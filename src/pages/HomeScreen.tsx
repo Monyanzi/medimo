@@ -10,6 +10,7 @@ import TodaysHealthDashboard from '@/components/features/TodaysHealthDashboard';
 import HealthScore from '@/components/features/HealthScore';
 import MedicationStreak from '@/components/features/MedicationStreak';
 import QuickCheckIn from '@/components/features/QuickCheckIn';
+import VitalTracker from '@/components/features/VitalTracker';
 import FAB from '@/components/shared/FAB';
 
 const HomeScreen: React.FC = () => {
@@ -78,7 +79,10 @@ const HomeScreen: React.FC = () => {
             activeMedications={activeMedications}
           />
 
-          {/* PRIORITY #3: Enhanced Gamification with Real Data */}
+          {/* PRIORITY #3: Vital Signs Tracker - Show health trends over time */}
+          <VitalTracker />
+
+          {/* PRIORITY #4: Enhanced Gamification with Real Data */}
           <div className="space-y-4">
             <HealthScore />
             <MedicationStreak />
