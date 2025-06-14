@@ -22,12 +22,10 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete }
         return <FileText className="h-4 w-4 text-green-500" />;
       case 'Vitals':
         return <Activity className="h-4 w-4 text-red-500" />;
-      case 'Lab Result':
+      case 'Test':
         return <Stethoscope className="h-4 w-4 text-orange-500" />;
-      case 'Observation':
+      case 'Other':
         return <Clock className="h-4 w-4 text-gray-500" />;
-      case 'Treatment':
-        return <Stethoscope className="h-4 w-4 text-indigo-500" />;
       default:
         return <Clock className="h-4 w-4 text-gray-500" />;
     }
@@ -43,12 +41,10 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete }
         return 'border-l-green-500 bg-green-50';
       case 'Vitals':
         return 'border-l-red-500 bg-red-50';
-      case 'Lab Result':
+      case 'Test':
         return 'border-l-orange-500 bg-orange-50';
-      case 'Observation':
+      case 'Other':
         return 'border-l-gray-500 bg-gray-50';
-      case 'Treatment':
-        return 'border-l-indigo-500 bg-indigo-50';
       default:
         return 'border-l-gray-500 bg-gray-50';
     }
@@ -81,18 +77,16 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete }
               </p>
             </div>
           </div>
-          {event.isEditable !== false && (
-            <div className="flex space-x-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleDelete}
-              >
-                <Trash2 className="h-4 w-4 text-red-500" />
-              </Button>
-            </div>
-          )}
+          <div className="flex space-x-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

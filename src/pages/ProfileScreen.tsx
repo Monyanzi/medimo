@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, CreditCard, QrCode, Download, User, Bell, Globe, FileText, Shield, HelpCircle, LogOut } from 'lucide-react';
@@ -39,16 +38,38 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleDigitalKey = () => {
-    navigate('/');
+    // Show user's digital health key information
+    const keyInfo = {
+      id: user?.id,
+      name: user?.name,
+      bloodType: user?.bloodType,
+      emergencyContact: user?.emergencyContact?.name,
+      qrCodeStatus: user?.qrCode ? 'Active' : 'Not Generated'
+    };
+    
+    alert(`Digital Health Key\n\nID: ${keyInfo.id}\nName: ${keyInfo.name}\nBlood Type: ${keyInfo.bloodType}\nEmergency Contact: ${keyInfo.emergencyContact}\nQR Code: ${keyInfo.qrCodeStatus}`);
   };
 
   const handleQRCode = () => {
     setQrModalOpen(true);
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     console.log('Exporting PDF report...');
-    // TODO: Implement PDF export functionality
+    try {
+      // Simulate PDF generation
+      const exportData = {
+        user: user?.name,
+        exportDate: new Date().toISOString(),
+        sections: ['Personal Information', 'Medical History', 'Emergency Contacts', 'QR Code']
+      };
+      
+      console.log('Export data prepared:', exportData);
+      alert('Health data export has been prepared. In a real implementation, this would generate and download a PDF file.');
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export failed. Please try again.');
+    }
   };
 
   const settingsItems = [
