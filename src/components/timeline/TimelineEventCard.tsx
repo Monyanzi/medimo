@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { TimelineEvent } from '@/types';
 import { format, parseISO } from 'date-fns';
 import { Pill, Calendar, FileText, Activity, Stethoscope, Clock, Trash2, Edit, Check, X } from 'lucide-react';
+import EditMedicationTimelineModal from '@/components/modals/EditMedicationTimelineModal';
 
 interface TimelineEventCardProps {
   event: TimelineEvent;
@@ -15,9 +15,11 @@ interface TimelineEventCardProps {
 }
 
 const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, onEdit }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingInline, setIsEditingInline] = useState(false);
   const [editedTitle, setEditedTitle] = useState(event.title);
   const [editedDetails, setEditedDetails] = useState(event.details);
+
+  const [isEditMedicationModalOpen, setIsEditMedicationModalOpen] = useState(false);
 
   const getCategoryIcon = (category: TimelineEvent['category']) => {
     switch (category) {
@@ -63,105 +65,125 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
     }
   };
 
-  const handleSaveEdit = () => {
+  const handleEditClick = () => {
+    if (event.category === 'Medication' && event.relatedId) {
+      setIsEditMedicationModalOpen(true);
+    } else {
+      setEditedTitle(event.title);
+      setEditedDetails(event.details);
+      setIsEditingInline(true);
+    }
+  };
+
+  const handleSaveInlineEdit = () => {
     onEdit(event.id, {
       title: editedTitle,
       details: editedDetails
     });
-    setIsEditing(false);
+    setIsEditingInline(false);
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelInlineEdit = () => {
     setEditedTitle(event.title);
     setEditedDetails(event.details);
-    setIsEditing(false);
+    setIsEditingInline(false);
   };
 
   return (
-    <Card className={`border-l-4 ${getCategoryColor(event.category)}`}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-3 flex-1">
-            <div className="mt-1">
-              {getCategoryIcon(event.category)}
+    <>
+      <Card className={`border-l-4 ${getCategoryColor(event.category)}`}>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-3 flex-1">
+              <div className="mt-1">
+                {getCategoryIcon(event.category)}
+              </div>
+              <div className="flex-1">
+                {isEditingInline ? (
+                  <div className="space-y-2">
+                    <Input
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      className="text-sm"
+                      placeholder="Event title"
+                    />
+                    <Textarea
+                      value={editedDetails}
+                      onChange={(e) => setEditedDetails(e.target.value)}
+                      className="text-sm"
+                      placeholder="Event details"
+                      rows={2}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h4 className="font-medium text-text-primary">{event.title}</h4>
+                      <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                        {event.category}
+                      </span>
+                    </div>
+                    <p className="text-sm text-text-secondary mb-2">{event.details}</p>
+                  </>
+                )}
+                <p className="text-xs text-gray-400">
+                  {format(parseISO(event.date), 'h:mm a')}
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              {isEditing ? (
-                <div className="space-y-2">
-                  <Input
-                    value={editedTitle}
-                    onChange={(e) => setEditedTitle(e.target.value)}
-                    className="text-sm"
-                    placeholder="Event title"
-                  />
-                  <Textarea
-                    value={editedDetails}
-                    onChange={(e) => setEditedDetails(e.target.value)}
-                    className="text-sm"
-                    placeholder="Event details"
-                    rows={2}
-                  />
-                </div>
+            <div className="flex space-x-1">
+              {isEditingInline ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleSaveInlineEdit}
+                  >
+                    <Check className="h-4 w-4 text-green-500" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleCancelInlineEdit}
+                  >
+                    <X className="h-4 w-4 text-gray-500" />
+                  </Button>
+                </>
               ) : (
                 <>
-                  <div className="flex items-center space-x-2 mb-1">
-                    <h4 className="font-medium text-text-primary">{event.title}</h4>
-                    <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                      {event.category}
-                    </span>
-                  </div>
-                  <p className="text-sm text-text-secondary mb-2">{event.details}</p>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleEditClick}
+                  >
+                    <Edit className="h-4 w-4 text-blue-500" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
                 </>
               )}
-              <p className="text-xs text-gray-400">
-                {format(parseISO(event.date), 'h:mm a')}
-              </p>
             </div>
           </div>
-          <div className="flex space-x-1">
-            {isEditing ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleSaveEdit}
-                >
-                  <Check className="h-4 w-4 text-green-500" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleCancelEdit}
-                >
-                  <X className="h-4 w-4 text-gray-500" />
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Edit className="h-4 w-4 text-blue-500" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleDelete}
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {event.category === 'Medication' && event.relatedId && (
+        <EditMedicationTimelineModal
+          isOpen={isEditMedicationModalOpen}
+          onOpenChange={setIsEditMedicationModalOpen}
+          event={event}
+        />
+      )}
+    </>
   );
 };
 
