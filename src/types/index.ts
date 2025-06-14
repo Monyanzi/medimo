@@ -43,9 +43,13 @@ export interface Appointment {
 export interface Document {
   id: string;
   fileName: string;
-  fileType: 'PDF' | 'Image';
+  fileType: 'PDF' | 'Image' | 'Lab Report' | 'Prescription' | 'Insurance Card' | 'Medical Record';
   uploadDate: string; // ISO 8601 format
   storagePath: string; // Local device path
+  category: 'Medical Records' | 'Lab Results' | 'Prescriptions' | 'Insurance' | 'Images' | 'Other';
+  fileSize: number; // in bytes
+  description?: string;
+  tags?: string[];
 }
 
 export interface TimelineEvent {
