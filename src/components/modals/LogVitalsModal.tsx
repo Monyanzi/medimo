@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useHealthData } from "@/contexts/HealthDataContext";
 import { Activity, AlertTriangle, CheckCircle } from "lucide-react";
-import { checkVitalInRange, DEFAULT_VITAL_RANGES, getVitalStatusColor, getVitalMessage } from "@/utils/vitalsUtils";
+import { checkVitalInRange, DEFAULT_VITAL_RANGES, getVitalStatusColor, getVitalMessage, VitalStatus } from "@/utils/vitalsUtils";
 
 interface LogVitalsModalProps {
   isOpen: boolean;
@@ -35,7 +35,7 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
     notes: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [vitalsAlerts, setVitalsAlerts] = useState<{[key: string]: { status: string; message: string }}>({});
+  const [vitalsAlerts, setVitalsAlerts] = useState<{[key: string]: { status: VitalStatus; message: string }}>({});
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -44,10 +44,10 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
     }));
 
     // Real-time vital checking for critical ranges
-    if (value && DEFAULT_VITAL_RANGES[field]) {
+    if (value && DEFAULT_VITAL_RANGES[field as keyof typeof DEFAULT_VITAL_RANGES]) {
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
-        const status = checkVitalInRange(numValue, DEFAULT_VITAL_RANGES[field]);
+        const status = checkVitalInRange(numValue, DEFAULT_VITAL_RANGES[field as keyof typeof DEFAULT_VITAL_RANGES]);
         const message = getVitalMessage(field, numValue, status);
         
         setVitalsAlerts(prev => ({

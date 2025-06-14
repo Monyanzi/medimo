@@ -13,6 +13,7 @@ import TimelineScreen from "./pages/TimelineScreen";
 import VaultScreen from "./pages/VaultScreen";
 import ProfileScreen from "./pages/ProfileScreen";
 import PersonalInformationPage from "./pages/PersonalInformationPage";
+import CaregiverSettingsPage from "./pages/CaregiverSettingsPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import LanguageRegionPage from "./pages/LanguageRegionPage";
 import TermsPage from "./pages/TermsPage";
@@ -49,6 +50,7 @@ const App = () => {
                       <Route path="/vault" element={<VaultScreen />} />
                       <Route path="/profile" element={<ProfileScreen />} />
                       <Route path="/profile/personal-information" element={<PersonalInformationPage />} />
+                      <Route path="/profile/caregiver-settings" element={<CaregiverSettingsPage />} />
                       <Route path="/profile/notifications" element={<NotificationSettingsPage />} />
                       <Route path="/profile/language-region" element={<LanguageRegionPage />} />
                       <Route path="/profile/terms" element={<TermsPage />} />

@@ -77,10 +77,25 @@ const CaregiverSettingsPage: React.FC = () => {
 
   const onSubmit = async (data: CaregiverForm) => {
     try {
-      await updateUser({
-        caregiver: data.caregiver
-      });
-      toast.success('Caregiver settings updated successfully');
+      if (data.caregiver) {
+        await updateUser({
+          caregiver: {
+            name: data.caregiver.name!,
+            phone: data.caregiver.phone!,
+            email: data.caregiver.email,
+            relationship: data.caregiver.relationship!,
+            isEmergencyContact: data.caregiver.isEmergencyContact!,
+            checkInSettings: data.caregiver.checkInSettings ? {
+              enabled: data.caregiver.checkInSettings.enabled!,
+              frequency: data.caregiver.checkInSettings.frequency!,
+              customHours: data.caregiver.checkInSettings.customHours,
+              reminderTime: data.caregiver.checkInSettings.reminderTime,
+              missedCheckInThreshold: data.caregiver.checkInSettings.missedCheckInThreshold!
+            } : undefined
+          }
+        });
+        toast.success('Caregiver settings updated successfully');
+      }
     } catch (error) {
       console.error('Failed to update caregiver settings:', error);
       toast.error('Failed to update settings');

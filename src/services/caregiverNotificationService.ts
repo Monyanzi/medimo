@@ -54,9 +54,12 @@ class CaregiverNotificationService {
   }
 
   public createCriticalVitalAlert(user: User, vitalType: string, value: number, status: VitalStatus): CaregiverAlert {
+    // Only create alerts for warning and critical statuses, skip normal
+    const alertSeverity: 'warning' | 'critical' = status === 'critical' ? 'critical' : 'warning';
+    
     return {
       type: 'critical-vitals',
-      severity: status,
+      severity: alertSeverity,
       message: `${user.name} has ${status} ${vitalType} reading: ${value}. Immediate attention may be required.`,
       timestamp: new Date().toISOString(),
       patientName: user.name,
