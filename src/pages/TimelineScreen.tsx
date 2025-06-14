@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { TimelineEvent } from '@/types';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {
@@ -250,7 +250,7 @@ const TimelineScreen: React.FC = () => {
       ]);
 
       // Create timeline table using autoTable
-      autoTable(doc, {
+      (doc as any).autoTable({
         startY: yPos,
         head: [['Date', 'Time', 'Event', 'Details', 'Category']],
         body: timelineData,
