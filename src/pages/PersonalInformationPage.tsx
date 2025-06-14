@@ -70,14 +70,14 @@ const PersonalInformationPage: React.FC = () => {
       conditions: user?.conditions.map(condition => ({ value: condition })) || [],
       organDonor: user?.organDonor || false,
       emergencyContact: {
-        name: user?.emergencyContact.name || '',
-        phone: user?.emergencyContact.phone || '',
-        relationship: user?.emergencyContact.relationship || ''
+        name: user?.emergencyContact?.name || '',
+        phone: user?.emergencyContact?.phone || '',
+        relationship: user?.emergencyContact?.relationship || ''
       },
       insurance: user?.insurance ? {
-        provider: user.insurance.provider,
-        policyNumber: user.insurance.policyNumber,
-        memberId: user.insurance.memberId
+        provider: user.insurance.provider || '',
+        policyNumber: user.insurance.policyNumber || '',
+        memberId: user.insurance.memberId || ''
       } : undefined
     }
   });
@@ -102,8 +102,16 @@ const PersonalInformationPage: React.FC = () => {
         allergies: data.allergies.map(item => item.value),
         conditions: data.conditions.map(item => item.value),
         organDonor: data.organDonor,
-        emergencyContact: data.emergencyContact,
-        insurance: data.insurance
+        emergencyContact: {
+          name: data.emergencyContact.name,
+          phone: data.emergencyContact.phone,
+          relationship: data.emergencyContact.relationship
+        },
+        insurance: data.insurance ? {
+          provider: data.insurance.provider,
+          policyNumber: data.insurance.policyNumber,
+          memberId: data.insurance.memberId
+        } : undefined
       });
     } catch (error) {
       console.error('Failed to update profile:', error);

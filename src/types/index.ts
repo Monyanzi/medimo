@@ -51,11 +51,11 @@ export interface HealthRecord {
 export interface Appointment {
   id: string;
   title: string;
-  provider: string;
+  doctorName: string;
   location: string;
   dateTime: string;
-  type: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  type?: string;
+  status?: 'scheduled' | 'completed' | 'cancelled';
   notes?: string;
 }
 
@@ -64,9 +64,10 @@ export interface Medication {
   name: string;
   dosage: string;
   frequency: string;
-  startDate: string;
+  instructions?: string;
+  startDate?: string;
   endDate?: string;
-  prescribedBy: string;
+  prescribedBy?: string;
   status: 'active' | 'completed' | 'discontinued';
   notes?: string;
 }
@@ -81,12 +82,58 @@ export interface Vital {
   notes?: string;
 }
 
+export interface VitalSigns {
+  id: string;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  heartRate?: number;
+  weight?: number;
+  temperature?: number;
+  recordedDate: string;
+  notes?: string;
+}
+
 export interface Document {
   id: string;
-  name: string;
-  type: string;
+  fileName: string;
+  fileType: string;
   uploadDate: string;
-  size: string;
-  url: string;
-  category: string;
+  storagePath: string;
+  category: 'Medical Records' | 'Lab Results' | 'Prescriptions' | 'Insurance' | 'Images' | 'Other';
+  fileSize: number;
+  description?: string;
+  tags?: string[];
+}
+
+export interface TimelineEvent {
+  id: string;
+  title: string;
+  details: string;
+  date: string;
+  category: 'Medication' | 'Appointment' | 'Document' | 'Vitals' | 'Test' | 'Other';
+  relatedId?: string;
+}
+
+export interface HealthDataContextType {
+  medications: Medication[];
+  appointments: Appointment[];
+  documents: Document[];
+  timelineEvents: TimelineEvent[];
+  vitalSigns: VitalSigns[];
+  addMedication: (medication: Omit<Medication, 'id'>) => Promise<void>;
+  updateMedication: (id: string, medication: Partial<Medication>) => Promise<void>;
+  deleteMedication: (id: string) => Promise<void>;
+  addAppointment: (appointment: Omit<Appointment, 'id'>) => Promise<void>;
+  updateAppointment: (id: string, appointment: Partial<Appointment>) => Promise<void>;
+  deleteAppointment: (id: string) => Promise<void>;
+  addDocument: (document: Omit<Document, 'id'>) => Promise<void>;
+  deleteDocument: (id: string) => Promise<void>;
+  addTimelineEvent: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
+  updateTimelineEvent: (id: string, event: Partial<TimelineEvent>) => Promise<void>;
+  deleteTimelineEvent: (id: string) => Promise<void>;
+  addVitalSigns: (vitals: Omit<VitalSigns, 'id'>) => Promise<void>;
+  updateVitalSigns: (id: string, vitals: Partial<VitalSigns>) => Promise<void>;
+  deleteVitalSigns: (id: string) => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
 }
