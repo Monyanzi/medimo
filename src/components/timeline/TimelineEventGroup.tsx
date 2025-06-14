@@ -8,12 +8,14 @@ interface TimelineEventGroupProps {
   dateKey: string;
   events: TimelineEvent[];
   onDeleteEvent: (eventId: string) => void;
+  onEditEvent: (eventId: string, updates: Partial<TimelineEvent>) => void;
 }
 
 const TimelineEventGroup: React.FC<TimelineEventGroupProps> = ({
   dateKey,
   events,
-  onDeleteEvent
+  onDeleteEvent,
+  onEditEvent
 }) => {
   return (
     <div>
@@ -26,6 +28,7 @@ const TimelineEventGroup: React.FC<TimelineEventGroupProps> = ({
             key={event.id}
             event={event}
             onDelete={onDeleteEvent}
+            onEdit={onEditEvent}
           />
         ))}
       </div>

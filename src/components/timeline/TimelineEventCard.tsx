@@ -1,17 +1,24 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { TimelineEvent } from '@/types';
 import { format, parseISO } from 'date-fns';
-import { Pill, Calendar, FileText, Activity, Stethoscope, Clock, Trash2 } from 'lucide-react';
+import { Pill, Calendar, FileText, Activity, Stethoscope, Clock, Trash2, Edit, Check, X } from 'lucide-react';
 
 interface TimelineEventCardProps {
   event: TimelineEvent;
   onDelete: (eventId: string) => void;
+  onEdit: (eventId: string, updates: Partial<TimelineEvent>) => void;
 }
 
-const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete }) => {
+const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, onEdit }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(event.title);
+  const [editedDetails, setEditedDetails] = useState(event.details);
+
   const getCategoryIcon = (category: TimelineEvent['category']) => {
     switch (category) {
       case 'Medication':
@@ -56,6 +63,20 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete }
     }
   };
 
+  const handleSaveEdit = () => {
+    onEdit(event.id, {
+      title: editedTitle,
+      details: editedDetails
+    });
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedTitle(event.title);
+    setEditedDetails(event.details);
+    setIsEditing(false);
+  };
+
   return (
     <Card className={`border-l-4 ${getCategoryColor(event.category)}`}>
       <CardContent className="p-4">
@@ -65,27 +86,78 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete }
               {getCategoryIcon(event.category)}
             </div>
             <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-1">
-                <h4 className="font-medium text-text-primary">{event.title}</h4>
-                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                  {event.category}
-                </span>
-              </div>
-              <p className="text-sm text-text-secondary mb-2">{event.details}</p>
+              {isEditing ? (
+                <div className="space-y-2">
+                  <Input
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    className="text-sm"
+                    placeholder="Event title"
+                  />
+                  <Textarea
+                    value={editedDetails}
+                    onChange={(e) => setEditedDetails(e.target.value)}
+                    className="text-sm"
+                    placeholder="Event details"
+                    rows={2}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center space-x-2 mb-1">
+                    <h4 className="font-medium text-text-primary">{event.title}</h4>
+                    <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                      {event.category}
+                    </span>
+                  </div>
+                  <p className="text-sm text-text-secondary mb-2">{event.details}</p>
+                </>
+              )}
               <p className="text-xs text-gray-400">
                 {format(parseISO(event.date), 'h:mm a')}
               </p>
             </div>
           </div>
           <div className="flex space-x-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
+            {isEditing ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleSaveEdit}
+                >
+                  <Check className="h-4 w-4 text-green-500" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleCancelEdit}
+                >
+                  <X className="h-4 w-4 text-gray-500" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit className="h-4 w-4 text-blue-500" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </CardContent>

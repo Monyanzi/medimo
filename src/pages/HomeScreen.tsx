@@ -10,7 +10,6 @@ import TodaysHealthDashboard from '@/components/features/TodaysHealthDashboard';
 import HealthScore from '@/components/features/HealthScore';
 import MedicationStreak from '@/components/features/MedicationStreak';
 import QuickCheckIn from '@/components/features/QuickCheckIn';
-import EmergencyContactCard from '@/components/features/EmergencyContactCard';
 import FAB from '@/components/shared/FAB';
 
 const HomeScreen: React.FC = () => {
@@ -72,9 +71,6 @@ const HomeScreen: React.FC = () => {
 
           {/* PRIORITY #1: Digital Health Key - Always first */}
           <DigitalHealthKey user={user} />
-
-          {/* PRIORITY #1.5: Emergency Contact Card - Critical for emergencies */}
-          <EmergencyContactCard user={user} />
 
           {/* PRIORITY #2: Today's Health Dashboard - Critical daily reminders */}
           <TodaysHealthDashboard 

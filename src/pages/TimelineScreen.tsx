@@ -13,9 +13,10 @@ import { generateTimelinePDF } from '@/services/pdfExportService';
 import { useTimelineFilters } from '@/hooks/useTimelineFilters';
 import TimelineFilters from '@/components/timeline/TimelineFilters';
 import TimelineEventGroup from '@/components/timeline/TimelineEventGroup';
+import { TimelineEvent } from '@/types';
 
 const TimelineScreen: React.FC = () => {
-  const { timelineEvents, deleteTimelineEvent } = useHealthData();
+  const { timelineEvents, deleteTimelineEvent, updateTimelineEvent } = useHealthData();
   const { user } = useAuth();
 
   const {
@@ -32,6 +33,10 @@ const TimelineScreen: React.FC = () => {
 
   const handleDeleteEvent = async (eventId: string) => {
     await deleteTimelineEvent(eventId);
+  };
+
+  const handleEditEvent = async (eventId: string, updates: Partial<TimelineEvent>) => {
+    await updateTimelineEvent(eventId, updates);
   };
 
   const handleExportTimeline = () => {
@@ -114,6 +119,7 @@ const TimelineScreen: React.FC = () => {
                     dateKey={dateKey}
                     events={events}
                     onDeleteEvent={handleDeleteEvent}
+                    onEditEvent={handleEditEvent}
                   />
                 ))
               )}
