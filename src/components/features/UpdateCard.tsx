@@ -1,168 +1,230 @@
 
-import React from 'react';
-import { Calendar, Clock, MapPin, Pill } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Appointment, Medication } from '@/types';
+import { format, parseISO } from 'date-fns';
+import { Calendar, Clock, Pill, CheckCircle, RotateCcw } from 'lucide-react';
+import AppointmentDetailModal from '@/components/modals/AppointmentDetailModal';
+import { useHealthData } from '@/contexts/HealthDataContext';
+import { useNotifications } from '@/contexts/NotificationContext';
+import { toast } from 'sonner';
 
 interface UpdateCardProps {
   upcomingAppointment?: Appointment;
-  activeMedications?: Medication[];
+  activeMedications: Medication[];
 }
 
 const UpdateCard: React.FC<UpdateCardProps> = ({ 
   upcomingAppointment, 
-  activeMedications = [] 
+  activeMedications 
 }) => {
-  const formatDateTime = (dateTime: string) => {
-    const date = new Date(dateTime);
-    return {
-      date: date.toLocaleDateString('en-US', { 
-        weekday: 'long',
-        month: 'long', 
-        day: 'numeric' 
-      }),
-      time: date.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-      })
-    };
+  const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
+  const [takenMedications, setTakenMedications] = useState<Set<string>>(new Set());
+  const { addNotification } = useNotifications();
+
+  const handleViewAppointmentDetails = () => {
+    if (upcomingAppointment) {
+      setAppointmentModalOpen(true);
+    }
   };
 
-  // Show upcoming appointment if exists
-  if (upcomingAppointment) {
-    const { date, time } = formatDateTime(upcomingAppointment.dateTime);
+  const handleReschedule = () => {
+    toast.info('Reschedule functionality would open appointment edit modal');
+    // In a real app, this would open an appointment reschedule modal
+  };
+
+  const handleMarkTaken = (medicationId: string, medicationName: string) => {
+    setTakenMedications(prev => new Set([...prev, medicationId]));
+    toast.success(`Marked ${medicationName} as taken`);
     
+    // Add notification for successful medication taking
+    addNotification({
+      title: 'Medication Taken',
+      message: `${medicationName} marked as taken`,
+      type: 'medication',
+      relatedId: medicationId
+    });
+  };
+
+  const handleSnooze = (medicationName: string) => {
+    toast.info(`Snoozed reminder for ${medicationName} for 30 minutes`);
+    // In a real app, this would set a new reminder
+  };
+
+  // Show different content based on what data is available
+  const hasUpcomingAppointment = !!upcomingAppointment;
+  const hasMedicationReminders = activeMedications.length > 0;
+
+  if (!hasUpcomingAppointment && !hasMedicationReminders) {
     return (
-      <Card className="bg-surface-card border-border-divider shadow-md font-inter">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold text-text-primary flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-primary-action" />
-            <span>Upcoming Appointment</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-semibold text-text-primary text-base mb-1">
-              {upcomingAppointment.title}
-            </h3>
-            <p className="text-text-secondary text-sm">
-              with {upcomingAppointment.doctorName}
-            </p>
+      <Card className="bg-surface-card border border-border-divider">
+        <CardContent className="p-6 text-center">
+          <div className="text-accent-success mb-2">
+            <CheckCircle className="h-12 w-12 mx-auto" />
           </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-sm">
-              <Clock className="h-4 w-4 text-text-secondary" />
-              <span className="text-text-primary font-medium">{date}</span>
-              <span className="text-text-secondary">at</span>
-              <span className="text-text-primary font-medium">{time}</span>
-            </div>
-            
-            <div className="flex items-center space-x-2 text-sm">
-              <MapPin className="h-4 w-4 text-text-secondary" />
-              <span className="text-text-primary">{upcomingAppointment.location}</span>
-            </div>
-          </div>
-
-          {upcomingAppointment.notes && (
-            <div className="p-3 bg-accent-success/10 rounded-lg">
-              <p className="text-sm text-text-primary">
-                <span className="font-medium">Notes:</span> {upcomingAppointment.notes}
-              </p>
-            </div>
-          )}
-
-          <div className="flex space-x-3 pt-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex-1 border-border-divider hover:bg-accent-success/20"
-            >
-              Reschedule
-            </Button>
-            <Button 
-              size="sm"
-              className="flex-1 bg-primary-action hover:bg-primary-action/90 text-white"
-            >
-              View Details
-            </Button>
-          </div>
+          <h3 className="text-lg font-semibold text-text-primary mb-2">
+            All caught up! 🎉
+          </h3>
+          <p className="text-text-secondary">
+            No upcoming appointments or medication reminders at this time.
+          </p>
         </CardContent>
       </Card>
     );
   }
 
-  // Show medication reminder if no appointments but active medications exist
-  if (activeMedications.length > 0) {
-    const nextMedication = activeMedications[0]; // Simple logic - could be enhanced
-    
-    return (
-      <Card className="bg-surface-card border-border-divider shadow-md font-inter">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold text-text-primary flex items-center space-x-2">
-            <Pill className="h-5 w-5 text-primary-action" />
-            <span>Medication Reminder</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-semibold text-text-primary text-base mb-1">
-              {nextMedication.name}
-            </h3>
-            <p className="text-text-secondary text-sm">
-              {nextMedication.dosage} - {nextMedication.frequency}
-            </p>
-          </div>
-
-          {nextMedication.instructions && (
-            <div className="p-3 bg-accent-success/10 rounded-lg">
-              <p className="text-sm text-text-primary">
-                <span className="font-medium">Instructions:</span> {nextMedication.instructions}
-              </p>
-            </div>
-          )}
-
-          <div className="flex space-x-3 pt-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex-1 border-border-divider hover:bg-accent-success/20"
-            >
-              Snooze
-            </Button>
-            <Button 
-              size="sm"
-              className="flex-1 bg-primary-action hover:bg-primary-action/90 text-white"
-            >
-              Mark Taken
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Empty state
   return (
-    <Card className="bg-surface-card border-border-divider shadow-md font-inter">
-      <CardContent className="py-8 text-center">
-        <div className="space-y-3">
-          <div className="h-12 w-12 bg-accent-success/20 rounded-full flex items-center justify-center mx-auto">
-            <Calendar className="h-6 w-6 text-primary-action" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-text-primary mb-1">
-              You're all caught up!
-            </h3>
-            <p className="text-text-secondary text-sm">
-              No upcoming tasks or appointments. Enjoy your day!
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <>
+      <div className="space-y-4">
+        {/* Upcoming Appointment Card */}
+        {hasUpcomingAppointment && (
+          <Card className="bg-surface-card border border-border-divider">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-primary-action/10 rounded-lg">
+                    <Calendar className="h-5 w-5 text-primary-action" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-text-primary">
+                      Upcoming Appointment
+                    </h3>
+                    <p className="text-text-secondary text-sm">Next scheduled visit</p>
+                  </div>
+                </div>
+                <Badge className="bg-primary-action/10 text-primary-action">
+                  Scheduled
+                </Badge>
+              </div>
+
+              <div className="space-y-3 mb-4">
+                <div>
+                  <p className="font-medium text-text-primary">{upcomingAppointment.title}</p>
+                  <p className="text-sm text-text-secondary">with {upcomingAppointment.doctorName}</p>
+                </div>
+                
+                <div className="flex items-center space-x-2 text-sm">
+                  <Clock className="h-4 w-4 text-text-secondary" />
+                  <span className="text-text-secondary">
+                    {format(parseISO(upcomingAppointment.dateTime), 'EEEE, MMMM d, yyyy • h:mm a')}
+                  </span>
+                </div>
+                
+                <div className="text-sm text-text-secondary">
+                  📍 {upcomingAppointment.location}
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <Button 
+                  onClick={handleViewAppointmentDetails}
+                  className="flex-1 bg-primary-action hover:bg-primary-action/90"
+                >
+                  View Details
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleReschedule}
+                  className="flex-1"
+                >
+                  Reschedule
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Medication Reminders Card */}
+        {hasMedicationReminders && (
+          <Card className="bg-surface-card border border-border-divider">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="p-2 bg-accent-success/10 rounded-lg">
+                  <Pill className="h-5 w-5 text-accent-success" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-text-primary">
+                    Medication Reminders
+                  </h3>
+                  <p className="text-text-secondary text-sm">
+                    {activeMedications.length} active medication{activeMedications.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {activeMedications.slice(0, 2).map((medication) => {
+                  const isTaken = takenMedications.has(medication.id);
+                  
+                  return (
+                    <div 
+                      key={medication.id}
+                      className={`p-3 rounded-lg border transition-all ${
+                        isTaken 
+                          ? 'bg-accent-success/10 border-accent-success/20' 
+                          : 'bg-surface-secondary border-border-divider'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="font-medium text-text-primary flex items-center gap-2">
+                            {medication.name} {medication.dosage}
+                            {isTaken && <CheckCircle className="h-4 w-4 text-accent-success" />}
+                          </p>
+                          <p className="text-sm text-text-secondary">{medication.frequency}</p>
+                        </div>
+                      </div>
+                      
+                      {!isTaken && (
+                        <div className="flex space-x-2 mt-3">
+                          <Button 
+                            size="sm"
+                            onClick={() => handleMarkTaken(medication.id, medication.name)}
+                            className="flex-1 bg-accent-success hover:bg-accent-success/90"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Mark Taken
+                          </Button>
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleSnooze(medication.name)}
+                            className="flex-1"
+                          >
+                            <RotateCcw className="h-4 w-4 mr-2" />
+                            Snooze
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {isTaken && (
+                        <div className="mt-2 text-sm text-accent-success">
+                          ✓ Taken today
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                
+                {activeMedications.length > 2 && (
+                  <p className="text-sm text-text-secondary text-center pt-2">
+                    +{activeMedications.length - 2} more medication{activeMedications.length - 2 !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      <AppointmentDetailModal 
+        appointment={upcomingAppointment || null}
+        isOpen={appointmentModalOpen}
+        onOpenChange={setAppointmentModalOpen}
+      />
+    </>
   );
 };
 

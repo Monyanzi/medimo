@@ -10,7 +10,7 @@ import FAB from '@/components/shared/FAB';
 
 const HomeScreen: React.FC = () => {
   const { user } = useAuth();
-  const { appointments, medications } = useHealthData();
+  const { appointments, medications, isLoading } = useHealthData();
 
   if (!user) {
     return (
@@ -19,6 +19,23 @@ const HomeScreen: React.FC = () => {
           <h2 className="text-xl font-semibold text-text-primary mb-2">Loading...</h2>
           <p className="text-text-secondary">Please wait while we load your data</p>
         </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background-main font-inter">
+        <Header />
+        <main className="px-4 py-6 pb-24 space-y-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-text-primary mb-2">
+              Hello, {user.name.split(' ')[0]}! 👋
+            </h1>
+            <p className="text-text-secondary">Loading your health information...</p>
+          </div>
+        </main>
+        <BottomNavigation />
       </div>
     );
   }
