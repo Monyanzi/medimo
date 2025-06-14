@@ -5,32 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Shield, QrCode, Share2, AlertTriangle } from 'lucide-react';
 import QRCodeModal from '@/components/modals/QRCodeModal';
+import { User } from '@/types';
 
 interface DigitalHealthKeyProps {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    dateOfBirth: string;
-    emergencyContacts: Array<{
-      name: string;
-      relationship: string;
-      phone: string;
-    }>;
-    medicalConditions: string[];
-    allergies: string[];
-    currentMedications: Array<{
-      name: string;
-      dosage: string;
-    }>;
-  };
+  user: User;
 }
 
 const DigitalHealthKey: React.FC<DigitalHealthKeyProps> = ({ user }) => {
   const [qrModalOpen, setQrModalOpen] = useState(false);
 
-  const criticalInfoCount = user.medicalConditions.length + user.allergies.length + user.currentMedications.length;
-  const hasEmergencyContact = user.emergencyContacts.length > 0;
+  const criticalInfoCount = user.conditions.length + user.allergies.length;
+  const hasEmergencyContact = user.emergencyContact.name && user.emergencyContact.phone;
 
   return (
     <>
@@ -63,15 +48,15 @@ const DigitalHealthKey: React.FC<DigitalHealthKeyProps> = ({ user }) => {
             <div className="grid grid-cols-2 gap-4 text-xs">
               <div>
                 <span className="text-text-secondary">Conditions:</span>
-                <span className="font-medium text-text-primary ml-1">{user.medicalConditions.length}</span>
+                <span className="font-medium text-text-primary ml-1">{user.conditions.length}</span>
               </div>
               <div>
                 <span className="text-text-secondary">Allergies:</span>
                 <span className="font-medium text-text-primary ml-1">{user.allergies.length}</span>
               </div>
               <div>
-                <span className="text-text-secondary">Medications:</span>
-                <span className="font-medium text-text-primary ml-1">{user.currentMedications.length}</span>
+                <span className="text-text-secondary">Blood Type:</span>
+                <span className="font-medium text-text-primary ml-1">{user.bloodType}</span>
               </div>
               <div>
                 <span className="text-text-secondary">Emergency Contact:</span>
