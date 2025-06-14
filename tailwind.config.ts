@@ -18,7 +18,25 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'inter': ['Inter', 'sans-serif'],
+			},
 			colors: {
+				// Medimo Brand Colors
+				'medimo-primary': '#f6f7f5',
+				'medimo-accent': '#81f0ba', 
+				'medimo-surface': '#d0dbd6',
+				'medimo-silver': '#718096',
+				// Official Design System Colors
+				'primary-action': '#10B981', // emerald-500
+				'accent-success': '#81f0ba',
+				'background-main': '#F9FAFB', // gray-50
+				'surface-card': '#FFFFFF',
+				'border-divider': '#E5E7EB', // gray-200
+				'text-primary': '#111827', // gray-900
+				'text-secondary': '#6B7280', // gray-500
+				'destructive-action': '#EF4444', // red-500
+				// Keep existing shadcn colors for compatibility
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
