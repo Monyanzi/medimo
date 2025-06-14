@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -161,22 +160,17 @@ const PersonalMedicalPage: React.FC = () => {
       }
 
       // Handle caregiver settings
-      if (data.caregiverEnabled && data.caregiverContact) {
+      if (data.caregiverEnabled && data.caregiverContact && data.checkInSettings) {
         updateData.caregiver = {
           name: data.caregiverContact.name,
           email: data.caregiverContact.email || '',
           phone: data.caregiverContact.phone,
           relationship: data.caregiverContact.relationship,
           isEmergencyContact: false,
-          checkInSettings: data.checkInSettings ? {
+          checkInSettings: {
             enabled: data.checkInSettings.enabled,
             frequency: data.checkInSettings.frequency,
             reminderTime: data.checkInSettings.reminderTime,
-            missedCheckInThreshold: 2
-          } : {
-            enabled: false,
-            frequency: 'daily',
-            reminderTime: '09:00',
             missedCheckInThreshold: 2
           }
         };
