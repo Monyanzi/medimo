@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Medication, Appointment, Document, TimelineEvent, HealthDataContextType } from '@/types';
+import { Medication, Appointment, Document, TimelineEvent, VitalSigns, HealthDataContextType } from '@/types';
 import { toast } from 'sonner';
 
 const HealthDataContext = createContext<HealthDataContextType | undefined>(undefined);
@@ -17,6 +18,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [vitalSigns, setVitalSigns] = useState<VitalSigns[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,20 +82,50 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   ];
 
+  const mockVitalSigns: VitalSigns[] = [
+    {
+      id: "vital-001",
+      bloodPressureSystolic: 135,
+      bloodPressureDiastolic: 85,
+      heartRate: 72,
+      weight: 175,
+      recordedDate: "2024-11-14T08:00:00Z",
+      notes: "Morning reading before medication"
+    }
+  ];
+
   const mockTimelineEvents: TimelineEvent[] = [
     {
       id: "event-001",
-      title: "New Medication Started",
-      details: "Lisinopril 10mg, once daily for hypertension",
+      title: "Medication Started",
+      details: "Lisinopril 10mg prescribed for hypertension management",
       date: "2024-11-10T09:00:00Z",
-      category: "Medication"
+      category: "Medication",
+      relatedId: "med-001"
     },
     {
       id: "event-002",
-      title: "Blood Pressure Logged",
-      details: "135/85 mmHg, resting measurement",
+      title: "Blood Pressure Recorded",
+      details: "135/85 mmHg, Heart Rate: 72 bpm",
       date: "2024-11-14T08:00:00Z",
-      category: "Vitals"
+      category: "Vitals",
+      relatedId: "vital-001"
+    },
+    {
+      id: "event-003",
+      title: "Lab Results Uploaded",
+      details: "Blood test results from November 2024",
+      date: "2024-11-15T10:30:00Z",
+      category: "Document",
+      relatedId: "doc-001"
+    },
+    {
+      id: "event-004",
+      title: "Appointment Scheduled",
+      details: "Cardiology follow-up with Dr. Evelyn Reed",
+      date: "2024-11-16T14:00:00Z",
+      category: "Appointment",
+      relatedId: "apt-001"
     }
   ];
 
@@ -105,12 +137,21 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setAppointments(mockAppointments);
       setDocuments(mockDocuments);
       setTimelineEvents(mockTimelineEvents);
+      setVitalSigns(mockVitalSigns);
       setIsLoading(false);
       console.log('Health data loaded');
     }, 1200);
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Helper function to create timeline events
+  const createTimelineEvent = (event: Omit<TimelineEvent, 'id'>): TimelineEvent => {
+    return {
+      ...event,
+      id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    };
+  };
 
   const addMedication = async (medication: Omit<Medication, 'id'>): Promise<void> => {
     try {
@@ -119,6 +160,17 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         id: `med-${Date.now()}`
       };
       setMedications(prev => [...prev, newMedication]);
+      
+      // Auto-generate timeline event
+      const timelineEvent = createTimelineEvent({
+        title: "Medication Added",
+        details: `${medication.name} ${medication.dosage} - ${medication.frequency}`,
+        date: new Date().toISOString(),
+        category: "Medication",
+        relatedId: newMedication.id
+      });
+      setTimelineEvents(prev => [...prev, timelineEvent]);
+      
       toast.success('Medication added successfully!');
     } catch (err) {
       toast.error('Failed to add medication');
@@ -129,6 +181,19 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const updateMedication = async (id: string, medication: Partial<Medication>): Promise<void> => {
     try {
       setMedications(prev => prev.map(med => med.id === id ? { ...med, ...medication } : med));
+      
+      // Auto-generate timeline event for significant changes
+      if (medication.status === 'discontinued') {
+        const timelineEvent = createTimelineEvent({
+          title: "Medication Discontinued",
+          details: `Medication has been discontinued`,
+          date: new Date().toISOString(),
+          category: "Medication",
+          relatedId: id
+        });
+        setTimelineEvents(prev => [...prev, timelineEvent]);
+      }
+      
       toast.success('Medication updated successfully!');
     } catch (err) {
       toast.error('Failed to update medication');
@@ -138,7 +203,21 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const deleteMedication = async (id: string): Promise<void> => {
     try {
+      const medication = medications.find(med => med.id === id);
       setMedications(prev => prev.filter(med => med.id !== id));
+      
+      // Auto-generate timeline event
+      if (medication) {
+        const timelineEvent = createTimelineEvent({
+          title: "Medication Removed",
+          details: `${medication.name} removed from medication list`,
+          date: new Date().toISOString(),
+          category: "Medication",
+          relatedId: id
+        });
+        setTimelineEvents(prev => [...prev, timelineEvent]);
+      }
+      
       toast.success('Medication removed successfully!');
     } catch (err) {
       toast.error('Failed to remove medication');
@@ -153,6 +232,17 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         id: `apt-${Date.now()}`
       };
       setAppointments(prev => [...prev, newAppointment]);
+      
+      // Auto-generate timeline event
+      const timelineEvent = createTimelineEvent({
+        title: "Appointment Scheduled",
+        details: `${appointment.title} with ${appointment.doctorName}`,
+        date: new Date().toISOString(),
+        category: "Appointment",
+        relatedId: newAppointment.id
+      });
+      setTimelineEvents(prev => [...prev, timelineEvent]);
+      
       toast.success('Appointment added successfully!');
     } catch (err) {
       toast.error('Failed to add appointment');
@@ -172,7 +262,21 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const deleteAppointment = async (id: string): Promise<void> => {
     try {
+      const appointment = appointments.find(apt => apt.id === id);
       setAppointments(prev => prev.filter(apt => apt.id !== id));
+      
+      // Auto-generate timeline event
+      if (appointment) {
+        const timelineEvent = createTimelineEvent({
+          title: "Appointment Cancelled",
+          details: `${appointment.title} appointment cancelled`,
+          date: new Date().toISOString(),
+          category: "Appointment",
+          relatedId: id
+        });
+        setTimelineEvents(prev => [...prev, timelineEvent]);
+      }
+      
       toast.success('Appointment cancelled successfully!');
     } catch (err) {
       toast.error('Failed to cancel appointment');
@@ -187,6 +291,17 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         id: `doc-${Date.now()}`
       };
       setDocuments(prev => [...prev, newDocument]);
+      
+      // Auto-generate timeline event
+      const timelineEvent = createTimelineEvent({
+        title: "Document Uploaded",
+        details: `${document.fileName} - ${document.category}`,
+        date: new Date().toISOString(),
+        category: "Document",
+        relatedId: newDocument.id
+      });
+      setTimelineEvents(prev => [...prev, timelineEvent]);
+      
       toast.success('Document uploaded successfully!');
     } catch (err) {
       toast.error('Failed to upload document');
@@ -196,7 +311,21 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const deleteDocument = async (id: string): Promise<void> => {
     try {
+      const document = documents.find(doc => doc.id === id);
       setDocuments(prev => prev.filter(doc => doc.id !== id));
+      
+      // Auto-generate timeline event
+      if (document) {
+        const timelineEvent = createTimelineEvent({
+          title: "Document Deleted",
+          details: `${document.fileName} removed from vault`,
+          date: new Date().toISOString(),
+          category: "Document",
+          relatedId: id
+        });
+        setTimelineEvents(prev => [...prev, timelineEvent]);
+      }
+      
       toast.success('Document deleted successfully!');
     } catch (err) {
       toast.error('Failed to delete document');
@@ -204,12 +333,62 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const addVitalSigns = async (vitals: Omit<VitalSigns, 'id'>): Promise<void> => {
+    try {
+      const newVitals: VitalSigns = {
+        ...vitals,
+        id: `vital-${Date.now()}`
+      };
+      setVitalSigns(prev => [...prev, newVitals]);
+      
+      // Auto-generate timeline event
+      const details = [];
+      if (vitals.bloodPressureSystolic && vitals.bloodPressureDiastolic) {
+        details.push(`BP: ${vitals.bloodPressureSystolic}/${vitals.bloodPressureDiastolic} mmHg`);
+      }
+      if (vitals.heartRate) details.push(`HR: ${vitals.heartRate} bpm`);
+      if (vitals.weight) details.push(`Weight: ${vitals.weight} lbs`);
+      if (vitals.temperature) details.push(`Temp: ${vitals.temperature}°F`);
+      
+      const timelineEvent = createTimelineEvent({
+        title: "Vitals Recorded",
+        details: details.join(', ') || 'Vital signs recorded',
+        date: new Date().toISOString(),
+        category: "Vitals",
+        relatedId: newVitals.id
+      });
+      setTimelineEvents(prev => [...prev, timelineEvent]);
+      
+      toast.success('Vital signs recorded successfully!');
+    } catch (err) {
+      toast.error('Failed to record vital signs');
+      throw err;
+    }
+  };
+
+  const updateVitalSigns = async (id: string, vitals: Partial<VitalSigns>): Promise<void> => {
+    try {
+      setVitalSigns(prev => prev.map(v => v.id === id ? { ...v, ...vitals } : v));
+      toast.success('Vital signs updated successfully!');
+    } catch (err) {
+      toast.error('Failed to update vital signs');
+      throw err;
+    }
+  };
+
+  const deleteVitalSigns = async (id: string): Promise<void> => {
+    try {
+      setVitalSigns(prev => prev.filter(v => v.id !== id));
+      toast.success('Vital signs deleted successfully!');
+    } catch (err) {
+      toast.error('Failed to delete vital signs');
+      throw err;
+    }
+  };
+
   const addTimelineEvent = async (event: Omit<TimelineEvent, 'id'>): Promise<void> => {
     try {
-      const newEvent: TimelineEvent = {
-        ...event,
-        id: `event-${Date.now()}`
-      };
+      const newEvent = createTimelineEvent(event);
       setTimelineEvents(prev => [...prev, newEvent]);
       toast.success('Timeline event added successfully!');
     } catch (err) {
@@ -243,6 +422,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     appointments,
     documents,
     timelineEvents,
+    vitalSigns,
     addMedication,
     updateMedication,
     deleteMedication,
@@ -254,6 +434,9 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     addTimelineEvent,
     updateTimelineEvent,
     deleteTimelineEvent,
+    addVitalSigns,
+    updateVitalSigns,
+    deleteVitalSigns,
     isLoading,
     error
   };
@@ -262,7 +445,8 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     medications: medications.length,
     appointments: appointments.length,
     documents: documents.length,
-    timelineEvents: timelineEvents.length
+    timelineEvents: timelineEvents.length,
+    vitalSigns: vitalSigns.length
   });
 
   return (

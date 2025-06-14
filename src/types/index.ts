@@ -57,7 +57,23 @@ export interface TimelineEvent {
   title: string;
   details: string;
   date: string;
-  category: 'Medication' | 'Appointment' | 'Vitals' | 'Observation';
+  category: 'Medication' | 'Appointment' | 'Document' | 'Vitals' | 'Lab Result' | 'Observation' | 'Treatment';
+  relatedId?: string; // ID of related medication, appointment, document, etc.
+  icon?: string;
+  isEditable?: boolean;
+}
+
+export interface VitalSigns {
+  id: string;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  heartRate?: number;
+  weight?: number;
+  height?: number;
+  temperature?: number;
+  oxygenSaturation?: number;
+  notes?: string;
+  recordedDate: string;
 }
 
 export type Permission = 
@@ -85,6 +101,7 @@ export interface HealthDataContextType {
   appointments: Appointment[];
   documents: Document[];
   timelineEvents: TimelineEvent[];
+  vitalSigns: VitalSigns[];
   addMedication: (medication: Omit<Medication, 'id'>) => Promise<void>;
   updateMedication: (id: string, medication: Partial<Medication>) => Promise<void>;
   deleteMedication: (id: string) => Promise<void>;
@@ -96,6 +113,9 @@ export interface HealthDataContextType {
   addTimelineEvent: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
   updateTimelineEvent: (id: string, event: Partial<TimelineEvent>) => Promise<void>;
   deleteTimelineEvent: (id: string) => Promise<void>;
+  addVitalSigns: (vitals: Omit<VitalSigns, 'id'>) => Promise<void>;
+  updateVitalSigns: (id: string, vitals: Partial<VitalSigns>) => Promise<void>;
+  deleteVitalSigns: (id: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
