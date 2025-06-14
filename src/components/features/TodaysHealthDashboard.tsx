@@ -1,229 +1,135 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Appointment, Medication } from '@/types';
-import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, Pill, CheckCircle, RotateCcw, Activity, AlertTriangle } from 'lucide-react';
-import AppointmentDetailModal from '@/components/modals/AppointmentDetailModal';
-import { useNotifications } from '@/contexts/NotificationContext';
-import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Clock, Pill, Activity, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface TodaysHealthDashboardProps {
-  upcomingAppointment?: Appointment;
-  activeMedications: Medication[];
+  upcomingAppointment?: any;
+  activeMedications: any[];
 }
 
-const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({ 
-  upcomingAppointment, 
-  activeMedications 
+const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
+  upcomingAppointment,
+  activeMedications
 }) => {
-  const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
-  const [takenMedications, setTakenMedications] = useState<Set<string>>(new Set());
-  const { addNotification } = useNotifications();
+  const todaysDate = new Date();
+  const pendingMedications = activeMedications.filter(med => !med.takenToday);
+  const pendingVitals = false; // Mock data - would come from context
+  const hasOverdueItems = pendingMedications.length > 0;
 
-  const handleViewAppointmentDetails = () => {
-    if (upcomingAppointment) {
-      setAppointmentModalOpen(true);
-    }
+  const getPriorityIcon = () => {
+    if (hasOverdueItems) return <AlertTriangle className="h-5 w-5 text-destructive-action" />;
+    return <CheckCircle2 className="h-5 w-5 text-primary-action" />;
   };
 
-  const handleMarkTaken = (medicationId: string, medicationName: string) => {
-    setTakenMedications(prev => new Set([...prev, medicationId]));
-    toast.success(`${medicationName} marked as taken`);
-    
-    addNotification({
-      title: 'Medication Taken',
-      message: `${medicationName} marked as taken`,
-      type: 'medication',
-      relatedId: medicationId
-    });
+  const getPriorityMessage = () => {
+    if (hasOverdueItems) return `${pendingMedications.length} medication${pendingMedications.length > 1 ? 's' : ''} pending`;
+    if (upcomingAppointment) return 'Next appointment today';
+    return 'All caught up! Great job';
   };
-
-  const handleSnooze = (medicationName: string) => {
-    toast.info(`Reminder snoozed for ${medicationName}`);
-  };
-
-  // Calculate pending items
-  const pendingMedications = activeMedications.filter(med => !takenMedications.has(med.id));
-  const hasVitalsReminder = true; // Mock data - in real app, check if vitals are due
-  const hasPendingItems = upcomingAppointment || pendingMedications.length > 0 || hasVitalsReminder;
-
-  if (!hasPendingItems) {
-    return (
-      <Card className="bg-white border border-gray-100 shadow-md">
-        <CardContent className="p-6 text-center">
-          <div className="text-[#28A745] mb-3">
-            <CheckCircle className="h-10 w-10 mx-auto" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            All Set for Today! 
-          </h3>
-          <p className="text-gray-600 text-sm">
-            No pending medications, appointments, or health reminders.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <>
-      <Card className="bg-white border border-gray-100 shadow-md">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-[#0066CC]/10 rounded-lg">
-                <Activity className="h-5 w-5 text-[#0066CC]" />
+    <Card className="bg-surface-card border border-border-divider shadow-sm">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <Activity className="h-5 w-5 text-primary-action" />
+            <h3 className="font-semibold text-text-primary">Today's Health</h3>
+          </div>
+          <div className="flex items-center space-x-2">
+            {getPriorityIcon()}
+            <span className={`text-sm font-medium ${hasOverdueItems ? 'text-destructive-action' : 'text-primary-action'}`}>
+              {getPriorityMessage()}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {/* Medications Section */}
+          {pendingMedications.length > 0 && (
+            <div className="border-l-4 border-destructive-action pl-4 py-2">
+              <div className="flex items-center space-x-2 mb-2">
+                <Pill className="h-4 w-4 text-destructive-action" />
+                <h4 className="font-medium text-text-primary">Medications Due</h4>
+                <Badge className="bg-destructive-action/10 text-destructive-action text-xs">
+                  {pendingMedications.length} pending
+                </Badge>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Today's Health Dashboard
-                </h3>
-                <p className="text-gray-600 text-sm">Your daily health reminders</p>
+              <div className="space-y-2">
+                {pendingMedications.slice(0, 2).map((med) => (
+                  <div key={med.id} className="flex items-center justify-between py-1">
+                    <span className="text-sm text-text-secondary">{med.name}</span>
+                    <span className="text-xs text-text-secondary">{med.dosage}</span>
+                  </div>
+                ))}
+                {pendingMedications.length > 2 && (
+                  <p className="text-xs text-text-secondary">+{pendingMedications.length - 2} more</p>
+                )}
               </div>
             </div>
-            {(pendingMedications.length > 0 || hasVitalsReminder) && (
-              <div className="flex items-center space-x-1">
-                <AlertTriangle className="h-4 w-4 text-[#0066CC]" />
-                <span className="text-sm text-[#0066CC] font-medium">
-                  {pendingMedications.length + (hasVitalsReminder ? 1 : 0)} pending
-                </span>
+          )}
+
+          {/* Appointments Section */}
+          {upcomingAppointment && (
+            <div className="border-l-4 border-primary-action pl-4 py-2">
+              <div className="flex items-center space-x-2 mb-2">
+                <Calendar className="h-4 w-4 text-primary-action" />
+                <h4 className="font-medium text-text-primary">Next Appointment</h4>
               </div>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            {/* Pending Medications */}
-            {pendingMedications.length > 0 && (
-              <div className="p-4 bg-[#0066CC]/5 rounded-lg border border-[#0066CC]/10">
-                <div className="flex items-center space-x-2 mb-3">
-                  <Pill className="h-4 w-4 text-[#0066CC]" />
-                  <h4 className="font-medium text-gray-900">Medications Due</h4>
-                  <Badge className="bg-[#0066CC]/10 text-[#0066CC] text-xs">
-                    {pendingMedications.length} pending
-                  </Badge>
-                </div>
-                
-                <div className="space-y-3">
-                  {pendingMedications.slice(0, 2).map((medication) => (
-                    <div key={medication.id} className="bg-white p-3 rounded border border-gray-100">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <p className="font-medium text-gray-900">{medication.name} {medication.dosage}</p>
-                          <p className="text-sm text-gray-600">{medication.frequency}</p>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button 
-                          size="sm"
-                          onClick={() => handleMarkTaken(medication.id, medication.name)}
-                          className="flex-1 bg-[#28A745] hover:bg-[#28A745]/90 text-white"
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Take Now
-                        </Button>
-                        <Button 
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSnooze(medication.name)}
-                          className="flex-1 border-gray-200"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-1" />
-                          Snooze
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {pendingMedications.length > 2 && (
-                    <p className="text-sm text-gray-600 text-center">
-                      +{pendingMedications.length - 2} more medication{pendingMedications.length - 2 !== 1 ? 's' : ''}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Upcoming Appointment */}
-            {upcomingAppointment && (
-              <div className="p-4 bg-[#009B8F]/5 rounded-lg border border-[#009B8F]/10">
-                <div className="flex items-center space-x-2 mb-3">
-                  <Calendar className="h-4 w-4 text-[#009B8F]" />
-                  <h4 className="font-medium text-gray-900">Next Appointment</h4>
-                  <Badge className="bg-[#009B8F]/10 text-[#009B8F] text-xs">
-                    Today
-                  </Badge>
-                </div>
-                
-                <div className="bg-white p-3 rounded border border-gray-100">
-                  <div className="mb-2">
-                    <p className="font-medium text-gray-900">{upcomingAppointment.title}</p>
-                    <p className="text-sm text-gray-600">Dr. {upcomingAppointment.doctorName}</p>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 mb-3">
-                    <Clock className="h-4 w-4" />
-                    <span>{format(parseISO(upcomingAppointment.dateTime), 'h:mm a')}</span>
-                    <span>•</span>
-                    <span>{upcomingAppointment.location}</span>
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <Button 
-                      size="sm"
-                      onClick={handleViewAppointmentDetails}
-                      className="flex-1 bg-[#009B8F] hover:bg-[#009B8F]/90 text-white"
-                    >
-                      View Details
-                    </Button>
-                    <Button 
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 border-gray-200"
-                    >
-                      Reschedule
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Vitals Reminder */}
-            {hasVitalsReminder && (
-              <div className="p-4 bg-[#28A745]/5 rounded-lg border border-[#28A745]/10">
-                <div className="flex items-center space-x-2 mb-3">
-                  <Activity className="h-4 w-4 text-[#28A745]" />
-                  <h4 className="font-medium text-gray-900">Vitals Check</h4>
-                  <Badge className="bg-[#28A745]/10 text-[#28A745] text-xs">
-                    Due
-                  </Badge>
-                </div>
-                
-                <div className="bg-white p-3 rounded border border-gray-100">
-                  <p className="text-sm text-gray-600 mb-3">
-                    Time for your daily vitals check - blood pressure and weight
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-text-primary">{upcomingAppointment.type}</p>
+                  <p className="text-xs text-text-secondary">
+                    {format(new Date(upcomingAppointment.dateTime), 'MMM d, h:mm a')}
                   </p>
-                  <Button 
-                    size="sm"
-                    className="w-full bg-[#28A745] hover:bg-[#28A745]/90 text-white"
-                  >
-                    Log Vitals
-                  </Button>
                 </div>
+                <Badge className="bg-primary-action/10 text-primary-action text-xs">
+                  {upcomingAppointment.location}
+                </Badge>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          )}
 
-      <AppointmentDetailModal 
-        appointment={upcomingAppointment || null}
-        isOpen={appointmentModalOpen}
-        onOpenChange={setAppointmentModalOpen}
-      />
-    </>
+          {/* Vitals Section */}
+          {pendingVitals && (
+            <div className="border-l-4 border-accent-success pl-4 py-2">
+              <div className="flex items-center space-x-2 mb-2">
+                <Activity className="h-4 w-4 text-accent-success" />
+                <h4 className="font-medium text-text-primary">Vitals Check</h4>
+                <Badge className="bg-accent-success/10 text-accent-success text-xs">
+                  Recommended
+                </Badge>
+              </div>
+              <p className="text-sm text-text-secondary">Last recorded 3 days ago</p>
+            </div>
+          )}
+
+          {/* All Clear State */}
+          {!hasOverdueItems && !upcomingAppointment && !pendingVitals && (
+            <div className="text-center py-4">
+              <CheckCircle2 className="h-8 w-8 text-primary-action mx-auto mb-2" />
+              <p className="text-sm font-medium text-text-primary">All caught up!</p>
+              <p className="text-xs text-text-secondary">Your health routine is on track</p>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex space-x-2 mt-4 pt-4 border-t border-border-divider">
+          <Button size="sm" className="flex-1 bg-primary-action hover:bg-primary-action/90 text-white">
+            <Clock className="h-4 w-4 mr-2" />
+            Log Vitals
+          </Button>
+          <Button size="sm" variant="outline" className="flex-1 border-border-divider text-text-primary hover:bg-accent-success/10">
+            <Pill className="h-4 w-4 mr-2" />
+            Mark Taken
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

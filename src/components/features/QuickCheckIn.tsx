@@ -12,9 +12,9 @@ const QuickCheckIn: React.FC = () => {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
 
   const getMoodIcon = (value: number) => {
-    if (value >= 4) return <Smile className="h-5 w-5 text-[#28A745]" />;
-    if (value >= 3) return <Meh className="h-5 w-5 text-[#0066CC]" />;
-    return <Frown className="h-5 w-5 text-[#009B8F]" />;
+    if (value >= 4) return <Smile className="h-5 w-5 text-primary-action" />;
+    if (value >= 3) return <Meh className="h-5 w-5 text-accent-success" />;
+    return <Frown className="h-5 w-5 text-text-secondary" />;
   };
 
   const getMoodLabel = (value: number) => {
@@ -39,31 +39,31 @@ const QuickCheckIn: React.FC = () => {
 
   if (hasCheckedIn) {
     return (
-      <Card className="bg-white border border-gray-100 shadow-md">
+      <Card className="bg-surface-card border border-border-divider shadow-sm">
         <CardContent className="p-6 text-center">
-          <div className="text-[#28A745] text-3xl mb-3">✓</div>
-          <h3 className="font-semibold text-gray-900 mb-2">Check-in Complete!</h3>
-          <p className="text-gray-600 text-sm">Thanks for sharing how you're feeling today.</p>
+          <div className="text-primary-action text-3xl mb-3">✓</div>
+          <h3 className="font-semibold text-text-primary mb-2">Check-in Complete!</h3>
+          <p className="text-text-secondary text-sm">Thanks for sharing how you're feeling today.</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="bg-white border border-gray-100 shadow-md">
+    <Card className="bg-surface-card border border-border-divider shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-center space-x-2 mb-4">
-          <Heart className="h-5 w-5 text-[#0066CC]" />
-          <h3 className="font-semibold text-gray-900">Daily Check-in</h3>
+          <Heart className="h-5 w-5 text-primary-action" />
+          <h3 className="font-semibold text-text-primary">Daily Check-in</h3>
         </div>
 
         <div className="space-y-6">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-gray-900">How are you feeling?</label>
+              <label className="text-sm font-medium text-text-primary">How are you feeling?</label>
               <div className="flex items-center space-x-2">
                 {getMoodIcon(mood[0])}
-                <span className="text-sm text-gray-600">{getMoodLabel(mood[0])}</span>
+                <span className="text-sm text-text-secondary">{getMoodLabel(mood[0])}</span>
               </div>
             </div>
             <Slider
@@ -78,8 +78,8 @@ const QuickCheckIn: React.FC = () => {
 
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-gray-900">Any symptoms?</label>
-              <span className="text-sm text-gray-600">{getSymptomLabel(symptoms[0])}</span>
+              <label className="text-sm font-medium text-text-primary">Any symptoms?</label>
+              <span className="text-sm text-text-secondary">{getSymptomLabel(symptoms[0])}</span>
             </div>
             <Slider
               value={symptoms}
@@ -91,7 +91,7 @@ const QuickCheckIn: React.FC = () => {
             />
           </div>
 
-          <Button onClick={handleCheckIn} className="w-full bg-[#0066CC] hover:bg-[#0066CC]/90">
+          <Button onClick={handleCheckIn} className="w-full bg-primary-action hover:bg-primary-action/90 text-white">
             Complete Check-in
           </Button>
         </div>

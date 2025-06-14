@@ -15,10 +15,10 @@ const MedicationStreak: React.FC<MedicationStreakProps> = ({
   todayCompleted
 }) => {
   const getStreakColor = (streak: number) => {
-    if (streak >= 30) return 'text-[#28A745]';
-    if (streak >= 14) return 'text-[#0066CC]';
-    if (streak >= 7) return 'text-[#009B8F]';
-    return 'text-gray-500';
+    if (streak >= 30) return 'text-primary-action';
+    if (streak >= 14) return 'text-accent-success';
+    if (streak >= 7) return 'text-accent-success';
+    return 'text-text-secondary';
   };
 
   const getStreakEmoji = (streak: number) => {
@@ -29,12 +29,12 @@ const MedicationStreak: React.FC<MedicationStreakProps> = ({
   };
 
   return (
-    <Card className="bg-white border border-gray-100 shadow-md">
+    <Card className="bg-surface-card border border-border-divider shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <Flame className="h-5 w-5 text-[#0066CC]" />
-            <h3 className="font-semibold text-gray-900">Medication Streak</h3>
+            <Flame className="h-5 w-5 text-primary-action" />
+            <h3 className="font-semibold text-text-primary">Medication Streak</h3>
           </div>
           <div className="text-2xl">{getStreakEmoji(currentStreak)}</div>
         </div>
@@ -43,20 +43,20 @@ const MedicationStreak: React.FC<MedicationStreakProps> = ({
           <div className={`text-3xl font-bold ${getStreakColor(currentStreak)} mb-2`}>
             {currentStreak} days
           </div>
-          <p className="text-gray-600 text-sm">
+          <p className="text-text-secondary text-sm">
             {todayCompleted ? "Great job! Keep it up!" : "Take your medications to continue your streak"}
           </p>
         </div>
 
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-1">
-            <Calendar className="h-4 w-4 text-gray-500" />
-            <span className="text-gray-600">Best: {bestStreak} days</span>
+            <Calendar className="h-4 w-4 text-text-secondary" />
+            <span className="text-text-secondary">Best: {bestStreak} days</span>
           </div>
           <div className={`px-2 py-1 rounded-full text-xs ${
             todayCompleted 
-              ? 'bg-[#28A745]/10 text-[#28A745]' 
-              : 'bg-[#0066CC]/10 text-[#0066CC]'
+              ? 'bg-primary-action/10 text-primary-action' 
+              : 'bg-accent-success/10 text-accent-success'
           }`}>
             {todayCompleted ? 'Complete ✓' : 'Pending'}
           </div>
@@ -69,8 +69,8 @@ const MedicationStreak: React.FC<MedicationStreakProps> = ({
               key={i}
               className={`w-2 h-2 rounded-full ${
                 i < Math.min(currentStreak, 7) 
-                  ? 'bg-[#0066CC]' 
-                  : 'bg-gray-200'
+                  ? 'bg-primary-action' 
+                  : 'bg-border-divider'
               }`}
             />
           ))}

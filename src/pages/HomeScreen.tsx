@@ -17,10 +17,10 @@ const HomeScreen: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+      <div className="min-h-screen bg-background-main flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading...</h2>
-          <p className="text-gray-600">Please wait while we load your data</p>
+          <h2 className="text-xl font-semibold text-text-primary mb-2">Loading...</h2>
+          <p className="text-text-secondary">Please wait while we load your data</p>
         </div>
       </div>
     );
@@ -28,14 +28,14 @@ const HomeScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] font-inter">
+      <div className="min-h-screen bg-background-main font-inter">
         <Header />
         <main className="px-4 py-6 pb-24 space-y-6">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-text-primary mb-2">
               Hello, {user.name.split(' ')[0]}! 👋
             </h1>
-            <p className="text-gray-600">Loading your health information...</p>
+            <p className="text-text-secondary">Loading your health information...</p>
           </div>
         </main>
         <BottomNavigation />
@@ -61,16 +61,16 @@ const HomeScreen: React.FC = () => {
   const todayCompleted = true;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] font-inter">
+    <div className="min-h-screen bg-background-main font-inter">
       <Header />
       
       <main className="px-4 py-6 pb-24 space-y-6">
         {/* Welcome Message */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">
             Hello, {user.name.split(' ')[0]}! 👋
           </h1>
-          <p className="text-gray-600">
+          <p className="text-text-secondary">
             Your health information is secure and up to date
           </p>
         </div>
