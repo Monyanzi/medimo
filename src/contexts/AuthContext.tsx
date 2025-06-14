@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthContextType } from '@/types';
 import { toast } from 'sonner';
+import { regenerateQRCode as serviceRegenerateQRCode, loadQRCodeFromStorage } from '@/services/qrCodeService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -52,15 +53,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ]
   };
 
+  const generateQRCodeForUser = async (userData: User): Promise<User> => {
+    try {
+      console.log('Generating QR code for user...');
+      const { data, imageUrl } = await serviceRegenerateQRCode(userData);
+      
+      return {
+        ...userData,
+        qrCode: {
+          id: data.id,
+          imageUrl: imageUrl,
+          generatedAt: data.generatedAt
+        }
+      };
+    } catch (error) {
+      console.error('Failed to generate QR code:', error);
+      toast.error('Failed to generate QR code');
+      return userData;
+    }
+  };
+
   useEffect(() => {
     console.log('AuthProvider initializing...');
-    // Simulate loading delay
-    const timer = setTimeout(() => {
-      setUser(mockUser);
-      setIsLoading(false);
-      console.log('User loaded:', mockUser);
-    }, 1000);
+    const initializeUser = async () => {
+      try {
+        // Check if QR code exists in storage
+        const storedQRCode = loadQRCodeFromStorage();
+        
+        let userWithQR = mockUser;
+        
+        if (storedQRCode) {
+          console.log('Loading existing QR code from storage');
+          userWithQR = {
+            ...mockUser,
+            qrCode: {
+              id: storedQRCode.data.id,
+              imageUrl: storedQRCode.imageUrl,
+              generatedAt: storedQRCode.data.generatedAt
+            }
+          };
+        } else {
+          console.log('Generating new QR code at startup');
+          userWithQR = await generateQRCodeForUser(mockUser);
+        }
+        
+        setUser(userWithQR);
+        console.log('User loaded with QR code:', userWithQR);
+      } catch (error) {
+        console.error('Error initializing user:', error);
+        setUser(mockUser);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    const timer = setTimeout(initializeUser, 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -71,7 +118,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      setUser(mockUser);
+      const userWithQR = await generateQRCodeForUser(mockUser);
+      setUser(userWithQR);
       toast.success('Login successful!');
     } catch (err) {
       const errorMessage = 'Login failed. Please try again.';
@@ -87,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setError(null);
     localStorage.removeItem('medimo_auth_token');
+    localStorage.removeItem('medimo_qr_code');
     toast.success('Logged out successfully');
   };
 
@@ -100,8 +149,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      toast.success('Profile updated successfully!');
+      
+      // Regenerate QR code if critical data changed
+      const criticalFields = ['name', 'dob', 'bloodType', 'allergies', 'conditions', 'emergencyContact', 'organDonor'];
+      const hasCriticalChanges = criticalFields.some(field => userData[field as keyof User] !== undefined);
+      
+      if (hasCriticalChanges) {
+        console.log('Critical data changed, regenerating QR code...');
+        const userWithNewQR = await generateQRCodeForUser(updatedUser);
+        setUser(userWithNewQR);
+        toast.success('Profile updated and QR code regenerated!');
+      } else {
+        setUser(updatedUser);
+        toast.success('Profile updated successfully!');
+      }
     } catch (err) {
       const errorMessage = 'Failed to update profile. Please try again.';
       setError(errorMessage);
@@ -112,11 +173,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const regenerateQRCode = async (): Promise<void> => {
+    if (!user) throw new Error('No user logged in');
+    
+    try {
+      const userWithNewQR = await generateQRCodeForUser(user);
+      setUser(userWithNewQR);
+      toast.success('QR code regenerated successfully!');
+    } catch (err) {
+      const errorMessage = 'Failed to regenerate QR code. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
   const contextValue: AuthContextType = {
     user,
     login,
     logout,
     updateUser,
+    regenerateQRCode,
     isLoading,
     error
   };

@@ -5,8 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { format, parseISO } from 'date-fns';
-import QRCode from 'qrcode';
-import { Download, AlertTriangle } from 'lucide-react';
+import { Download, AlertTriangle, RotateCcw } from 'lucide-react';
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -14,50 +13,23 @@ interface QRCodeModalProps {
 }
 
 const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onOpenChange }) => {
-  const { user } = useAuth();
-  const [qrCodeUrl, setQrCodeUrl] = React.useState<string>('');
-
-  React.useEffect(() => {
-    if (!user || !isOpen) return;
-
-    const emergencyData = {
-      name: user.name,
-      dob: format(parseISO(user.dob), 'MM/dd/yyyy'),
-      bloodType: user.bloodType,
-      allergies: user.allergies.length > 0 ? user.allergies.join(', ') : 'None',
-      conditions: user.conditions.length > 0 ? user.conditions.join(', ') : 'None',
-      emergencyContact: {
-        name: user.emergencyContact.name,
-        phone: user.emergencyContact.phone,
-        relationship: user.emergencyContact.relationship
-      },
-      organDonor: user.organDonor ? 'Yes' : 'No',
-      medicalId: user.id
-    };
-
-    const dataString = JSON.stringify(emergencyData);
-    
-    QRCode.toDataURL(dataString, {
-      width: 300,
-      margin: 2,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    }).then(url => {
-      setQrCodeUrl(url);
-    }).catch(err => {
-      console.error('Error generating QR code:', err);
-    });
-  }, [user, isOpen]);
+  const { user, regenerateQRCode, isLoading } = useAuth();
 
   const downloadQRCode = () => {
-    if (!qrCodeUrl || !user) return;
+    if (!user?.qrCode?.imageUrl || !user) return;
     
     const link = document.createElement('a');
     link.download = `${user.name.replace(/\s+/g, '_')}_Emergency_QR.png`;
-    link.href = qrCodeUrl;
+    link.href = user.qrCode.imageUrl;
     link.click();
+  };
+
+  const handleRegenerateQR = async () => {
+    try {
+      await regenerateQRCode();
+    } catch (error) {
+      console.error('Failed to regenerate QR code:', error);
+    }
   };
 
   if (!user) return null;
@@ -79,11 +51,26 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onOpenChange }) => {
             </p>
           </div>
 
-          {qrCodeUrl && (
+          {user.qrCode?.imageUrl && (
             <div className="flex justify-center">
               <Card className="p-4 bg-white">
-                <img src={qrCodeUrl} alt="Emergency QR Code" className="w-64 h-64" />
+                <img 
+                  src={user.qrCode.imageUrl} 
+                  alt="Emergency QR Code" 
+                  className="w-64 h-64" 
+                />
               </Card>
+            </div>
+          )}
+
+          {user.qrCode?.generatedAt && (
+            <div className="text-center">
+              <p className="text-xs text-text-secondary">
+                Generated: {format(parseISO(user.qrCode.generatedAt), 'MMM d, yyyy h:mm a')}
+              </p>
+              <p className="text-xs text-text-secondary">
+                ID: {user.qrCode.id}
+              </p>
             </div>
           )}
 
@@ -103,19 +90,29 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onOpenChange }) => {
             <Button 
               onClick={downloadQRCode}
               className="flex-1 bg-accent-success hover:bg-accent-success/90"
-              disabled={!qrCodeUrl}
+              disabled={!user.qrCode?.imageUrl}
             >
               <Download className="h-4 w-4 mr-2" />
               Download QR Code
             </Button>
             <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
+              onClick={handleRegenerateQR}
+              variant="outline"
               className="flex-1"
+              disabled={isLoading}
             >
-              Close
+              <RotateCcw className="h-4 w-4 mr-2" />
+              {isLoading ? 'Regenerating...' : 'Regenerate'}
             </Button>
           </div>
+
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            className="w-full"
+          >
+            Close
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

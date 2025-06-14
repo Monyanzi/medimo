@@ -8,18 +8,55 @@ export interface User {
   allergies: string[];
   conditions: string[];
   organDonor: boolean;
-  emergencyContact: { 
-    name: string; 
-    phone: string; 
-    relationship: string; 
+  emergencyContact: {
+    name: string;
+    phone: string;
+    relationship: string;
   };
-  insurance?: { 
-    provider: string; 
-    policyNumber: string; 
-    memberId: string; 
+  insurance?: {
+    provider: string;
+    policyNumber: string;
+    memberId: string;
   };
   roles: string[];
   permissions: string[];
+  qrCode?: {
+    id: string;
+    imageUrl: string;
+    generatedAt: string;
+  };
+}
+
+export interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  updateUser: (userData: Partial<User>) => Promise<void>;
+  regenerateQRCode: () => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface HealthRecord {
+  id: string;
+  type: 'appointment' | 'medication' | 'vital' | 'document' | 'test';
+  title: string;
+  description?: string;
+  date: string;
+  provider?: string;
+  status?: string;
+  data?: any;
+}
+
+export interface Appointment {
+  id: string;
+  title: string;
+  provider: string;
+  location: string;
+  dateTime: string;
+  type: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  notes?: string;
 }
 
 export interface Medication {
@@ -27,95 +64,29 @@ export interface Medication {
   name: string;
   dosage: string;
   frequency: string;
-  instructions?: string;
-  status: 'active' | 'discontinued';
+  startDate: string;
+  endDate?: string;
+  prescribedBy: string;
+  status: 'active' | 'completed' | 'discontinued';
+  notes?: string;
 }
 
-export interface Appointment {
+export interface Vital {
   id: string;
-  title: string;
-  doctorName: string;
-  location: string;
-  dateTime: string; // ISO 8601 format
+  type: string;
+  value: string;
+  unit: string;
+  recordedAt: string;
+  recordedBy?: string;
   notes?: string;
 }
 
 export interface Document {
   id: string;
-  fileName: string;
-  fileType: 'PDF' | 'Image' | 'Lab Report' | 'Prescription' | 'Insurance Card' | 'Medical Record';
-  uploadDate: string; // ISO 8601 format
-  storagePath: string; // Local device path
-  category: 'Medical Records' | 'Lab Results' | 'Prescriptions' | 'Insurance' | 'Images' | 'Other';
-  fileSize: number; // in bytes
-  description?: string;
-  tags?: string[];
-}
-
-export interface TimelineEvent {
-  id: string;
-  title: string;
-  details: string;
-  date: string;
-  category: 'Medication' | 'Appointment' | 'Document' | 'Vitals' | 'Lab Result' | 'Observation' | 'Treatment';
-  relatedId?: string; // ID of related medication, appointment, document, etc.
-  icon?: string;
-  isEditable?: boolean;
-}
-
-export interface VitalSigns {
-  id: string;
-  bloodPressureSystolic?: number;
-  bloodPressureDiastolic?: number;
-  heartRate?: number;
-  weight?: number;
-  height?: number;
-  temperature?: number;
-  oxygenSaturation?: number;
-  notes?: string;
-  recordedDate: string;
-}
-
-export type Permission = 
-  | 'VIEW_DASHBOARD' 
-  | 'VIEW_TIMELINE' 
-  | 'VIEW_VAULT'
-  | 'UPDATE_OWN_PROFILE'
-  | 'GENERATE_EMERGENCY_QR'
-  | 'EXPORT_PDF_REPORT'
-  | 'MANAGE_MEDICATIONS'
-  | 'MANAGE_APPOINTMENTS'
-  | 'MANAGE_DOCUMENTS';
-
-export interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  updateUser: (userData: Partial<User>) => Promise<void>;
-  isLoading: boolean;
-  error: string | null;
-}
-
-export interface HealthDataContextType {
-  medications: Medication[];
-  appointments: Appointment[];
-  documents: Document[];
-  timelineEvents: TimelineEvent[];
-  vitalSigns: VitalSigns[];
-  addMedication: (medication: Omit<Medication, 'id'>) => Promise<void>;
-  updateMedication: (id: string, medication: Partial<Medication>) => Promise<void>;
-  deleteMedication: (id: string) => Promise<void>;
-  addAppointment: (appointment: Omit<Appointment, 'id'>) => Promise<void>;
-  updateAppointment: (id: string, appointment: Partial<Appointment>) => Promise<void>;
-  deleteAppointment: (id: string) => Promise<void>;
-  addDocument: (document: Omit<Document, 'id'>) => Promise<void>;
-  deleteDocument: (id: string) => Promise<void>;
-  addTimelineEvent: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
-  updateTimelineEvent: (id: string, event: Partial<TimelineEvent>) => Promise<void>;
-  deleteTimelineEvent: (id: string) => Promise<void>;
-  addVitalSigns: (vitals: Omit<VitalSigns, 'id'>) => Promise<void>;
-  updateVitalSigns: (id: string, vitals: Partial<VitalSigns>) => Promise<void>;
-  deleteVitalSigns: (id: string) => Promise<void>;
-  isLoading: boolean;
-  error: string | null;
+  name: string;
+  type: string;
+  uploadDate: string;
+  size: string;
+  url: string;
+  category: string;
 }

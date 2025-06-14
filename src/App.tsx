@@ -12,6 +12,7 @@ import HomeScreen from "./pages/HomeScreen";
 import TimelineScreen from "./pages/TimelineScreen";
 import VaultScreen from "./pages/VaultScreen";
 import ProfileScreen from "./pages/ProfileScreen";
+import PersonalInformationPage from "./pages/PersonalInformationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -42,6 +43,7 @@ const App = () => {
                       <Route path="/timeline" element={<TimelineScreen />} />
                       <Route path="/vault" element={<VaultScreen />} />
                       <Route path="/profile" element={<ProfileScreen />} />
+                      <Route path="/profile/personal-information" element={<PersonalInformationPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
