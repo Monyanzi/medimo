@@ -7,6 +7,7 @@ import { TimelineEvent } from '@/types';
 import { format, parseISO } from 'date-fns';
 import { Pill, Calendar, FileText, Activity, Stethoscope, Clock, Trash2, Edit, Check, X } from 'lucide-react';
 import EditMedicationTimelineModal from '@/components/modals/EditMedicationTimelineModal';
+import EditAppointmentTimelineModal from '@/components/modals/EditAppointmentTimelineModal';
 
 interface TimelineEventCardProps {
   event: TimelineEvent;
@@ -20,6 +21,7 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
   const [editedDetails, setEditedDetails] = useState(event.details);
 
   const [isEditMedicationModalOpen, setIsEditMedicationModalOpen] = useState(false);
+  const [isEditAppointmentModalOpen, setIsEditAppointmentModalOpen] = useState(false);
 
   const getCategoryIcon = (category: TimelineEvent['category']) => {
     switch (category) {
@@ -68,6 +70,8 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
   const handleEditClick = () => {
     if (event.category === 'Medication' && event.relatedId) {
       setIsEditMedicationModalOpen(true);
+    } else if (event.category === 'Appointment' && event.relatedId) {
+      setIsEditAppointmentModalOpen(true);
     } else {
       setEditedTitle(event.title);
       setEditedDetails(event.details);
@@ -176,10 +180,20 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
         </CardContent>
       </Card>
 
+      {/* Medication Edit Modal */}
       {event.category === 'Medication' && event.relatedId && (
         <EditMedicationTimelineModal
           isOpen={isEditMedicationModalOpen}
           onOpenChange={setIsEditMedicationModalOpen}
+          event={event}
+        />
+      )}
+
+      {/* Appointment Edit Modal */}
+      {event.category === 'Appointment' && event.relatedId && (
+        <EditAppointmentTimelineModal
+          isOpen={isEditAppointmentModalOpen}
+          onOpenChange={setIsEditAppointmentModalOpen}
           event={event}
         />
       )}
