@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, X, Pill, Calendar, FileText, Activity } from 'lucide-react';
+import { Plus, X, Pill, Calendar, FileText, Activity, ScanLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLocation } from 'react-router-dom';
@@ -10,8 +10,9 @@ import AddMedicationModal from '@/components/modals/AddMedicationModal';
 import AddAppointmentModal from '@/components/modals/AddAppointmentModal';
 import UploadDocumentModal from '@/components/modals/UploadDocumentModal';
 import LogVitalsModal from '@/components/modals/LogVitalsModal';
+import SmartScanModal from '@/components/modals/SmartScanModal';
 
-type ModalType = 'medication' | 'appointment' | 'document' | 'vitals' | null;
+type ModalType = 'medication' | 'appointment' | 'document' | 'vitals' | 'scan' | null;
 
 const FAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,6 +35,12 @@ const FAB: React.FC = () => {
   // Define actions based on current route
   const getActionsForRoute = () => {
     const allActions = [
+      {
+        id: 'scan' as ModalType,
+        label: 'Smart Scan',
+        icon: ScanLine,
+        color: 'bg-indigo-500 hover:bg-indigo-600'
+      },
       {
         id: 'medication' as ModalType,
         label: 'Add Medication',
@@ -60,9 +67,9 @@ const FAB: React.FC = () => {
       }
     ];
 
-    // Context-aware filtering
+    // Context-aware filtering - Smart Scan always available
     if (location.pathname === '/vault') {
-      return allActions.filter(action => action.id === 'document');
+      return allActions.filter(action => ['scan', 'document'].includes(action.id));
     } else if (location.pathname === '/timeline') {
       return allActions.filter(action => action.id !== 'document');
     } else {
@@ -130,6 +137,7 @@ const FAB: React.FC = () => {
       </div>
 
       {/* Modals */}
+      <SmartScanModal isOpen={activeModal === 'scan'} onOpenChange={() => setActiveModal(null)} />
       <AddMedicationModal isOpen={activeModal === 'medication'} onOpenChange={() => setActiveModal(null)} />
       <AddAppointmentModal isOpen={activeModal === 'appointment'} onOpenChange={() => setActiveModal(null)} />
       <UploadDocumentModal isOpen={activeModal === 'document'} onOpenChange={() => setActiveModal(null)} />

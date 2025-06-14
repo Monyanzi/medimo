@@ -6,6 +6,9 @@ import Header from '@/components/shared/Header';
 import BottomNavigation from '@/components/shared/BottomNavigation';
 import DigitalHealthKey from '@/components/features/DigitalHealthKey';
 import UpdateCard from '@/components/features/UpdateCard';
+import HealthScore from '@/components/features/HealthScore';
+import MedicationStreak from '@/components/features/MedicationStreak';
+import QuickCheckIn from '@/components/features/QuickCheckIn';
 import FAB from '@/components/shared/FAB';
 
 const HomeScreen: React.FC = () => {
@@ -49,6 +52,14 @@ const HomeScreen: React.FC = () => {
   // Get active medications
   const activeMedications = medications.filter(med => med.status === 'active');
 
+  // Mock data for gamification features
+  const adherenceScore = 85;
+  const completenessScore = 75;
+  const checkInScore = 90;
+  const currentStreak = 12;
+  const bestStreak = 28;
+  const todayCompleted = true;
+
   return (
     <div className="min-h-screen bg-background-main font-inter">
       <Header />
@@ -63,6 +74,23 @@ const HomeScreen: React.FC = () => {
             Your health information is secure and up to date
           </p>
         </div>
+
+        {/* Health Score - New gamified feature */}
+        <HealthScore 
+          adherenceScore={adherenceScore}
+          completenessScore={completenessScore}
+          checkInScore={checkInScore}
+        />
+
+        {/* Medication Streak - New gamified feature */}
+        <MedicationStreak 
+          currentStreak={currentStreak}
+          bestStreak={bestStreak}
+          todayCompleted={todayCompleted}
+        />
+
+        {/* Quick Check-in - New engagement feature */}
+        <QuickCheckIn />
 
         {/* Digital Health Key */}
         <div className="space-y-4">
