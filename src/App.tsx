@@ -12,29 +12,41 @@ import VaultScreen from "./pages/VaultScreen";
 import ProfileScreen from "./pages/ProfileScreen";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
-const App = () => (
-  <BrowserRouter>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <HealthDataProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/" element={<HomeScreen />} />
-              <Route path="/timeline" element={<TimelineScreen />} />
-              <Route path="/vault" element={<VaultScreen />} />
-              <Route path="/profile" element={<ProfileScreen />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </TooltipProvider>
-        </HealthDataProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </BrowserRouter>
-);
+const App = () => {
+  console.log('App component rendering');
+  
+  return (
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <HealthDataProvider>
+            <TooltipProvider>
+              <div className="min-h-screen w-full bg-background-main">
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  <Route path="/" element={<HomeScreen />} />
+                  <Route path="/timeline" element={<TimelineScreen />} />
+                  <Route path="/vault" element={<VaultScreen />} />
+                  <Route path="/profile" element={<ProfileScreen />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
+            </TooltipProvider>
+          </HealthDataProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  );
+};
 
 export default App;
