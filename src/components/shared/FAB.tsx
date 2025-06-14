@@ -21,7 +21,7 @@ const FAB: React.FC = () => {
 
   const toggleFAB = () => {
     setIsOpen(!isOpen);
-    if (isOpen) { // If closing FAB, also close any active modal
+    if (isOpen) {
       setActiveModal(null);
     }
   };
@@ -29,51 +29,48 @@ const FAB: React.FC = () => {
   const handleAction = (action: ModalType) => {
     console.log(`FAB Action: ${action}`);
     setActiveModal(action);
-    setIsOpen(false); // Close FAB menu when modal opens
+    setIsOpen(false);
   };
 
-  // Define actions based on current route
   const getActionsForRoute = () => {
     const allActions = [
       {
         id: 'scan' as ModalType,
         label: 'Smart Scan',
         icon: ScanLine,
-        color: 'bg-indigo-500 hover:bg-indigo-600'
+        color: 'bg-[#0066CC] hover:bg-[#0066CC]/90'
       },
       {
         id: 'medication' as ModalType,
         label: 'Add Medication',
         icon: Pill,
-        color: 'bg-blue-500 hover:bg-blue-600'
+        color: 'bg-[#009B8F] hover:bg-[#009B8F]/90'
       },
       {
         id: 'appointment' as ModalType,
         label: 'Add Appointment', 
         icon: Calendar,
-        color: 'bg-purple-500 hover:bg-purple-600'
+        color: 'bg-[#0066CC] hover:bg-[#0066CC]/90'
       },
       {
         id: 'document' as ModalType,
         label: 'Upload Document',
         icon: FileText,
-        color: 'bg-green-500 hover:bg-green-600'
+        color: 'bg-[#28A745] hover:bg-[#28A745]/90'
       },
       {
         id: 'vitals' as ModalType,
         label: 'Log Vitals',
         icon: Activity,
-        color: 'bg-red-500 hover:bg-red-600'
+        color: 'bg-[#009B8F] hover:bg-[#009B8F]/90'
       }
     ];
 
-    // Context-aware filtering - Smart Scan always available
     if (location.pathname === '/vault') {
       return allActions.filter(action => ['scan', 'document'].includes(action.id));
     } else if (location.pathname === '/timeline') {
       return allActions.filter(action => action.id !== 'document');
     } else {
-      // Home and other pages show all actions
       return allActions;
     }
   };
@@ -82,6 +79,7 @@ const FAB: React.FC = () => {
 
   return (
     <>
+      {/* Fixed positioning: bottom-20 (80px) to stay above profile button in navigation */}
       <div className="fixed bottom-20 right-4 z-40 font-inter">
         {/* Action Buttons */}
         <div className={cn(
@@ -99,7 +97,7 @@ const FAB: React.FC = () => {
                 )}
                 style={{ transitionDelay: `${index * 50}ms` }}
               >
-                <span className="bg-surface-card text-text-primary px-3 py-2 rounded-lg shadow-lg text-sm font-medium whitespace-nowrap border border-border-divider">
+                <span className="bg-white text-gray-900 px-3 py-2 rounded-lg shadow-lg text-sm font-medium whitespace-nowrap border border-gray-200">
                   {action.label}
                 </span>
                 <Button
@@ -122,7 +120,7 @@ const FAB: React.FC = () => {
           onClick={toggleFAB}
           className={cn(
             "h-14 w-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110",
-            "bg-primary-action hover:bg-primary-action/90 text-white",
+            "bg-[#0066CC] hover:bg-[#0066CC]/90 text-white",
             isOpen && "rotate-45"
           )}
           aria-expanded={isOpen}
