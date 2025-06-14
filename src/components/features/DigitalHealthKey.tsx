@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Shield, QrCode, Share2, AlertTriangle } from 'lucide-react';
+import { Shield, QrCode, Share2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import QRCodeModal from '@/components/modals/QRCodeModal';
 import { User } from '@/types';
 
@@ -13,6 +13,7 @@ interface DigitalHealthKeyProps {
 
 const DigitalHealthKey: React.FC<DigitalHealthKeyProps> = ({ user }) => {
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const criticalInfoCount = user.conditions.length + user.allergies.length;
   const hasEmergencyContact = user.emergencyContact.name && user.emergencyContact.phone;
@@ -42,7 +43,17 @@ const DigitalHealthKey: React.FC<DigitalHealthKeyProps> = ({ user }) => {
           <div className="bg-accent-success/5 rounded-lg p-4 mb-4 border border-accent-success/20">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-text-primary">Critical Information Ready</span>
-              <span className="text-sm font-bold text-primary-action">{criticalInfoCount} items</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-bold text-primary-action">{criticalInfoCount} items</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="h-6 w-6 p-0"
+                >
+                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4 text-xs">
@@ -65,6 +76,57 @@ const DigitalHealthKey: React.FC<DigitalHealthKeyProps> = ({ user }) => {
                 </span>
               </div>
             </div>
+
+            {isExpanded && (
+              <div className="mt-4 pt-4 border-t border-accent-success/20 space-y-3">
+                {user.conditions.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-text-primary mb-2">Medical Conditions:</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {user.conditions.map((condition, index) => (
+                        <Badge key={index} variant="outline" className="text-xs bg-destructive-action/10 text-destructive-action border-destructive-action/30">
+                          {condition}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {user.allergies.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-text-primary mb-2">Allergies:</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {user.allergies.map((allergy, index) => (
+                        <Badge key={index} variant="outline" className="text-xs bg-orange-100 text-orange-800 border-orange-300">
+                          {allergy}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {hasEmergencyContact && (
+                  <div>
+                    <h4 className="text-sm font-medium text-text-primary mb-2">Emergency Contact:</h4>
+                    <div className="text-xs">
+                      <p className="font-medium">{user.emergencyContact.name}</p>
+                      <p className="text-text-secondary">{user.emergencyContact.relationship}</p>
+                      <p className="text-primary-action font-mono">{user.emergencyContact.phone}</p>
+                    </div>
+                  </div>
+                )}
+
+                {user.insurance && (
+                  <div>
+                    <h4 className="text-sm font-medium text-text-primary mb-2">Insurance:</h4>
+                    <div className="text-xs space-y-1">
+                      <p><span className="text-text-secondary">Provider:</span> <span className="font-medium">{user.insurance.provider}</span></p>
+                      <p><span className="text-text-secondary">Member ID:</span> <span className="font-mono">{user.insurance.memberId}</span></p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-3">
