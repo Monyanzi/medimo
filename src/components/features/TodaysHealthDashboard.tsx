@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Pill, Activity, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, differenceInDays, parseISO, isToday, isTomorrow } from 'date-fns';
 import { useMedicationAdherence } from '@/contexts/MedicationAdherenceContext';
 import { toast } from 'sonner';
 
@@ -21,7 +21,21 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
   
   const pendingMedications = activeMedications.filter(med => !isMedicationTakenToday(med.id));
   const takenMedications = activeMedications.filter(med => isMedicationTakenToday(med.id));
+  
+  // Get medications expiring within 7 days
+  const expiringMedications = activeMedications.filter(med => {
+    if (!med.prescriptionPeriod?.endDate) return false;
+    const daysUntilExpiry = differenceInDays(parseISO(med.prescriptionPeriod.endDate), new Date());
+    return daysUntilExpiry >= 0 && daysUntilExpiry <= 7;
+  });
+
+  // Get days until upcoming appointment
+  const appointmentDays = upcomingAppointment ? 
+    differenceInDays(parseISO(upcomingAppointment.dateTime), new Date()) : null;
+
   const hasOverdueItems = pendingMedications.length > 0;
+  const hasExpiringMeds = expiringMedications.length > 0;
+  const hasUpcomingAppointment = !!upcomingAppointment;
 
   const handleMarkTaken = (medication: any) => {
     markMedicationTaken(medication.id, medication.name, medication.dosage);
@@ -29,13 +43,18 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
   };
 
   const getPriorityIcon = () => {
-    if (hasOverdueItems) return <AlertTriangle className="h-5 w-5 text-destructive-action" />;
+    if (hasOverdueItems || hasExpiringMeds) return <AlertTriangle className="h-5 w-5 text-destructive-action" />;
     return <CheckCircle2 className="h-5 w-5 text-primary-action" />;
   };
 
   const getPriorityMessage = () => {
     if (hasOverdueItems) return `${pendingMedications.length} medication${pendingMedications.length > 1 ? 's' : ''} pending`;
-    if (upcomingAppointment) return 'Next appointment today';
+    if (hasExpiringMeds) return `${expiringMedications.length} medication${expiringMedications.length > 1 ? 's' : ''} expiring soon`;
+    if (hasUpcomingAppointment && appointmentDays !== null) {
+      if (appointmentDays === 0) return 'Appointment today';
+      if (appointmentDays === 1) return 'Appointment tomorrow';
+      return `Appointment in ${appointmentDays} days`;
+    }
     return 'All caught up! Great job';
   };
 
@@ -49,14 +68,46 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
           </div>
           <div className="flex items-center space-x-2">
             {getPriorityIcon()}
-            <span className={`text-sm font-medium ${hasOverdueItems ? 'text-destructive-action' : 'text-primary-action'}`}>
+            <span className={`text-sm font-medium ${(hasOverdueItems || hasExpiringMeds) ? 'text-destructive-action' : 'text-primary-action'}`}>
               {getPriorityMessage()}
             </span>
           </div>
         </div>
 
         <div className="space-y-4">
-          {/* Medications Section */}
+          {/* Expiring Medications Alert */}
+          {hasExpiringMeds && (
+            <div className="border-l-4 border-orange-500 pl-4 py-2">
+              <div className="flex items-center space-x-2 mb-2">
+                <Clock className="h-4 w-4 text-orange-500" />
+                <h4 className="font-medium text-text-primary">Medications Expiring Soon</h4>
+                <Badge className="bg-orange-500/10 text-orange-500 text-xs">
+                  {expiringMedications.length} expiring
+                </Badge>
+              </div>
+              <div className="space-y-2">
+                {expiringMedications.slice(0, 2).map((med) => {
+                  const daysLeft = differenceInDays(parseISO(med.prescriptionPeriod.endDate), new Date());
+                  return (
+                    <div key={med.id} className="flex items-center justify-between py-1">
+                      <div>
+                        <span className="text-sm text-text-primary font-medium">{med.name}</span>
+                        <span className="text-xs text-text-secondary ml-2">{med.dosage}</span>
+                      </div>
+                      <Badge className="bg-orange-500/10 text-orange-500 text-xs">
+                        {daysLeft === 0 ? 'Expires today' : `${daysLeft} day${daysLeft > 1 ? 's' : ''} left`}
+                      </Badge>
+                    </div>
+                  );
+                })}
+                {expiringMedications.length > 2 && (
+                  <p className="text-xs text-text-secondary">+{expiringMedications.length - 2} more expiring</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Medications Due Section */}
           {pendingMedications.length > 0 && (
             <div className="border-l-4 border-destructive-action pl-4 py-2">
               <div className="flex items-center space-x-2 mb-2">
@@ -119,6 +170,13 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
               <div className="flex items-center space-x-2 mb-2">
                 <Calendar className="h-4 w-4 text-primary-action" />
                 <h4 className="font-medium text-text-primary">Next Appointment</h4>
+                {appointmentDays !== null && (
+                  <Badge className="bg-primary-action/10 text-primary-action text-xs">
+                    {appointmentDays === 0 ? 'Today' : 
+                     appointmentDays === 1 ? 'Tomorrow' : 
+                     `In ${appointmentDays} days`}
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <div>
@@ -135,7 +193,7 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
           )}
 
           {/* All Clear State */}
-          {!hasOverdueItems && !upcomingAppointment && (
+          {!hasOverdueItems && !upcomingAppointment && !hasExpiringMeds && (
             <div className="text-center py-4">
               <CheckCircle2 className="h-8 w-8 text-primary-action mx-auto mb-2" />
               <p className="text-sm font-medium text-text-primary">All caught up!</p>

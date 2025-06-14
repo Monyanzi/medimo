@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useHealthData } from "@/contexts/HealthDataContext";
 import { Pill } from "lucide-react";
+import { format, addDays } from 'date-fns';
 
 interface AddMedicationModalProps {
   isOpen: boolean;
@@ -28,7 +29,8 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ isOpen, onOpenC
     dosage: '',
     frequency: '',
     instructions: '',
-    status: 'active' as 'active' | 'discontinued'
+    status: 'active' as 'active' | 'discontinued',
+    prescriptionDays: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -46,13 +48,28 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ isOpen, onOpenC
 
     setIsSubmitting(true);
     try {
-      await addMedication({
+      const medicationData: any = {
         name: formData.name,
         dosage: formData.dosage,
         frequency: formData.frequency,
         instructions: formData.instructions || undefined,
         status: formData.status
-      });
+      };
+
+      // Add prescription period if specified
+      if (formData.prescriptionDays && parseInt(formData.prescriptionDays) > 0) {
+        const startDate = new Date();
+        const totalDays = parseInt(formData.prescriptionDays);
+        const endDate = addDays(startDate, totalDays);
+        
+        medicationData.prescriptionPeriod = {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          totalDays
+        };
+      }
+
+      await addMedication(medicationData);
       
       // Reset form
       setFormData({
@@ -60,7 +77,8 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ isOpen, onOpenC
         dosage: '',
         frequency: '',
         instructions: '',
-        status: 'active'
+        status: 'active',
+        prescriptionDays: ''
       });
       
       onOpenChange(false);
@@ -117,6 +135,20 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ isOpen, onOpenC
               value={formData.frequency}
               onChange={(e) => handleInputChange('frequency', e.target.value)}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="prescriptionDays">Prescription Period (Days)</Label>
+            <Input
+              id="prescriptionDays"
+              type="number"
+              placeholder="e.g., 30"
+              value={formData.prescriptionDays}
+              onChange={(e) => handleInputChange('prescriptionDays', e.target.value)}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Leave empty for ongoing medication
+            </p>
           </div>
 
           <div>

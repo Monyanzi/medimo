@@ -83,6 +83,11 @@ export interface Medication {
   prescribedBy?: string;
   status: 'active' | 'completed' | 'discontinued';
   notes?: string;
+  prescriptionPeriod?: {
+    startDate: string;
+    endDate: string;
+    totalDays: number;
+  };
 }
 
 export interface Vital {
