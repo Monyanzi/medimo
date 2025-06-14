@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, CreditCard, QrCode, Download, User, Bell, Globe, FileText, Shield, HelpCircle, LogOut, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CreditCard, QrCode, Download, User, Settings, FileText, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -76,38 +76,21 @@ const ProfileScreen: React.FC = () => {
   const settingsItems = [
     {
       icon: User,
-      label: 'Personal Information',
-      path: '/profile/personal-information'
+      label: 'Personal & Medical Info',
+      path: '/profile/personal-medical',
+      description: 'Personal info, medical history, emergency contacts, caregiver settings'
     },
     {
-      icon: Heart,
-      label: 'Caregiver Settings',
-      path: '/profile/caregiver-settings'
-    },
-    {
-      icon: Bell,
-      label: 'Notifications',
-      path: '/profile/notifications'
-    },
-    {
-      icon: Globe,
-      label: 'Language & Region',
-      path: '/profile/language-region'
+      icon: Settings,
+      label: 'Settings & Notifications',
+      path: '/profile/settings-notifications',
+      description: 'Notifications, language, region, and app preferences'
     },
     {
       icon: FileText,
-      label: 'Terms of Service',
-      path: '/profile/terms'
-    },
-    {
-      icon: Shield,
-      label: 'Privacy Policy',
-      path: '/profile/privacy'
-    },
-    {
-      icon: HelpCircle,
-      label: 'Help & Support',
-      path: '/profile/support'
+      label: 'Legal & Support',
+      path: '/profile/legal-support',
+      description: 'Terms, privacy policy, help, and support resources'
     }
   ];
 
@@ -122,7 +105,6 @@ const ProfileScreen: React.FC = () => {
   return (
     <>
       <div className="min-h-screen bg-[#F8F9FA] font-inter">
-        {/* Always show Header */}
         <Header />
 
         <div className="px-4 py-6 pb-24 space-y-6">
@@ -184,7 +166,7 @@ const ProfileScreen: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Settings Navigation */}
+          {/* Settings Navigation - Consolidated to 3 sections */}
           <Card className="bg-white border border-gray-100 shadow-md">
             <CardContent className="p-0">
               {settingsItems.map((item, index) => {
@@ -199,7 +181,10 @@ const ProfileScreen: React.FC = () => {
                   >
                     <div className="flex items-center space-x-3">
                       <Icon className="h-5 w-5 text-gray-600" />
-                      <span className="text-gray-900 font-medium">{item.label}</span>
+                      <div>
+                        <div className="text-gray-900 font-medium">{item.label}</div>
+                        <div className="text-xs text-gray-500">{item.description}</div>
+                      </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-gray-400" />
                   </Link>
@@ -239,7 +224,6 @@ const ProfileScreen: React.FC = () => {
           </AlertDialog>
         </div>
 
-        {/* Always show BottomNavigation */}
         <BottomNavigation />
       </div>
 

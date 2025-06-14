@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -13,13 +12,9 @@ import HomeScreen from "./pages/HomeScreen";
 import TimelineScreen from "./pages/TimelineScreen";
 import VaultScreen from "./pages/VaultScreen";
 import ProfileScreen from "./pages/ProfileScreen";
-import PersonalInformationPage from "./pages/PersonalInformationPage";
-import CaregiverSettingsPage from "./pages/CaregiverSettingsPage";
-import NotificationSettingsPage from "./pages/NotificationSettingsPage";
-import LanguageRegionPage from "./pages/LanguageRegionPage";
-import TermsPage from "./pages/TermsPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import SupportPage from "./pages/SupportPage";
+import PersonalMedicalPage from "./pages/PersonalMedicalPage";
+import SettingsNotificationsPage from "./pages/SettingsNotificationsPage";
+import LegalSupportPage from "./pages/LegalSupportPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -50,13 +45,9 @@ const App: React.FC = () => {
                       <Route path="/timeline" element={<TimelineScreen />} />
                       <Route path="/vault" element={<VaultScreen />} />
                       <Route path="/profile" element={<ProfileScreen />} />
-                      <Route path="/profile/personal-information" element={<PersonalInformationPage />} />
-                      <Route path="/profile/caregiver-settings" element={<CaregiverSettingsPage />} />
-                      <Route path="/profile/notifications" element={<NotificationSettingsPage />} />
-                      <Route path="/profile/language-region" element={<LanguageRegionPage />} />
-                      <Route path="/profile/terms" element={<TermsPage />} />
-                      <Route path="/profile/privacy" element={<PrivacyPage />} />
-                      <Route path="/profile/support" element={<SupportPage />} />
+                      <Route path="/profile/personal-medical" element={<PersonalMedicalPage />} />
+                      <Route path="/profile/settings-notifications" element={<SettingsNotificationsPage />} />
+                      <Route path="/profile/legal-support" element={<LegalSupportPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
