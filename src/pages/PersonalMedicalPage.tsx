@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -50,24 +51,26 @@ const personalMedicalSchema = z.object({
     relationship: z.string().min(1, 'Relationship is required')
   }),
   
-  // Insurance Information
+  // Insurance Information (optional)
+  insuranceEnabled: z.boolean().default(false),
   insurance: z.object({
-    provider: z.string().min(1, 'Insurance provider is required'),
-    policyNumber: z.string().min(1, 'Policy number is required'),
-    memberId: z.string().min(1, 'Member ID is required')
+    provider: z.string(),
+    policyNumber: z.string(),
+    memberId: z.string()
   }).optional(),
   
   // Caregiver Settings
-  caregiverEnabled: z.boolean(),
+  caregiverEnabled: z.boolean().default(false),
   caregiverContact: z.object({
     name: z.string(),
-    email: z.string().email().optional().or(z.literal('')),
-    phone: z.string()
+    email: z.string().optional(),
+    phone: z.string(),
+    relationship: z.string()
   }).optional(),
   checkInSettings: z.object({
-    enabled: z.boolean(),
-    frequency: z.string(),
-    reminderTime: z.string()
+    enabled: z.boolean().default(false),
+    frequency: z.enum(['daily', 'twice-daily', 'weekly']).default('daily'),
+    reminderTime: z.string().default('09:00')
   }).optional()
 });
 
@@ -84,14 +87,15 @@ const PersonalMedicalPage: React.FC = () => {
       email: user?.email || '',
       dob: user?.dob || '',
       bloodType: user?.bloodType || '',
-      allergies: user?.allergies.map(allergy => ({ value: allergy })) || [],
-      conditions: user?.conditions.map(condition => ({ value: condition })) || [],
+      allergies: user?.allergies?.map(allergy => ({ value: allergy })) || [],
+      conditions: user?.conditions?.map(condition => ({ value: condition })) || [],
       organDonor: user?.organDonor || false,
       emergencyContact: {
         name: user?.emergencyContact?.name || '',
         phone: user?.emergencyContact?.phone || '',
         relationship: user?.emergencyContact?.relationship || ''
       },
+      insuranceEnabled: !!user?.insurance,
       insurance: user?.insurance ? {
         provider: user.insurance.provider || '',
         policyNumber: user.insurance.policyNumber || '',
@@ -101,13 +105,18 @@ const PersonalMedicalPage: React.FC = () => {
       caregiverContact: user?.caregiver ? {
         name: user.caregiver.name || '',
         email: user.caregiver.email || '',
-        phone: user.caregiver.phone || ''
+        phone: user.caregiver.phone || '',
+        relationship: user.caregiver.relationship || 'Other'
       } : undefined,
       checkInSettings: user?.caregiver?.checkInSettings ? {
         enabled: user.caregiver.checkInSettings.enabled || false,
         frequency: user.caregiver.checkInSettings.frequency || 'daily',
         reminderTime: user.caregiver.checkInSettings.reminderTime || '09:00'
-      } : undefined
+      } : {
+        enabled: false,
+        frequency: 'daily',
+        reminderTime: '09:00'
+      }
     }
   });
 
@@ -123,43 +132,61 @@ const PersonalMedicalPage: React.FC = () => {
 
   const onSubmit = async (data: PersonalMedicalForm) => {
     try {
+      console.log('Submitting profile update with data:', data);
+      
       const updateData: any = {
         name: data.name,
         email: data.email,
         dob: data.dob,
         bloodType: data.bloodType,
-        allergies: data.allergies.map(item => item.value),
-        conditions: data.conditions.map(item => item.value),
+        allergies: data.allergies.map(item => item.value).filter(Boolean),
+        conditions: data.conditions.map(item => item.value).filter(Boolean),
         organDonor: data.organDonor,
         emergencyContact: {
           name: data.emergencyContact.name,
           phone: data.emergencyContact.phone,
           relationship: data.emergencyContact.relationship
-        },
-        insurance: data.insurance ? {
+        }
+      };
+
+      // Handle insurance
+      if (data.insuranceEnabled && data.insurance) {
+        updateData.insurance = {
           provider: data.insurance.provider,
           policyNumber: data.insurance.policyNumber,
           memberId: data.insurance.memberId
-        } : undefined
-      };
+        };
+      } else {
+        updateData.insurance = undefined;
+      }
 
       // Handle caregiver settings
       if (data.caregiverEnabled && data.caregiverContact) {
         updateData.caregiver = {
           name: data.caregiverContact.name,
-          email: data.caregiverContact.email,
+          email: data.caregiverContact.email || '',
           phone: data.caregiverContact.phone,
-          checkInSettings: data.checkInSettings || {
+          relationship: data.caregiverContact.relationship,
+          isEmergencyContact: false,
+          checkInSettings: data.checkInSettings ? {
+            enabled: data.checkInSettings.enabled,
+            frequency: data.checkInSettings.frequency,
+            reminderTime: data.checkInSettings.reminderTime,
+            missedCheckInThreshold: 2
+          } : {
             enabled: false,
             frequency: 'daily',
-            reminderTime: '09:00'
+            reminderTime: '09:00',
+            missedCheckInThreshold: 2
           }
         };
-      } else if (!data.caregiverEnabled) {
-        updateData.caregiver = null;
+      } else {
+        updateData.caregiver = undefined;
       }
 
+      console.log('Final update data:', updateData);
       await updateUser(updateData);
+      
     } catch (error) {
       console.error('Failed to update profile:', error);
     }
@@ -167,7 +194,11 @@ const PersonalMedicalPage: React.FC = () => {
 
   const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const relationships = ['Spouse', 'Parent', 'Child', 'Sibling', 'Friend', 'Other'];
-  const checkInFrequencies = ['daily', 'twice-daily', 'weekly'];
+  const checkInFrequencies = [
+    { value: 'daily', label: 'Daily' },
+    { value: 'twice-daily', label: 'Twice Daily' },
+    { value: 'weekly', label: 'Weekly' }
+  ];
 
   return (
     <div className="min-h-screen bg-background-main font-inter">
@@ -488,7 +519,7 @@ const PersonalMedicalPage: React.FC = () => {
                       name="caregiverContact.email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Caregiver Email</FormLabel>
+                          <FormLabel>Caregiver Email (Optional)</FormLabel>
                           <FormControl>
                             <Input {...field} type="email" placeholder="Enter caregiver email" />
                           </FormControl>
@@ -506,6 +537,31 @@ const PersonalMedicalPage: React.FC = () => {
                           <FormControl>
                             <Input {...field} type="tel" placeholder="Enter caregiver phone" />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="caregiverContact.relationship"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Relationship</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select relationship" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {relationships.map(relationship => (
+                                <SelectItem key={relationship} value={relationship}>
+                                  {relationship}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -548,8 +604,8 @@ const PersonalMedicalPage: React.FC = () => {
                                 </FormControl>
                                 <SelectContent>
                                   {checkInFrequencies.map(freq => (
-                                    <SelectItem key={freq} value={freq}>
-                                      {freq.charAt(0).toUpperCase() + freq.slice(1).replace('-', ' ')}
+                                    <SelectItem key={freq.value} value={freq.value}>
+                                      {freq.label}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -587,45 +643,70 @@ const PersonalMedicalPage: React.FC = () => {
               <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="insurance.provider"
+                  name="insuranceEnabled"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Insurance Provider</FormLabel>
+                    <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Add Insurance Information</FormLabel>
+                        <FormDescription>
+                          Include insurance details in your profile
+                        </FormDescription>
+                      </div>
                       <FormControl>
-                        <Input {...field} placeholder="Enter insurance provider" />
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="insurance.policyNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Policy Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter policy number" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {form.watch('insuranceEnabled') && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="insurance.provider"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Insurance Provider</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter insurance provider" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="insurance.memberId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Member ID</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter member ID" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="insurance.policyNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Policy Number</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter policy number" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="insurance.memberId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Member ID</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter member ID" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
               </CardContent>
             </Card>
 

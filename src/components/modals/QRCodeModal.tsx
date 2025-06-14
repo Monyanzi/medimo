@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { format, parseISO } from 'date-fns';
 import { Download, AlertTriangle, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -15,24 +16,54 @@ interface QRCodeModalProps {
 const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onOpenChange }) => {
   const { user, regenerateQRCode, isLoading } = useAuth();
 
-  const downloadQRCode = () => {
-    if (!user?.qrCode?.imageUrl || !user) return;
+  const downloadQRCode = async () => {
+    if (!user?.qrCode?.imageUrl || !user) {
+      toast.error('QR code not available for download');
+      return;
+    }
     
-    const link = document.createElement('a');
-    link.download = `${user.name.replace(/\s+/g, '_')}_Emergency_QR.png`;
-    link.href = user.qrCode.imageUrl;
-    link.click();
+    try {
+      console.log('Downloading QR code:', user.qrCode.imageUrl);
+      
+      // Create a temporary link to download the QR code
+      const response = await fetch(user.qrCode.imageUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch QR code image');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.download = `${user.name.replace(/\s+/g, '_')}_Emergency_QR.png`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      window.URL.revokeObjectURL(url);
+      toast.success('QR code downloaded successfully!');
+      
+    } catch (error) {
+      console.error('QR code download failed:', error);
+      toast.error('Failed to download QR code. Please try again.');
+    }
   };
 
   const handleRegenerateQR = async () => {
     try {
+      console.log('Regenerating QR code...');
       await regenerateQRCode();
+      toast.success('QR code regenerated successfully!');
     } catch (error) {
       console.error('Failed to regenerate QR code:', error);
+      toast.error('Failed to regenerate QR code. Please try again.');
     }
   };
 
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -51,14 +82,30 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onOpenChange }) => {
             </p>
           </div>
 
-          {user.qrCode?.imageUrl && (
+          {user.qrCode?.imageUrl ? (
             <div className="flex justify-center">
               <Card className="p-4 bg-white">
                 <img 
                   src={user.qrCode.imageUrl} 
                   alt="Emergency QR Code" 
                   className="w-64 h-64" 
+                  onError={(e) => {
+                    console.error('QR code image failed to load');
+                    toast.error('QR code image failed to load');
+                  }}
                 />
+              </Card>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <Card className="p-4 bg-gray-50 border-2 border-dashed border-gray-300">
+                <div className="w-64 h-64 flex items-center justify-center">
+                  <div className="text-center">
+                    <AlertTriangle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">QR Code not available</p>
+                    <p className="text-xs text-gray-400">Try regenerating</p>
+                  </div>
+                </div>
               </Card>
             </div>
           )}
@@ -79,10 +126,10 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onOpenChange }) => {
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Name and Date of Birth</li>
               <li>Blood Type: {user.bloodType}</li>
-              <li>Allergies: {user.allergies.length > 0 ? user.allergies.join(', ') : 'None'}</li>
-              <li>Medical Conditions: {user.conditions.length > 0 ? user.conditions.join(', ') : 'None'}</li>
+              <li>Allergies: {user.allergies?.length > 0 ? user.allergies.join(', ') : 'None'}</li>
+              <li>Medical Conditions: {user.conditions?.length > 0 ? user.conditions.join(', ') : 'None'}</li>
               <li>Emergency Contact Information</li>
-              <li>Organ Donor Status</li>
+              <li>Organ Donor Status: {user.organDonor ? 'Yes' : 'No'}</li>
             </ul>
           </div>
 
@@ -90,7 +137,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onOpenChange }) => {
             <Button 
               onClick={downloadQRCode}
               className="flex-1 bg-accent-success hover:bg-accent-success/90"
-              disabled={!user.qrCode?.imageUrl}
+              disabled={!user.qrCode?.imageUrl || isLoading}
             >
               <Download className="h-4 w-4 mr-2" />
               Download QR Code

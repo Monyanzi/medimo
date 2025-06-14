@@ -116,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
     
     try {
+      console.log('Logging in user:', email);
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       const userWithQR = await generateQRCodeForUser(mockUser);
@@ -132,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = (): void => {
+    console.log('Logging out user...');
     setUser(null);
     setError(null);
     localStorage.removeItem('medimo_auth_token');
@@ -140,19 +142,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUser = async (userData: Partial<User>): Promise<void> => {
-    if (!user) throw new Error('No user logged in');
+    if (!user) {
+      const error = 'No user logged in';
+      console.error(error);
+      toast.error(error);
+      throw new Error(error);
+    }
     
     setIsLoading(true);
     setError(null);
     
     try {
+      console.log('Updating user with data:', userData);
+      
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Merge the update data with existing user data
       const updatedUser = { ...user, ...userData };
       
       // Regenerate QR code if critical data changed
       const criticalFields = ['name', 'dob', 'bloodType', 'allergies', 'conditions', 'emergencyContact', 'organDonor'];
-      const hasCriticalChanges = criticalFields.some(field => userData[field as keyof User] !== undefined);
+      const hasCriticalChanges = criticalFields.some(field => {
+        const newValue = userData[field as keyof User];
+        return newValue !== undefined && JSON.stringify(newValue) !== JSON.stringify(user[field as keyof User]);
+      });
       
       if (hasCriticalChanges) {
         console.log('Critical data changed, regenerating QR code...');
@@ -163,8 +177,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(updatedUser);
         toast.success('Profile updated successfully!');
       }
+      
+      console.log('User update completed:', updatedUser);
+      
     } catch (err) {
       const errorMessage = 'Failed to update profile. Please try again.';
+      console.error('Update user error:', err);
       setError(errorMessage);
       toast.error(errorMessage);
       throw new Error(errorMessage);
@@ -174,17 +192,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const regenerateQRCode = async (): Promise<void> => {
-    if (!user) throw new Error('No user logged in');
+    if (!user) {
+      const error = 'No user logged in';
+      console.error(error);
+      toast.error(error);
+      throw new Error(error);
+    }
+    
+    setIsLoading(true);
     
     try {
+      console.log('Regenerating QR code for user:', user.name);
       const userWithNewQR = await generateQRCodeForUser(user);
       setUser(userWithNewQR);
-      toast.success('QR code regenerated successfully!');
+      console.log('QR code regenerated successfully');
     } catch (err) {
       const errorMessage = 'Failed to regenerate QR code. Please try again.';
+      console.error('Regenerate QR code error:', err);
       setError(errorMessage);
       toast.error(errorMessage);
       throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -198,7 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     error
   };
 
-  console.log('AuthContext rendering with user:', user);
+  console.log('AuthContext rendering with user:', user ? user.name : 'null');
 
   return (
     <AuthContext.Provider value={contextValue}>

@@ -20,6 +20,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import QRCodeModal from '@/components/modals/QRCodeModal';
+import { toast } from 'sonner';
 
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
@@ -36,40 +37,90 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleLogout = () => {
+    console.log('Logging out user...');
     logout();
     navigate('/');
   };
 
   const handleDigitalKey = () => {
-    const keyInfo = {
-      id: user?.id,
-      name: user?.name,
-      bloodType: user?.bloodType,
-      emergencyContact: user?.emergencyContact?.name,
-      qrCodeStatus: user?.qrCode ? 'Active' : 'Not Generated'
-    };
+    if (!user) {
+      toast.error('User information not available');
+      return;
+    }
     
-    alert(`Digital Health Key\n\nID: ${keyInfo.id}\nName: ${keyInfo.name}\nBlood Type: ${keyInfo.bloodType}\nEmergency Contact: ${keyInfo.emergencyContact}\nQR Code: ${keyInfo.qrCodeStatus}`);
+    try {
+      const keyInfo = {
+        id: user.id,
+        name: user.name,
+        bloodType: user.bloodType,
+        emergencyContact: user.emergencyContact?.name || 'Not set',
+        qrCodeStatus: user.qrCode ? 'Active' : 'Not Generated',
+        organDonor: user.organDonor ? 'Yes' : 'No'
+      };
+      
+      console.log('Digital Health Key accessed:', keyInfo);
+      
+      const message = `Digital Health Key
+
+ID: ${keyInfo.id}
+Name: ${keyInfo.name}
+Blood Type: ${keyInfo.bloodType}
+Emergency Contact: ${keyInfo.emergencyContact}
+Organ Donor: ${keyInfo.organDonor}
+QR Code: ${keyInfo.qrCodeStatus}`;
+      
+      alert(message);
+      toast.success('Digital Health Key accessed');
+      
+    } catch (error) {
+      console.error('Error accessing digital key:', error);
+      toast.error('Failed to access digital key');
+    }
   };
 
   const handleQRCode = () => {
+    console.log('Opening QR Code modal...');
     setQrModalOpen(true);
   };
 
   const handleExport = async () => {
+    if (!user) {
+      toast.error('User information not available for export');
+      return;
+    }
+    
     console.log('Exporting PDF report...');
     try {
       const exportData = {
-        user: user?.name,
+        user: user.name,
         exportDate: new Date().toISOString(),
-        sections: ['Personal Information', 'Medical History', 'Emergency Contacts', 'QR Code']
+        sections: [
+          'Personal Information',
+          'Medical History',
+          'Emergency Contacts',
+          'QR Code',
+          ...(user.caregiver ? ['Caregiver Settings'] : []),
+          ...(user.insurance ? ['Insurance Information'] : [])
+        ]
       };
       
       console.log('Export data prepared:', exportData);
-      alert('Health data export has been prepared. In a real implementation, this would generate and download a PDF file.');
+      
+      // Simulate export process
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success('Health data export prepared successfully!');
+      alert(`Health Data Export
+
+User: ${exportData.user}
+Export Date: ${new Date(exportData.exportDate).toLocaleDateString()}
+Sections Included: ${exportData.sections.join(', ')}
+
+In a real implementation, this would generate and download a PDF file with your complete health profile.`);
+      
     } catch (error) {
       console.error('Export failed:', error);
-      alert('Export failed. Please try again.');
+      toast.error('Export failed. Please try again.');
     }
   };
 
