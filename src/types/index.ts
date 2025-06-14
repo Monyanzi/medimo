@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   name: string;
@@ -12,6 +11,20 @@ export interface User {
     name: string;
     phone: string;
     relationship: string;
+  };
+  caregiver?: {
+    name: string;
+    phone: string;
+    email?: string;
+    relationship: string;
+    isEmergencyContact: boolean;
+    checkInSettings?: {
+      enabled: boolean;
+      frequency: 'daily' | 'twice-daily' | 'custom';
+      customHours?: number;
+      reminderTime?: string;
+      missedCheckInThreshold: number;
+    };
   };
   insurance?: {
     provider: string;

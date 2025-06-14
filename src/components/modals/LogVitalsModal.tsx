@@ -12,8 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useHealthData } from "@/contexts/HealthDataContext";
-import { Activity } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle } from "lucide-react";
+import { checkVitalInRange, DEFAULT_VITAL_RANGES, getVitalStatusColor, getVitalMessage } from "@/utils/vitalsUtils";
 
 interface LogVitalsModalProps {
   isOpen: boolean;
@@ -33,12 +35,33 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
     notes: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [vitalsAlerts, setVitalsAlerts] = useState<{[key: string]: { status: string; message: string }}>({});
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+
+    // Real-time vital checking for critical ranges
+    if (value && DEFAULT_VITAL_RANGES[field]) {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        const status = checkVitalInRange(numValue, DEFAULT_VITAL_RANGES[field]);
+        const message = getVitalMessage(field, numValue, status);
+        
+        setVitalsAlerts(prev => ({
+          ...prev,
+          [field]: { status, message }
+        }));
+      }
+    } else {
+      setVitalsAlerts(prev => {
+        const updated = { ...prev };
+        delete updated[field];
+        return updated;
+      });
+    }
   };
 
   const handleSubmit = async () => {
@@ -69,6 +92,7 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
         oxygenSaturation: '',
         notes: ''
       });
+      setVitalsAlerts({});
       
       onOpenChange(false);
     } catch (error) {
@@ -82,6 +106,8 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
     return formData.bloodPressureSystolic || formData.heartRate || formData.weight || 
            formData.temperature || formData.oxygenSaturation;
   };
+
+  const hasCriticalAlerts = Object.values(vitalsAlerts).some(alert => alert.status === 'critical');
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -107,7 +133,14 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
                 placeholder="120"
                 value={formData.bloodPressureSystolic}
                 onChange={(e) => handleInputChange('bloodPressureSystolic', e.target.value)}
+                className={vitalsAlerts.bloodPressureSystolic?.status === 'critical' ? 'border-red-500' : ''}
               />
+              {vitalsAlerts.bloodPressureSystolic && (
+                <div className={`text-xs mt-1 ${getVitalStatusColor(vitalsAlerts.bloodPressureSystolic.status)}`}>
+                  {vitalsAlerts.bloodPressureSystolic.status === 'normal' ? '✓ Normal' : 
+                   vitalsAlerts.bloodPressureSystolic.status === 'warning' ? '⚠ High' : '🚨 Critical'}
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="diastolic">Diastolic BP</Label>
@@ -117,7 +150,14 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
                 placeholder="80"
                 value={formData.bloodPressureDiastolic}
                 onChange={(e) => handleInputChange('bloodPressureDiastolic', e.target.value)}
+                className={vitalsAlerts.bloodPressureDiastolic?.status === 'critical' ? 'border-red-500' : ''}
               />
+              {vitalsAlerts.bloodPressureDiastolic && (
+                <div className={`text-xs mt-1 ${getVitalStatusColor(vitalsAlerts.bloodPressureDiastolic.status)}`}>
+                  {vitalsAlerts.bloodPressureDiastolic.status === 'normal' ? '✓ Normal' : 
+                   vitalsAlerts.bloodPressureDiastolic.status === 'warning' ? '⚠ High' : '🚨 Critical'}
+                </div>
+              )}
             </div>
           </div>
 
@@ -130,7 +170,14 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
               placeholder="72"
               value={formData.heartRate}
               onChange={(e) => handleInputChange('heartRate', e.target.value)}
+              className={vitalsAlerts.heartRate?.status === 'critical' ? 'border-red-500' : ''}
             />
+            {vitalsAlerts.heartRate && (
+              <div className={`text-xs mt-1 ${getVitalStatusColor(vitalsAlerts.heartRate.status)}`}>
+                {vitalsAlerts.heartRate.status === 'normal' ? '✓ Normal' : 
+                 vitalsAlerts.heartRate.status === 'warning' ? '⚠ Abnormal' : '🚨 Critical'}
+              </div>
+            )}
           </div>
 
           {/* Weight and Height */}
@@ -169,7 +216,14 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
               placeholder="98.6"
               value={formData.temperature}
               onChange={(e) => handleInputChange('temperature', e.target.value)}
+              className={vitalsAlerts.temperature?.status === 'critical' ? 'border-red-500' : ''}
             />
+            {vitalsAlerts.temperature && (
+              <div className={`text-xs mt-1 ${getVitalStatusColor(vitalsAlerts.temperature.status)}`}>
+                {vitalsAlerts.temperature.status === 'normal' ? '✓ Normal' : 
+                 vitalsAlerts.temperature.status === 'warning' ? '⚠ Elevated' : '🚨 Critical'}
+              </div>
+            )}
           </div>
 
           {/* Oxygen Saturation */}
@@ -181,8 +235,25 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
               placeholder="98"
               value={formData.oxygenSaturation}
               onChange={(e) => handleInputChange('oxygenSaturation', e.target.value)}
+              className={vitalsAlerts.oxygenSaturation?.status === 'critical' ? 'border-red-500' : ''}
             />
+            {vitalsAlerts.oxygenSaturation && (
+              <div className={`text-xs mt-1 ${getVitalStatusColor(vitalsAlerts.oxygenSaturation.status)}`}>
+                {vitalsAlerts.oxygenSaturation.status === 'normal' ? '✓ Normal' : 
+                 vitalsAlerts.oxygenSaturation.status === 'warning' ? '⚠ Low' : '🚨 Critical'}
+              </div>
+            )}
           </div>
+
+          {/* Critical Alerts */}
+          {hasCriticalAlerts && (
+            <Alert className="border-red-500 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <AlertDescription className="text-red-700">
+                <strong>Critical readings detected!</strong> Consider seeking immediate medical attention for any critical values.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Notes */}
           <div>
@@ -204,8 +275,9 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
           <Button 
             onClick={handleSubmit} 
             disabled={!isFormValid() || isSubmitting}
+            className={hasCriticalAlerts ? 'bg-red-600 hover:bg-red-700' : ''}
           >
-            {isSubmitting ? 'Saving...' : 'Save Vitals'}
+            {isSubmitting ? 'Saving...' : hasCriticalAlerts ? 'Save Critical Vitals' : 'Save Vitals'}
           </Button>
         </DialogFooter>
       </DialogContent>
