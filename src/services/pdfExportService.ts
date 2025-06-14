@@ -1,15 +1,8 @@
 
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { User, TimelineEvent } from '@/types';
 import { format, parseISO } from 'date-fns';
-
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
 
 export const generateTimelinePDF = (user: User, timelineEvents: TimelineEvent[]) => {
   try {
@@ -124,7 +117,7 @@ export const generateTimelinePDF = (user: User, timelineEvents: TimelineEvent[])
     ]);
 
     // Create timeline table using autoTable
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: yPos,
       head: [['Date', 'Time', 'Event', 'Details', 'Category']],
       body: timelineData,
