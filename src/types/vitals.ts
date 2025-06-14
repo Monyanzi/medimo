@@ -38,3 +38,5 @@ export interface CheckInSettings {
   reminderTime?: string;
   missedCheckInThreshold: number; // minutes before alert
 }
+
+export type VitalStatus = 'normal' | 'warning' | 'critical';

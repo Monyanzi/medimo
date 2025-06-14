@@ -1,16 +1,19 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useHealthData } from './HealthDataContext';
-import { format, parseISO, isToday, isTomorrow, addHours } from 'date-fns';
+import { useAuth } from './AuthContext';
+import { format, parseISO, isToday, isTomorrow } from 'date-fns';
+import { caregiverNotificationService } from '@/services/caregiverNotificationService';
 
 export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'medication' | 'appointment' | 'info';
+  type: 'medication' | 'appointment' | 'info' | 'caregiver-alert' | 'safety-checkin';
   timestamp: string;
   isRead: boolean;
   relatedId?: string;
+  severity?: 'warning' | 'critical';
 }
 
 interface NotificationContextType {
@@ -19,6 +22,7 @@ interface NotificationContextType {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'isRead'>) => void;
+  checkForMissedCheckIns: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -34,6 +38,26 @@ export const useNotifications = () => {
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { medications, appointments } = useHealthData();
+  const { user } = useAuth();
+
+  // Check for missed check-ins periodically
+  const checkForMissedCheckIns = () => {
+    if (!user || !user.caregiver?.checkInSettings?.enabled) return;
+
+    const missedCheckInAlert = caregiverNotificationService.checkForMissedCheckIn(user);
+    if (missedCheckInAlert) {
+      // Add notification for user
+      addNotification({
+        title: 'Missed Check-in Alert',
+        message: 'Your caregiver has been notified about your missed check-in.',
+        type: 'safety-checkin',
+        severity: missedCheckInAlert.severity
+      });
+
+      // Send alert to caregiver
+      caregiverNotificationService.sendAlert(missedCheckInAlert, user.caregiver);
+    }
+  };
 
   // Generate notifications based on health data
   useEffect(() => {
@@ -79,6 +103,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [medications, appointments, notifications.length]);
 
+  // Check for missed check-ins every 5 minutes
+  useEffect(() => {
+    checkForMissedCheckIns(); // Check immediately
+    const interval = setInterval(checkForMissedCheckIns, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const markAsRead = (id: string) => {
@@ -114,7 +145,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       unreadCount,
       markAsRead,
       markAllAsRead,
-      addNotification
+      addNotification,
+      checkForMissedCheckIns
     }}>
       {children}
     </NotificationContext.Provider>

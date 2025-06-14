@@ -9,7 +9,9 @@ export const DEFAULT_VITAL_RANGES: CriticalVitalRanges = {
   oxygenSaturation: { min: 95, max: 100, unit: '%' }
 };
 
-export const checkVitalInRange = (value: number, range: VitalRange): 'normal' | 'warning' | 'critical' => {
+export type VitalStatus = 'normal' | 'warning' | 'critical';
+
+export const checkVitalInRange = (value: number, range: VitalRange): VitalStatus => {
   if (value < range.min || value > range.max) {
     // Critical if very far outside range
     const deviation = Math.max(
@@ -21,7 +23,7 @@ export const checkVitalInRange = (value: number, range: VitalRange): 'normal' | 
   return 'normal';
 };
 
-export const getVitalStatusColor = (status: 'normal' | 'warning' | 'critical'): string => {
+export const getVitalStatusColor = (status: VitalStatus): string => {
   switch (status) {
     case 'critical': return 'text-red-600';
     case 'warning': return 'text-orange-500';
@@ -29,7 +31,7 @@ export const getVitalStatusColor = (status: 'normal' | 'warning' | 'critical'): 
   }
 };
 
-export const getVitalMessage = (vitalType: string, value: number, status: 'normal' | 'warning' | 'critical'): string => {
+export const getVitalMessage = (vitalType: string, value: number, status: VitalStatus): string => {
   const messages = {
     critical: {
       bloodPressureSystolic: 'Blood pressure is critically high. Seek immediate medical attention.',
@@ -48,5 +50,5 @@ export const getVitalMessage = (vitalType: string, value: number, status: 'norma
   };
 
   if (status === 'normal') return 'Reading is within normal range.';
-  return messages[status][vitalType] || `${vitalType} reading needs attention.`;
+  return messages[status][vitalType as keyof typeof messages[typeof status]] || `${vitalType} reading needs attention.`;
 };

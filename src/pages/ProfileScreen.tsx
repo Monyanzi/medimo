@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, CreditCard, QrCode, Download, User, Bell, Globe, FileText, Shield, HelpCircle, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CreditCard, QrCode, Download, User, Bell, Globe, FileText, Shield, HelpCircle, LogOut, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -80,6 +80,11 @@ const ProfileScreen: React.FC = () => {
       path: '/profile/personal-information'
     },
     {
+      icon: Heart,
+      label: 'Caregiver Settings',
+      path: '/profile/caregiver-settings'
+    },
+    {
       icon: Bell,
       label: 'Notifications',
       path: '/profile/notifications'
@@ -137,6 +142,11 @@ const ProfileScreen: React.FC = () => {
                 <p className="text-sm text-gray-600">
                   ID: {user.id}
                 </p>
+                {user.caregiver && (
+                  <p className="text-xs text-green-600 mt-1">
+                    Safety monitoring enabled
+                  </p>
+                )}
               </div>
 
               {/* Action Buttons */}
