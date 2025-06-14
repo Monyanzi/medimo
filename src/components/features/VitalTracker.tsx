@@ -32,6 +32,13 @@ const VitalTracker: React.FC = () => {
     return value ? `${value}${unit}` : 'No data';
   };
 
+  const getLatestVitalAsNumber = (type: keyof typeof vitalSigns[0]): number | undefined => {
+    const value = getLatestVital(type);
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') return parseFloat(value);
+    return undefined;
+  };
+
   if (vitalSigns.length === 0) {
     return (
       <Card className="bg-surface-card border border-border-divider shadow-sm">
@@ -66,7 +73,7 @@ const VitalTracker: React.FC = () => {
           <div className="text-center p-3 bg-blue-50 rounded-lg">
             <Heart className="h-5 w-5 text-blue-600 mx-auto mb-2" />
             <div className="text-lg font-semibold text-blue-700">
-              {formatVitalValue(getLatestVital('heartRate'), ' bpm')}
+              {formatVitalValue(getLatestVitalAsNumber('heartRate'), ' bpm')}
             </div>
             <div className="text-xs text-blue-600">Heart Rate</div>
           </div>
@@ -74,8 +81,8 @@ const VitalTracker: React.FC = () => {
           <div className="text-center p-3 bg-red-50 rounded-lg">
             <Activity className="h-5 w-5 text-red-600 mx-auto mb-2" />
             <div className="text-lg font-semibold text-red-700">
-              {getLatestVital('bloodPressureSystolic') && getLatestVital('bloodPressureDiastolic') 
-                ? `${getLatestVital('bloodPressureSystolic')}/${getLatestVital('bloodPressureDiastolic')}`
+              {getLatestVitalAsNumber('bloodPressureSystolic') && getLatestVitalAsNumber('bloodPressureDiastolic') 
+                ? `${getLatestVitalAsNumber('bloodPressureSystolic')}/${getLatestVitalAsNumber('bloodPressureDiastolic')}`
                 : 'No data'}
             </div>
             <div className="text-xs text-red-600">Blood Pressure</div>
@@ -84,7 +91,7 @@ const VitalTracker: React.FC = () => {
           <div className="text-center p-3 bg-orange-50 rounded-lg">
             <Thermometer className="h-5 w-5 text-orange-600 mx-auto mb-2" />
             <div className="text-lg font-semibold text-orange-700">
-              {formatVitalValue(getLatestVital('temperature'), '°F')}
+              {formatVitalValue(getLatestVitalAsNumber('temperature'), '°F')}
             </div>
             <div className="text-xs text-orange-600">Temperature</div>
           </div>
@@ -92,7 +99,7 @@ const VitalTracker: React.FC = () => {
           <div className="text-center p-3 bg-green-50 rounded-lg">
             <Weight className="h-5 w-5 text-green-600 mx-auto mb-2" />
             <div className="text-lg font-semibold text-green-700">
-              {formatVitalValue(getLatestVital('weight'), ' lbs')}
+              {formatVitalValue(getLatestVitalAsNumber('weight'), ' lbs')}
             </div>
             <div className="text-xs text-green-600">Weight</div>
           </div>
