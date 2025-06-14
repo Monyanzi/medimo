@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import Header from '@/components/shared/Header';
 import BottomNavigation from '@/components/shared/BottomNavigation';
@@ -7,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Clock, Search, Filter, Calendar, Pill, FileText, Activity, Stethoscope, Edit, Trash2 } from 'lucide-react';
+import { Clock, Search, Filter, Calendar, Pill, FileText, Activity, Stethoscope, Edit, Trash2, Download } from 'lucide-react';
 import { useHealthData } from '@/contexts/HealthDataContext';
 import { TimelineEvent } from '@/types';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
@@ -125,6 +124,35 @@ const TimelineScreen: React.FC = () => {
     }
   };
 
+  const handleExportTimeline = () => {
+    const exportData = filteredAndSortedEvents.map(event => ({
+      Date: format(parseISO(event.date), 'MMM d, yyyy h:mm a'),
+      Category: event.category,
+      Title: event.title,
+      Details: event.details
+    }));
+
+    const csvContent = [
+      ['Date', 'Category', 'Title', 'Details'].join(','),
+      ...exportData.map(row => [
+        `"${row.Date}"`,
+        `"${row.Category}"`,
+        `"${row.Title}"`,
+        `"${row.Details}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `medical_timeline_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const groupEventsByDate = (events: TimelineEvent[]) => {
     const groups: { [key: string]: TimelineEvent[] } = {};
     
@@ -148,10 +176,22 @@ const TimelineScreen: React.FC = () => {
       <main className="px-4 py-6 pb-24">
         <Card className="bg-surface-card border-border-divider shadow-md mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-text-primary">
-              <Clock className="h-5 w-5 text-primary-action" />
-              <span>Medical Timeline</span>
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center space-x-2 text-text-primary">
+                <Clock className="h-5 w-5 text-primary-action" />
+                <span>Medical Timeline</span>
+              </CardTitle>
+              <Button
+                onClick={handleExportTimeline}
+                variant="outline"
+                size="sm"
+                className="flex items-center space-x-2"
+                disabled={filteredAndSortedEvents.length === 0}
+              >
+                <Download className="h-4 w-4" />
+                <span>Export</span>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {/* Filters and Search */}
