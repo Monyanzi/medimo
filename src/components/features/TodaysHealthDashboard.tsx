@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Pill, Activity, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useMedicationAdherence } from '@/contexts/MedicationAdherenceContext';
+import { toast } from 'sonner';
 
 interface TodaysHealthDashboardProps {
   upcomingAppointment?: any;
@@ -15,10 +17,16 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
   upcomingAppointment,
   activeMedications
 }) => {
-  const todaysDate = new Date();
-  const pendingMedications = activeMedications.filter(med => !med.takenToday);
-  const pendingVitals = false; // Mock data - would come from context
+  const { isMedicationTakenToday, markMedicationTaken } = useMedicationAdherence();
+  
+  const pendingMedications = activeMedications.filter(med => !isMedicationTakenToday(med.id));
+  const takenMedications = activeMedications.filter(med => isMedicationTakenToday(med.id));
   const hasOverdueItems = pendingMedications.length > 0;
+
+  const handleMarkTaken = (medication: any) => {
+    markMedicationTaken(medication.id, medication.name, medication.dosage);
+    toast.success(`Marked ${medication.name} as taken`);
+  };
 
   const getPriorityIcon = () => {
     if (hasOverdueItems) return <AlertTriangle className="h-5 w-5 text-destructive-action" />;
@@ -61,12 +69,45 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
               <div className="space-y-2">
                 {pendingMedications.slice(0, 2).map((med) => (
                   <div key={med.id} className="flex items-center justify-between py-1">
-                    <span className="text-sm text-text-secondary">{med.name}</span>
-                    <span className="text-xs text-text-secondary">{med.dosage}</span>
+                    <div>
+                      <span className="text-sm text-text-primary font-medium">{med.name}</span>
+                      <span className="text-xs text-text-secondary ml-2">{med.dosage}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => handleMarkTaken(med)}
+                      className="bg-accent-success hover:bg-accent-success/90 text-white text-xs"
+                    >
+                      Mark Taken
+                    </Button>
                   </div>
                 ))}
                 {pendingMedications.length > 2 && (
                   <p className="text-xs text-text-secondary">+{pendingMedications.length - 2} more</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Taken Medications Section */}
+          {takenMedications.length > 0 && (
+            <div className="border-l-4 border-accent-success pl-4 py-2">
+              <div className="flex items-center space-x-2 mb-2">
+                <CheckCircle2 className="h-4 w-4 text-accent-success" />
+                <h4 className="font-medium text-text-primary">Medications Taken</h4>
+                <Badge className="bg-accent-success/10 text-accent-success text-xs">
+                  {takenMedications.length} completed
+                </Badge>
+              </div>
+              <div className="space-y-1">
+                {takenMedications.slice(0, 2).map((med) => (
+                  <div key={med.id} className="flex items-center justify-between py-1">
+                    <span className="text-sm text-text-secondary">{med.name}</span>
+                    <span className="text-xs text-accent-success">✓ Taken</span>
+                  </div>
+                ))}
+                {takenMedications.length > 2 && (
+                  <p className="text-xs text-text-secondary">+{takenMedications.length - 2} more</p>
                 )}
               </div>
             </div>
@@ -81,7 +122,7 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-text-primary">{upcomingAppointment.type}</p>
+                  <p className="text-sm font-medium text-text-primary">{upcomingAppointment.type || upcomingAppointment.title}</p>
                   <p className="text-xs text-text-secondary">
                     {format(new Date(upcomingAppointment.dateTime), 'MMM d, h:mm a')}
                   </p>
@@ -93,22 +134,8 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
             </div>
           )}
 
-          {/* Vitals Section */}
-          {pendingVitals && (
-            <div className="border-l-4 border-accent-success pl-4 py-2">
-              <div className="flex items-center space-x-2 mb-2">
-                <Activity className="h-4 w-4 text-accent-success" />
-                <h4 className="font-medium text-text-primary">Vitals Check</h4>
-                <Badge className="bg-accent-success/10 text-accent-success text-xs">
-                  Recommended
-                </Badge>
-              </div>
-              <p className="text-sm text-text-secondary">Last recorded 3 days ago</p>
-            </div>
-          )}
-
           {/* All Clear State */}
-          {!hasOverdueItems && !upcomingAppointment && !pendingVitals && (
+          {!hasOverdueItems && !upcomingAppointment && (
             <div className="text-center py-4">
               <CheckCircle2 className="h-8 w-8 text-primary-action mx-auto mb-2" />
               <p className="text-sm font-medium text-text-primary">All caught up!</p>
@@ -123,9 +150,14 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
             <Clock className="h-4 w-4 mr-2" />
             Log Vitals
           </Button>
-          <Button size="sm" variant="outline" className="flex-1 border-border-divider text-text-primary hover:bg-accent-success/10">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="flex-1 border-border-divider text-text-primary hover:bg-accent-success/10"
+            disabled={pendingMedications.length === 0}
+          >
             <Pill className="h-4 w-4 mr-2" />
-            Mark Taken
+            Mark All Taken
           </Button>
         </div>
       </CardContent>

@@ -2,18 +2,14 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Flame, Calendar } from 'lucide-react';
+import { useMedicationAdherence } from '@/contexts/MedicationAdherenceContext';
 
-interface MedicationStreakProps {
-  currentStreak: number;
-  bestStreak: number;
-  todayCompleted: boolean;
-}
+const MedicationStreak: React.FC = () => {
+  const { currentStreak, bestStreak, getTodaysAdherence } = useMedicationAdherence();
+  
+  const todaysAdherence = getTodaysAdherence();
+  const todayCompleted = todaysAdherence ? todaysAdherence.adherenceScore >= 80 : false;
 
-const MedicationStreak: React.FC<MedicationStreakProps> = ({
-  currentStreak,
-  bestStreak,
-  todayCompleted
-}) => {
   const getStreakColor = (streak: number) => {
     if (streak >= 30) return 'text-primary-action';
     if (streak >= 14) return 'text-accent-success';

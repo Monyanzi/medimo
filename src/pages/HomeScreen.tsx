@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHealthData } from '@/contexts/HealthDataContext';
+import { MedicationAdherenceProvider } from '@/contexts/MedicationAdherenceContext';
 import Header from '@/components/shared/Header';
 import BottomNavigation from '@/components/shared/BottomNavigation';
 import DigitalHealthKey from '@/components/features/DigitalHealthKey';
@@ -9,6 +10,7 @@ import TodaysHealthDashboard from '@/components/features/TodaysHealthDashboard';
 import HealthScore from '@/components/features/HealthScore';
 import MedicationStreak from '@/components/features/MedicationStreak';
 import QuickCheckIn from '@/components/features/QuickCheckIn';
+import EmergencyContactCard from '@/components/features/EmergencyContactCard';
 import FAB from '@/components/shared/FAB';
 
 const HomeScreen: React.FC = () => {
@@ -52,59 +54,46 @@ const HomeScreen: React.FC = () => {
   // Get active medications
   const activeMedications = medications.filter(med => med.status === 'active');
 
-  // Mock data for gamification features (refined for medical aesthetic)
-  const adherenceScore = 85;
-  const completenessScore = 75;
-  const checkInScore = 90;
-  const currentStreak = 12;
-  const bestStreak = 28;
-  const todayCompleted = true;
-
   return (
-    <div className="min-h-screen bg-background-main font-inter">
-      <Header />
-      
-      <main className="px-4 py-6 pb-24 space-y-6">
-        {/* Welcome Message */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-text-primary mb-2">
-            Hello, {user.name.split(' ')[0]}! 👋
-          </h1>
-          <p className="text-text-secondary">
-            Your health information is secure and up to date
-          </p>
-        </div>
+    <MedicationAdherenceProvider>
+      <div className="min-h-screen bg-background-main font-inter">
+        <Header />
+        
+        <main className="px-4 py-6 pb-24 space-y-6">
+          {/* Welcome Message */}
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-text-primary mb-2">
+              Hello, {user.name.split(' ')[0]}! 👋
+            </h1>
+            <p className="text-text-secondary">
+              Your health information is secure and up to date
+            </p>
+          </div>
 
-        {/* PRIORITY #1: Digital Health Key - Always first */}
-        <DigitalHealthKey user={user} />
+          {/* PRIORITY #1: Digital Health Key - Always first */}
+          <DigitalHealthKey user={user} />
 
-        {/* PRIORITY #2: Today's Health Dashboard - Critical daily reminders */}
-        <TodaysHealthDashboard 
-          upcomingAppointment={upcomingAppointment}
-          activeMedications={activeMedications}
-        />
+          {/* PRIORITY #1.5: Emergency Contact Card - Critical for emergencies */}
+          <EmergencyContactCard user={user} />
 
-        {/* PRIORITY #3: Refined Gamification - Below critical info */}
-        <div className="space-y-4">
-          <HealthScore 
-            adherenceScore={adherenceScore}
-            completenessScore={completenessScore}
-            checkInScore={checkInScore}
+          {/* PRIORITY #2: Today's Health Dashboard - Critical daily reminders */}
+          <TodaysHealthDashboard 
+            upcomingAppointment={upcomingAppointment}
+            activeMedications={activeMedications}
           />
 
-          <MedicationStreak 
-            currentStreak={currentStreak}
-            bestStreak={bestStreak}
-            todayCompleted={todayCompleted}
-          />
+          {/* PRIORITY #3: Enhanced Gamification with Real Data */}
+          <div className="space-y-4">
+            <HealthScore />
+            <MedicationStreak />
+            <QuickCheckIn />
+          </div>
+        </main>
 
-          <QuickCheckIn />
-        </div>
-      </main>
-
-      <FAB />
-      <BottomNavigation />
-    </div>
+        <FAB />
+        <BottomNavigation />
+      </div>
+    </MedicationAdherenceProvider>
   );
 };
 

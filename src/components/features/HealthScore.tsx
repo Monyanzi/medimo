@@ -3,18 +3,55 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, TrendingUp, Calendar, Pill } from 'lucide-react';
+import { useMedicationAdherence } from '@/contexts/MedicationAdherenceContext';
+import { useHealthData } from '@/contexts/HealthDataContext';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface HealthScoreProps {
-  adherenceScore: number;
-  completenessScore: number;
-  checkInScore: number;
-}
+const HealthScore: React.FC = () => {
+  const { overallAdherenceScore } = useMedicationAdherence();
+  const { documents, vitalSigns } = useHealthData();
+  const { user } = useAuth();
 
-const HealthScore: React.FC<HealthScoreProps> = ({
-  adherenceScore,
-  completenessScore,
-  checkInScore
-}) => {
+  // Calculate completeness score based on profile data
+  const calculateCompletenessScore = () => {
+    if (!user) return 0;
+    
+    let score = 0;
+    const totalFields = 8;
+    
+    if (user.name) score++;
+    if (user.email) score++;
+    if (user.dob) score++;
+    if (user.bloodType) score++;
+    if (user.emergencyContact.name && user.emergencyContact.phone) score++;
+    if (user.allergies.length > 0) score++;
+    if (user.conditions.length > 0) score++;
+    if (documents.length > 0) score++;
+    
+    return Math.round((score / totalFields) * 100);
+  };
+
+  // Calculate check-in score based on recent vital signs
+  const calculateCheckInScore = () => {
+    if (vitalSigns.length === 0) return 0;
+    
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    const recentVitals = vitalSigns.filter(vital => 
+      new Date(vital.recordedDate) >= thirtyDaysAgo
+    );
+    
+    // Ideal is 4 check-ins per month (weekly)
+    const idealCheckIns = 4;
+    const score = Math.min(100, (recentVitals.length / idealCheckIns) * 100);
+    return Math.round(score);
+  };
+
+  const adherenceScore = overallAdherenceScore;
+  const completenessScore = calculateCompletenessScore();
+  const checkInScore = calculateCheckInScore();
+
   const totalScore = Math.round(
     (adherenceScore * 0.4) + (completenessScore * 0.3) + (checkInScore * 0.3)
   );
