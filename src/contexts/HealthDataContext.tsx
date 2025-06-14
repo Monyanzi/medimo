@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Medication, Appointment, Document, TimelineEvent, HealthDataContextType } from '@/types';
 import { toast } from 'sonner';
@@ -66,14 +65,18 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       fileName: "Blood_Test_Results_Nov2024.pdf",
       fileType: "PDF",
       uploadDate: "2024-11-15T10:30:00Z",
-      storagePath: "/documents/blood_test_nov2024.pdf"
+      storagePath: "/documents/blood_test_nov2024.pdf",
+      category: "Lab Results",
+      fileSize: 2048000
     },
     {
       id: "doc-002",
       fileName: "Chest_Xray_Oct2024.jpg",
       fileType: "Image",
       uploadDate: "2024-10-22T15:45:00Z",
-      storagePath: "/documents/chest_xray_oct2024.jpg"
+      storagePath: "/documents/chest_xray_oct2024.jpg",
+      category: "Images", 
+      fileSize: 1536000
     }
   ];
 

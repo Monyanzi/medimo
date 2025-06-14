@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Plus, X, Pill, Calendar, FileText, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router-dom';
 
 // Import Modals
 import AddMedicationModal from '@/components/modals/AddMedicationModal';
@@ -15,6 +16,7 @@ type ModalType = 'medication' | 'appointment' | 'document' | 'vitals' | null;
 const FAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const location = useLocation();
 
   const toggleFAB = () => {
     setIsOpen(!isOpen);
@@ -29,32 +31,47 @@ const FAB: React.FC = () => {
     setIsOpen(false); // Close FAB menu when modal opens
   };
 
-  const actions = [
-    {
-      id: 'medication' as ModalType,
-      label: 'Add Medication',
-      icon: Pill,
-      color: 'bg-blue-500 hover:bg-blue-600'
-    },
-    {
-      id: 'appointment' as ModalType,
-      label: 'Add Appointment', 
-      icon: Calendar,
-      color: 'bg-purple-500 hover:bg-purple-600'
-    },
-    {
-      id: 'document' as ModalType,
-      label: 'Upload Document',
-      icon: FileText,
-      color: 'bg-green-500 hover:bg-green-600'
-    },
-    {
-      id: 'vitals' as ModalType,
-      label: 'Log Vitals',
-      icon: Activity,
-      color: 'bg-red-500 hover:bg-red-600'
+  // Define actions based on current route
+  const getActionsForRoute = () => {
+    const allActions = [
+      {
+        id: 'medication' as ModalType,
+        label: 'Add Medication',
+        icon: Pill,
+        color: 'bg-blue-500 hover:bg-blue-600'
+      },
+      {
+        id: 'appointment' as ModalType,
+        label: 'Add Appointment', 
+        icon: Calendar,
+        color: 'bg-purple-500 hover:bg-purple-600'
+      },
+      {
+        id: 'document' as ModalType,
+        label: 'Upload Document',
+        icon: FileText,
+        color: 'bg-green-500 hover:bg-green-600'
+      },
+      {
+        id: 'vitals' as ModalType,
+        label: 'Log Vitals',
+        icon: Activity,
+        color: 'bg-red-500 hover:bg-red-600'
+      }
+    ];
+
+    // Context-aware filtering
+    if (location.pathname === '/vault') {
+      return allActions.filter(action => action.id === 'document');
+    } else if (location.pathname === '/timeline') {
+      return allActions.filter(action => action.id !== 'document');
+    } else {
+      // Home and other pages show all actions
+      return allActions;
     }
-  ];
+  };
+
+  const actions = getActionsForRoute();
 
   return (
     <>

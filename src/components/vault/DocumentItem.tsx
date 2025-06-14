@@ -73,7 +73,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({ document }) => {
   const handleDownload = () => {
     console.log('Downloading:', document.fileName);
     // In a real app, this would trigger the actual download
-    const link = document.createElement('a');
+    const link = window.document.createElement('a');
     link.href = document.storagePath;
     link.download = document.fileName;
     link.click();

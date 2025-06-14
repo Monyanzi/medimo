@@ -23,7 +23,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, isOpen, onOpe
     // In a real app, this would download the actual file
     console.log('Downloading document:', document.fileName);
     // Create a mock download link
-    const link = document.createElement('a');
+    const link = window.document.createElement('a');
     link.href = '#';
     link.download = document.fileName;
     link.click();
