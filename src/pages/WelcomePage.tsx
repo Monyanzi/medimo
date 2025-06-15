@@ -90,16 +90,6 @@ const WelcomePage: React.FC = () => {
               Continue as Guest
             </Button>
           </div>
-
-          <p className="text-xs text-text-muted mt-6">
-            Already have an account?{' '}
-            <button 
-              onClick={() => navigate('/login')}
-              className="text-primary-action font-medium"
-            >
-              Sign In
-            </button>
-          </p>
         </div>
       </main>
     </div>
