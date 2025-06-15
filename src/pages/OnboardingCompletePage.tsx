@@ -1,12 +1,21 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Heart, Calendar, FileText, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { MockAuthService } from '@/services/mockAuthService';
 
 const OnboardingCompletePage: React.FC = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Mark onboarding as complete for the current user
+    const currentUser = MockAuthService.getCurrentUser();
+    if (currentUser) {
+      MockAuthService.updateUserOnboardingStatus(currentUser.id, true);
+    }
+  }, []);
 
   const nextSteps = [
     {

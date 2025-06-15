@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { HealthDataProvider } from "@/contexts/HealthDataContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import AuthGuard from "@/components/auth/AuthGuard";
 import HomeScreen from "./pages/HomeScreen";
 import TimelineScreen from "./pages/TimelineScreen";
 import VaultScreen from "./pages/VaultScreen";
@@ -17,6 +18,8 @@ import PersonalMedicalPage from "./pages/PersonalMedicalPage";
 import SettingsNotificationsPage from "./pages/SettingsNotificationsPage";
 import LegalSupportPage from "./pages/LegalSupportPage";
 import WelcomePage from "./pages/WelcomePage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import OnboardingSetupPage from "./pages/OnboardingSetupPage";
 import OnboardingCompletePage from "./pages/OnboardingCompletePage";
 import NotFound from "./pages/NotFound";
@@ -45,16 +48,58 @@ const App: React.FC = () => {
                     <Toaster />
                     <Sonner />
                     <Routes>
+                      {/* Public routes */}
                       <Route path="/welcome" element={<WelcomePage />} />
-                      <Route path="/onboarding/setup" element={<OnboardingSetupPage />} />
-                      <Route path="/onboarding/complete" element={<OnboardingCompletePage />} />
-                      <Route path="/" element={<HomeScreen />} />
-                      <Route path="/timeline" element={<TimelineScreen />} />
-                      <Route path="/vault" element={<VaultScreen />} />
-                      <Route path="/profile" element={<ProfileScreen />} />
-                      <Route path="/profile/personal-medical" element={<PersonalMedicalPage />} />
-                      <Route path="/profile/settings-notifications" element={<SettingsNotificationsPage />} />
-                      <Route path="/profile/legal-support" element={<LegalSupportPage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/register" element={<RegisterPage />} />
+                      
+                      {/* Protected routes */}
+                      <Route path="/onboarding/setup" element={
+                        <AuthGuard>
+                          <OnboardingSetupPage />
+                        </AuthGuard>
+                      } />
+                      <Route path="/onboarding/complete" element={
+                        <AuthGuard>
+                          <OnboardingCompletePage />
+                        </AuthGuard>
+                      } />
+                      <Route path="/" element={
+                        <AuthGuard>
+                          <HomeScreen />
+                        </AuthGuard>
+                      } />
+                      <Route path="/timeline" element={
+                        <AuthGuard>
+                          <TimelineScreen />
+                        </AuthGuard>
+                      } />
+                      <Route path="/vault" element={
+                        <AuthGuard>
+                          <VaultScreen />
+                        </AuthGuard>
+                      } />
+                      <Route path="/profile" element={
+                        <AuthGuard>
+                          <ProfileScreen />
+                        </AuthGuard>
+                      } />
+                      <Route path="/profile/personal-medical" element={
+                        <AuthGuard>
+                          <PersonalMedicalPage />
+                        </AuthGuard>
+                      } />
+                      <Route path="/profile/settings-notifications" element={
+                        <AuthGuard>
+                          <SettingsNotificationsPage />
+                        </AuthGuard>
+                      } />
+                      <Route path="/profile/legal-support" element={
+                        <AuthGuard>
+                          <LegalSupportPage />
+                        </AuthGuard>
+                      } />
+                      
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
