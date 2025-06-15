@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -15,6 +16,9 @@ import ProfileScreen from "./pages/ProfileScreen";
 import PersonalMedicalPage from "./pages/PersonalMedicalPage";
 import SettingsNotificationsPage from "./pages/SettingsNotificationsPage";
 import LegalSupportPage from "./pages/LegalSupportPage";
+import WelcomePage from "./pages/WelcomePage";
+import OnboardingSetupPage from "./pages/OnboardingSetupPage";
+import OnboardingCompletePage from "./pages/OnboardingCompletePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -41,6 +45,9 @@ const App: React.FC = () => {
                     <Toaster />
                     <Sonner />
                     <Routes>
+                      <Route path="/welcome" element={<WelcomePage />} />
+                      <Route path="/onboarding/setup" element={<OnboardingSetupPage />} />
+                      <Route path="/onboarding/complete" element={<OnboardingCompletePage />} />
                       <Route path="/" element={<HomeScreen />} />
                       <Route path="/timeline" element={<TimelineScreen />} />
                       <Route path="/vault" element={<VaultScreen />} />
