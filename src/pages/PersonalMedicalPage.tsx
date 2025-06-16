@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -79,6 +80,13 @@ const PersonalMedicalPage: React.FC = () => {
   const { user, updateUser, isLoading } = useAuth();
   const navigate = useNavigate();
 
+  const getSafeFrequency = (freq?: string): 'daily' | 'twice-daily' | 'weekly' => {
+    if (freq && ['daily', 'twice-daily', 'weekly'].includes(freq)) {
+      return freq as 'daily' | 'twice-daily' | 'weekly';
+    }
+    return 'daily';
+  };
+
   const form = useForm<PersonalMedicalForm>({
     resolver: zodResolver(personalMedicalSchema),
     defaultValues: {
@@ -109,7 +117,7 @@ const PersonalMedicalPage: React.FC = () => {
       } : undefined,
       checkInSettings: user?.caregiver?.checkInSettings ? {
         enabled: user.caregiver.checkInSettings.enabled || false,
-        frequency: user.caregiver.checkInSettings.frequency || 'daily',
+        frequency: getSafeFrequency(user.caregiver.checkInSettings.frequency),
         reminderTime: user.caregiver.checkInSettings.reminderTime || '09:00'
       } : {
         enabled: false,

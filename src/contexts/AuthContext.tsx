@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthContextType } from '@/types';
 import { toast } from 'sonner';
 import { regenerateQRCode as serviceRegenerateQRCode, loadQRCodeFromStorage } from '@/services/qrCodeService';
+import { MockAuthService, MockUser } from '@/services/mockAuthService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -14,17 +15,13 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Mock user data for development
-  const mockUser: User = {
-    id: "USR-2024-001",
-    name: "Sarah Johnson",
-    email: "sarah.johnson@email.com",
-    dob: "1985-04-15",
+// Convert MockUser to User format
+const convertMockUserToUser = (mockUser: MockUser): User => {
+  return {
+    id: mockUser.id,
+    name: mockUser.name,
+    email: mockUser.email,
+    dob: "1985-04-15", // Default values - will be updated during onboarding
     bloodType: "O+",
     allergies: ["Penicillin", "Shellfish"],
     conditions: ["Hypertension", "Type 2 Diabetes"],
@@ -52,6 +49,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       "MANAGE_DOCUMENTS"
     ]
   };
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const generateQRCodeForUser = async (userData: User): Promise<User> => {
     try {
@@ -77,31 +80,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthProvider initializing...');
     const initializeUser = async () => {
       try {
-        // Check if QR code exists in storage
-        const storedQRCode = loadQRCodeFromStorage();
+        // Check if user is logged in via mock auth
+        const mockUser = MockAuthService.getCurrentUser();
         
-        let userWithQR = mockUser;
-        
-        if (storedQRCode) {
-          console.log('Loading existing QR code from storage');
-          userWithQR = {
-            ...mockUser,
-            qrCode: {
-              id: storedQRCode.data.id,
-              imageUrl: storedQRCode.imageUrl,
-              generatedAt: storedQRCode.data.generatedAt
-            }
-          };
+        if (mockUser) {
+          let userWithQR = convertMockUserToUser(mockUser);
+          
+          // Check if QR code exists in storage
+          const storedQRCode = loadQRCodeFromStorage();
+          
+          if (storedQRCode) {
+            console.log('Loading existing QR code from storage');
+            userWithQR = {
+              ...userWithQR,
+              qrCode: {
+                id: storedQRCode.data.id,
+                imageUrl: storedQRCode.imageUrl,
+                generatedAt: storedQRCode.data.generatedAt
+              }
+            };
+          } else {
+            console.log('Generating new QR code at startup');
+            userWithQR = await generateQRCodeForUser(userWithQR);
+          }
+          
+          setUser(userWithQR);
+          console.log('User loaded with QR code:', userWithQR);
         } else {
-          console.log('Generating new QR code at startup');
-          userWithQR = await generateQRCodeForUser(mockUser);
+          console.log('No authenticated user found');
+          setUser(null);
         }
-        
-        setUser(userWithQR);
-        console.log('User loaded with QR code:', userWithQR);
       } catch (error) {
         console.error('Error initializing user:', error);
-        setUser(mockUser);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -117,13 +128,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       console.log('Logging in user:', email);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const userWithQR = await generateQRCodeForUser(mockUser);
-      setUser(userWithQR);
-      toast.success('Login successful!');
+      const response = await MockAuthService.login(email, password);
+      
+      if (response.success && response.user) {
+        const userWithQR = await generateQRCodeForUser(convertMockUserToUser(response.user));
+        setUser(userWithQR);
+        toast.success('Login successful!');
+      } else {
+        throw new Error(response.error || 'Login failed');
+      }
     } catch (err) {
-      const errorMessage = 'Login failed. Please try again.';
+      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
       setError(errorMessage);
       toast.error(errorMessage);
       throw new Error(errorMessage);
@@ -134,9 +149,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = (): void => {
     console.log('Logging out user...');
+    MockAuthService.logout();
     setUser(null);
     setError(null);
-    localStorage.removeItem('medimo_auth_token');
     localStorage.removeItem('medimo_qr_code');
     toast.success('Logged out successfully');
   };
