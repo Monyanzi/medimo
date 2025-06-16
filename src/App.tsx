@@ -50,10 +50,19 @@ const App: React.FC = () => {
                     <Routes>
                       {/* Public routes */}
                       <Route path="/welcome" element={<WelcomePage />} />
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/register" element={<RegisterPage />} />
+                      <Route path="/login" element={
+                        <AuthGuard requireAuth={false} redirectTo="/"> {/* Redirect to home if logged in */}
+                          <LoginPage />
+                        </AuthGuard>
+                      } />
+                      <Route path="/register" element={
+                        <AuthGuard requireAuth={false} redirectTo="/"> {/* Redirect to home if logged in */}
+                          <RegisterPage />
+                        </AuthGuard>
+                      } />
                       
-                      {/* Protected routes */}
+                      {/* Protected routes - Onboarding has its own AuthGuard logic often */}
+                      {/* For this setup, AuthGuard will handle redirection if user is not authenticated */}
                       <Route path="/onboarding/setup" element={
                         <AuthGuard>
                           <OnboardingSetupPage />
@@ -64,6 +73,8 @@ const App: React.FC = () => {
                           <OnboardingCompletePage />
                         </AuthGuard>
                       } />
+
+                      {/* Main protected application routes */}
                       <Route path="/" element={
                         <AuthGuard>
                           <HomeScreen />

@@ -1,71 +1,24 @@
 
-import { useState, useMemo } from 'react';
-import { TimelineEvent } from '@/types';
-import { parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { useState } from 'react';
+import { TimelineEventFilters } from '@/types'; // Assuming sortOrder is part of TimelineEventFilters
 
-export const useTimelineFilters = (timelineEvents: TimelineEvent[]) => {
-  const [searchTerm, setSearchTerm] = useState('');
+// Default sort order is 'desc' (newest first) in HealthDataContext
+// We'll use 'asc' | 'desc' for consistency with the new filters type
+export const useTimelineFilters = () => {
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // Default to newest first
   const [dateFilter, setDateFilter] = useState<string>('all');
 
-  const filteredAndSortedEvents = useMemo(() => {
-    let filtered = timelineEvents.filter(event => {
-      // Search filter
-      const matchesSearch = searchTerm === '' || 
-        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.details.toLowerCase().includes(searchTerm.toLowerCase());
+  // The filtering and sorting logic has moved to HealthDataContext.
+  // This hook now primarily manages the state of these filter options.
 
-      // Category filter
-      const matchesCategory = categoryFilter === 'all' || event.category === categoryFilter;
-
-      // Date filter
-      let matchesDate = true;
-      if (dateFilter !== 'all') {
-        const eventDate = parseISO(event.date);
-        const now = new Date();
-        
-        switch (dateFilter) {
-          case 'today':
-            matchesDate = isWithinInterval(eventDate, {
-              start: startOfDay(now),
-              end: endOfDay(now)
-            });
-            break;
-          case 'week':
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            matchesDate = isWithinInterval(eventDate, {
-              start: startOfDay(weekAgo),
-              end: endOfDay(now)
-            });
-            break;
-          case 'month':
-            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            matchesDate = isWithinInterval(eventDate, {
-              start: startOfDay(monthAgo),
-              end: endOfDay(now)
-            });
-            break;
-        }
-      }
-
-      return matchesSearch && matchesCategory && matchesDate;
-    });
-
-    // Sort events
-    filtered.sort((a, b) => {
-      const dateA = parseISO(a.date);
-      const dateB = parseISO(b.date);
-      
-      if (sortOrder === 'newest') {
-        return dateB.getTime() - dateA.getTime();
-      } else {
-        return dateA.getTime() - dateB.getTime();
-      }
-    });
-
-    return filtered;
-  }, [timelineEvents, searchTerm, categoryFilter, sortOrder, dateFilter]);
+  const currentFilters: TimelineEventFilters = {
+    searchTerm: searchTerm || undefined, // Pass undefined if empty string for cleaner filter object
+    categoryFilter: categoryFilter,
+    dateFilter: dateFilter,
+    sortOrder: sortOrder,
+  };
 
   return {
     searchTerm,
@@ -76,6 +29,6 @@ export const useTimelineFilters = (timelineEvents: TimelineEvent[]) => {
     setSortOrder,
     dateFilter,
     setDateFilter,
-    filteredAndSortedEvents
+    currentFilters, // Expose the combined filter object for convenience
   };
 };

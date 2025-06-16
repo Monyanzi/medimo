@@ -38,6 +38,7 @@ export interface User {
     imageUrl: string;
     generatedAt: string;
   };
+  isOnboardingComplete: boolean; // Added field
 }
 
 export interface AuthContextType {
@@ -48,6 +49,13 @@ export interface AuthContextType {
   regenerateQRCode: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
+}
+
+export interface TimelineEventFilters {
+  searchTerm?: string;
+  categoryFilter?: string; // e.g., 'all', 'Medication', 'Appointment'
+  dateFilter?: string; // e.g., 'all', 'today', 'past_7_days', 'past_30_days'
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface HealthRecord {
@@ -106,7 +114,9 @@ export interface VitalSigns {
   bloodPressureDiastolic?: number;
   heartRate?: number;
   weight?: number;
+  height?: number; // Added field
   temperature?: number;
+  oxygenSaturation?: number; // Added field
   recordedDate: string;
   notes?: string;
 }

@@ -44,13 +44,11 @@ export class MockAuthService {
   }
 
   static async register(email: string, password: string, name: string): Promise<AuthResponse> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
     const users = this.getUsers();
+    const normalizedEmailInput = email.toLowerCase();
     
     // Check if user already exists
-    if (users.find(user => user.email === email)) {
+    if (users.find(user => user.email.toLowerCase() === normalizedEmailInput)) {
       return {
         success: false,
         error: 'User with this email already exists'
@@ -60,7 +58,7 @@ export class MockAuthService {
     // Create new user
     const newUser: MockUser = {
       id: `USR-${Date.now()}`,
-      email,
+      email: normalizedEmailInput, // Store email as lowercase
       password, // In real app, this would be hashed
       name,
       isOnboardingComplete: false
@@ -79,11 +77,9 @@ export class MockAuthService {
   }
 
   static async login(email: string, password: string): Promise<AuthResponse> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
     const users = this.getUsers();
-    const user = users.find(u => u.email === email && u.password === password);
+    const normalizedEmailInput = email.toLowerCase();
+    const user = users.find(u => u.email.toLowerCase() === normalizedEmailInput && u.password === password);
 
     if (!user) {
       return {

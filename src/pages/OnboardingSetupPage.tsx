@@ -74,7 +74,8 @@ const OnboardingSetupPage: React.FC = () => {
           name: data.emergencyContactName,
           phone: data.emergencyContactPhone,
           relationship: data.emergencyContactRelationship
-        }
+        },
+        isOnboardingComplete: true // Add this line
       };
 
       await updateUser(updateData);

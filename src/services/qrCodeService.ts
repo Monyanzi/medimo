@@ -1,22 +1,14 @@
 
 import QRCode from 'qrcode';
 import { User } from '@/types';
-import { format, parseISO } from 'date-fns';
+// import { format, parseISO } from 'date-fns'; // No longer needed for dob formatting in QR
 
 export interface QRCodeData {
-  id: string;
-  name: string;
-  dob: string;
-  bloodType: string;
-  allergies: string;
-  conditions: string;
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
-  organDonor: string;
-  medicalId: string;
+  qrId: string; // Unique ID for the QR instance itself
+  userName: string;
+  medicalId: string; // User's main ID
+  emergencyContactName: string;
+  emergencyContactPhone: string;
   generatedAt: string;
 }
 
@@ -28,19 +20,11 @@ export const generateUniqueQRId = (): string => {
 
 export const generateQRCodeData = (user: User): QRCodeData => {
   return {
-    id: generateUniqueQRId(),
-    name: user.name,
-    dob: format(parseISO(user.dob), 'MM/dd/yyyy'),
-    bloodType: user.bloodType,
-    allergies: user.allergies.length > 0 ? user.allergies.join(', ') : 'None',
-    conditions: user.conditions.length > 0 ? user.conditions.join(', ') : 'None',
-    emergencyContact: {
-      name: user.emergencyContact.name,
-      phone: user.emergencyContact.phone,
-      relationship: user.emergencyContact.relationship
-    },
-    organDonor: user.organDonor ? 'Yes' : 'No',
-    medicalId: user.id,
+    qrId: generateUniqueQRId(), // Use qrId for the instance ID
+    userName: user.name,
+    medicalId: user.id, // User's primary ID
+    emergencyContactName: user.emergencyContact.name,
+    emergencyContactPhone: user.emergencyContact.phone,
     generatedAt: new Date().toISOString()
   };
 };

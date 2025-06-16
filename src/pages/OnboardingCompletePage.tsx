@@ -9,13 +9,8 @@ import { MockAuthService } from '@/services/mockAuthService';
 const OnboardingCompletePage: React.FC = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Mark onboarding as complete for the current user
-    const currentUser = MockAuthService.getCurrentUser();
-    if (currentUser) {
-      MockAuthService.updateUserOnboardingStatus(currentUser.id, true);
-    }
-  }, []);
+  // useEffect hook that called MockAuthService.updateUserOnboardingStatus is removed.
+  // This logic is now handled by AuthContext.updateUser when OnboardingSetupPage submits.
 
   const nextSteps = [
     {

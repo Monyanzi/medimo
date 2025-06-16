@@ -1,7 +1,8 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Medication, Appointment, Document, TimelineEvent, VitalSigns, HealthDataContextType } from '@/types';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { Medication, Appointment, Document, TimelineEvent, VitalSigns, HealthDataContextType, TimelineEventFilters } from '@/types';
 import { toast } from 'sonner';
+import { parseISO, isToday, isWithinInterval, subDays } from 'date-fns';
 
 const HealthDataContext = createContext<HealthDataContextType | undefined>(undefined);
 
@@ -17,7 +18,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [medications, setMedications] = useState<Medication[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [masterTimelineEvents, setMasterTimelineEvents] = useState<TimelineEvent[]>([]); // Renamed to hold all events
   const [vitalSigns, setVitalSigns] = useState<VitalSigns[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,8 +90,10 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       bloodPressureDiastolic: 85,
       heartRate: 72,
       weight: 175,
+      height: 70, // Added height in inches
+      oxygenSaturation: 98, // Added SpO2
       recordedDate: "2024-11-14T08:00:00Z",
-      notes: "Morning reading before medication"
+      notes: "Morning reading before medication, including height and SpO2"
     }
   ];
 
@@ -106,7 +109,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     {
       id: "event-002",
       title: "Blood Pressure Recorded",
-      details: "135/85 mmHg, Heart Rate: 72 bpm",
+      details: "135/85 mmHg, Heart Rate: 72 bpm, Weight: 175 lbs, Height: 70 in, SpO2: 98%", // Updated details
       date: "2024-11-14T08:00:00Z",
       category: "Vitals",
       relatedId: "vital-001"
@@ -131,18 +134,14 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     console.log('HealthDataProvider initializing...');
-    // Simulate data loading
-    const timer = setTimeout(() => {
-      setMedications(mockMedications);
-      setAppointments(mockAppointments);
-      setDocuments(mockDocuments);
-      setTimelineEvents(mockTimelineEvents);
-      setVitalSigns(mockVitalSigns);
-      setIsLoading(false);
-      console.log('Health data loaded');
-    }, 1200);
-
-    return () => clearTimeout(timer);
+    // Directly set data without artificial delay
+    setMedications(mockMedications);
+    setAppointments(mockAppointments);
+    setDocuments(mockDocuments);
+    setMasterTimelineEvents(mockTimelineEvents); // Initialize master list
+    setVitalSigns(mockVitalSigns);
+    setIsLoading(false);
+    console.log('Health data loaded instantly');
   }, []);
 
   // Helper function to create timeline events
@@ -169,7 +168,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         category: "Medication",
         relatedId: newMedication.id
       });
-      setTimelineEvents(prev => [...prev, timelineEvent]);
+      setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
       
       toast.success('Medication added successfully!');
     } catch (err) {
@@ -193,7 +192,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           category: "Medication",
           relatedId: id
         });
-        setTimelineEvents(prev => [...prev, timelineEvent]);
+        setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
         eventGenerated = true;
       } else if (medication.dosage !== undefined && existingMedication?.dosage !== medication.dosage ||
                  medication.frequency !== undefined && existingMedication?.frequency !== medication.frequency) {
@@ -204,7 +203,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           category: "Medication",
           relatedId: id
         });
-        setTimelineEvents(prev => [...prev, timelineEvent]);
+        setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
         eventGenerated = true;
       }
       
@@ -229,7 +228,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           category: "Medication",
           relatedId: id
         });
-        setTimelineEvents(prev => [...prev, timelineEvent]);
+        setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
       }
       
       toast.success('Medication removed successfully!');
@@ -255,7 +254,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         category: "Appointment",
         relatedId: newAppointment.id
       });
-      setTimelineEvents(prev => [...prev, timelineEvent]);
+      setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
       
       toast.success('Appointment added successfully!');
     } catch (err) {
@@ -277,7 +276,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         category: "Appointment",
         relatedId: id
       });
-      setTimelineEvents(prev => [...prev, timelineEvent]);
+      setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
 
       toast.success('Appointment updated successfully!');
     } catch (err) {
@@ -300,7 +299,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           category: "Appointment",
           relatedId: id
         });
-        setTimelineEvents(prev => [...prev, timelineEvent]);
+        setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
       }
       
       toast.success('Appointment cancelled successfully!');
@@ -326,7 +325,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         category: "Document",
         relatedId: newDocument.id
       });
-      setTimelineEvents(prev => [...prev, timelineEvent]);
+      setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
       
       toast.success('Document uploaded successfully!');
     } catch (err) {
@@ -349,7 +348,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           category: "Document",
           relatedId: id
         });
-        setTimelineEvents(prev => [...prev, timelineEvent]);
+        setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
       }
       
       toast.success('Document deleted successfully!');
@@ -373,17 +372,19 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         details.push(`BP: ${vitals.bloodPressureSystolic}/${vitals.bloodPressureDiastolic} mmHg`);
       }
       if (vitals.heartRate) details.push(`HR: ${vitals.heartRate} bpm`);
-      if (vitals.weight) details.push(`Weight: ${vitals.weight} lbs`);
-      if (vitals.temperature) details.push(`Temp: ${vitals.temperature}°F`);
+      if (vitals.weight) details.push(`Weight: ${vitals.weight} lbs`); // Assuming lbs from modal
+      if (vitals.height) details.push(`Height: ${vitals.height} in`); // Assuming inches from modal
+      if (vitals.temperature) details.push(`Temp: ${vitals.temperature}°F`); // Assuming F from modal
+      if (vitals.oxygenSaturation) details.push(`SpO2: ${vitals.oxygenSaturation}%`);
       
       const timelineEvent = createTimelineEvent({
         title: "Vitals Recorded",
         details: details.join(', ') || 'Vital signs recorded',
-        date: new Date().toISOString(),
+        date: vitals.recordedDate || new Date().toISOString(), // Prefer recordedDate from input
         category: "Vitals",
         relatedId: newVitals.id
       });
-      setTimelineEvents(prev => [...prev, timelineEvent]);
+      setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
       
       toast.success('Vital signs recorded successfully!');
     } catch (err) {
@@ -402,16 +403,19 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         details.push(`BP: ${vitals.bloodPressureSystolic}/${vitals.bloodPressureDiastolic} mmHg`);
       }
       if (vitals.heartRate) details.push(`HR: ${vitals.heartRate} bpm`);
-      // Add other vital fields as needed for the details string
+      if (vitals.weight) details.push(`Weight: ${vitals.weight} lbs`);
+      if (vitals.height) details.push(`Height: ${vitals.height} in`);
+      if (vitals.temperature) details.push(`Temp: ${vitals.temperature}°F`);
+      if (vitals.oxygenSaturation) details.push(`SpO2: ${vitals.oxygenSaturation}%`);
 
       const timelineEvent = createTimelineEvent({
         title: "Vitals Updated",
         details: details.length > 0 ? `Updated: ${details.join(', ')}` : 'Vital signs record updated.',
-        date: new Date().toISOString(), // Or use vitals.recordedDate if that's being updated
+        date: vitals.recordedDate || new Date().toISOString(), // Prefer recordedDate from input
         category: "Vitals",
         relatedId: id
       });
-      setTimelineEvents(prev => [...prev, timelineEvent]);
+      setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
 
       toast.success('Vital signs updated successfully!');
     } catch (err) {
@@ -433,7 +437,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const addTimelineEvent = async (event: Omit<TimelineEvent, 'id'>): Promise<void> => {
     try {
       const newEvent = createTimelineEvent(event);
-      setTimelineEvents(prev => [...prev, newEvent]);
+      setMasterTimelineEvents(prev => [...prev, newEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
       toast.success('Timeline event added successfully!');
     } catch (err) {
       toast.error('Failed to add timeline event');
@@ -443,7 +447,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const updateTimelineEvent = async (id: string, event: Partial<TimelineEvent>): Promise<void> => {
     try {
-      setTimelineEvents(prev => prev.map(evt => evt.id === id ? { ...evt, ...event } : evt));
+      setMasterTimelineEvents(prev => prev.map(evt => evt.id === id ? { ...evt, ...event } : evt).sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
       toast.success('Timeline event updated successfully!');
     } catch (err) {
       toast.error('Failed to update timeline event');
@@ -453,7 +457,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const deleteTimelineEvent = async (id: string): Promise<void> => {
     try {
-      setTimelineEvents(prev => prev.filter(evt => evt.id !== id));
+      setMasterTimelineEvents(prev => prev.filter(evt => evt.id !== id));
       toast.success('Timeline event deleted successfully!');
     } catch (err) {
       toast.error('Failed to delete timeline event');
@@ -461,11 +465,61 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const getFilteredTimelineEvents = useCallback((filters?: TimelineEventFilters): TimelineEvent[] => {
+    let processedEvents = [...masterTimelineEvents];
+
+    if (filters) {
+      // 1. Filter by Search Term
+      if (filters.searchTerm) {
+        const lowerSearchTerm = filters.searchTerm.toLowerCase();
+        processedEvents = processedEvents.filter(event =>
+          event.title.toLowerCase().includes(lowerSearchTerm) ||
+          (event.details && event.details.toLowerCase().includes(lowerSearchTerm))
+        );
+      }
+
+      // 2. Filter by Category
+      if (filters.categoryFilter && filters.categoryFilter !== 'all') {
+        processedEvents = processedEvents.filter(event => event.category === filters.categoryFilter);
+      }
+
+      // 3. Filter by Date
+      if (filters.dateFilter && filters.dateFilter !== 'all') {
+        const now = new Date();
+        processedEvents = processedEvents.filter(event => {
+          const eventDate = parseISO(event.date);
+          switch (filters.dateFilter) {
+            case 'today':
+              return isToday(eventDate);
+            case 'past_7_days':
+              return isWithinInterval(eventDate, { start: subDays(now, 7), end: now });
+            case 'past_30_days':
+              return isWithinInterval(eventDate, { start: subDays(now, 30), end: now });
+            default:
+              return true;
+          }
+        });
+      }
+    }
+
+    // 4. Sort Events (already sorted by date desc when data is modified, but can be adjusted here if needed)
+    if (filters?.sortOrder === 'asc') {
+      processedEvents.sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
+    } else {
+      // Default or 'desc'
+      processedEvents.sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+    }
+
+    return processedEvents;
+  }, [masterTimelineEvents]);
+
+
   const contextValue: HealthDataContextType = {
     medications,
     appointments,
     documents,
-    timelineEvents,
+    // timelineEvents: masterTimelineEvents, // Keep this if direct access to all events is needed elsewhere
+    getFilteredTimelineEvents, // Expose the new function
     vitalSigns,
     addMedication,
     updateMedication,
@@ -475,7 +529,7 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     deleteAppointment,
     addDocument,
     deleteDocument,
-    addTimelineEvent,
+    addTimelineEvent, // These still modify masterTimelineEvents
     updateTimelineEvent,
     deleteTimelineEvent,
     addVitalSigns,
@@ -485,13 +539,13 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     error
   };
 
-  console.log('HealthDataContext rendering with data:', {
-    medications: medications.length,
-    appointments: appointments.length,
-    documents: documents.length,
-    timelineEvents: timelineEvents.length,
-    vitalSigns: vitalSigns.length
-  });
+  // console.log('HealthDataContext rendering with data:', {
+  //   medications: medications.length,
+  //   appointments: appointments.length,
+  //   documents: documents.length,
+  //   timelineEvents: masterTimelineEvents.length, // Log master list length
+  //   vitalSigns: vitalSigns.length
+  // });
 
   return (
     <HealthDataContext.Provider value={contextValue}>

@@ -1,7 +1,7 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MockAuthService } from '@/services/mockAuthService';
+import { useAuth } from '@/contexts/AuthContext'; // Use AuthContext
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -12,56 +12,61 @@ interface AuthGuardProps {
 const AuthGuard: React.FC<AuthGuardProps> = ({ 
   children, 
   requireAuth = true, 
-  redirectTo = '/login' // Changed default from /welcome to /login
+  redirectTo = '/login'
 }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { user, isLoading: isAuthLoading } = useAuth(); // Get user and loading state from context
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    const checkAuth = () => {
-      const currentUser = MockAuthService.getCurrentUser();
-      setIsAuthenticated(!!currentUser);
-      setIsLoading(false);
+    if (isAuthLoading) {
+      return; // Wait for AuthContext to determine authentication status
+    }
 
-      if (requireAuth && !currentUser) {
-        // Save the attempted location for redirect after login
-        navigate(redirectTo, { 
-          state: { from: location.pathname } 
-        });
-      } else if (!requireAuth && currentUser) {
-        // User is logged in but trying to access auth pages
-        if (currentUser.isOnboardingComplete) {
-          navigate('/');
-        } else {
-          navigate('/onboarding/setup');
-        }
+    if (requireAuth && !user) {
+      // If authentication is required and user is not logged in, redirect to login
+      navigate(redirectTo, {
+        state: { from: location.pathname }, // Pass the original location
+        replace: true
+      });
+    } else if (!requireAuth && user) {
+      // If authentication is NOT required (e.g., login/register page) AND user IS logged in
+      if (user.isOnboardingComplete) {
+        navigate('/', { replace: true }); // Redirect to home
+      } else {
+        navigate('/onboarding/setup', { replace: true }); // Redirect to onboarding
       }
-    };
+    }
+    // No action needed if:
+    // 1. requireAuth is true AND user is logged in (allow access to children)
+    // 2. requireAuth is false AND user is NOT logged in (allow access to children, e.g. login page)
+  }, [isAuthLoading, user, requireAuth, redirectTo, navigate, location]);
 
-    checkAuth();
-  }, [requireAuth, redirectTo, navigate, location]);
-
-  if (isLoading) {
+  if (isAuthLoading) {
+    // Show a loading indicator while AuthContext is initializing
     return (
       <div className="min-h-screen bg-background-main flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-text-primary mb-2">Loading...</h2>
+          <h2 className="text-xl font-semibold text-text-primary mb-2">Verifying session...</h2>
           <p className="text-text-secondary">Please wait</p>
         </div>
       </div>
     );
   }
 
-  if (requireAuth && !isAuthenticated) {
-    return null; // Will redirect
+  // If requireAuth is true and user is not authenticated (after loading),
+  // this component will have already triggered a redirect, so return null.
+  if (requireAuth && !user) {
+    return null;
   }
 
-  if (!requireAuth && isAuthenticated) {
-    return null; // Will redirect
+  // If this guard is for public routes (requireAuth=false) and user is logged in (after loading),
+  // this component will have already triggered a redirect, so return null.
+  if (!requireAuth && user) {
+    return null;
   }
 
+  // Otherwise, render the children
   return <>{children}</>;
 };
 

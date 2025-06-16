@@ -21,6 +21,7 @@ const convertMockUserToUser = (mockUser: MockUser): User => {
     id: mockUser.id,
     name: mockUser.name,
     email: mockUser.email,
+    isOnboardingComplete: mockUser.isOnboardingComplete, // Mapped this field
     dob: "1985-04-15", // Default values - will be updated during onboarding
     bloodType: "O+",
     allergies: ["Penicillin", "Shellfish"],
@@ -78,49 +79,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     console.log('AuthProvider initializing...');
-    const initializeUser = async () => {
+    const initializeUser = () => { // No longer async itself, parts are async
       try {
-        // Check if user is logged in via mock auth
         const mockUser = MockAuthService.getCurrentUser();
         
         if (mockUser) {
-          let userWithQR = convertMockUserToUser(mockUser);
-          
-          // Check if QR code exists in storage
+          let initialUser = convertMockUserToUser(mockUser);
+          setUser(initialUser); // Set basic user data first
+          console.log('Initial user data set:', initialUser.name);
+
           const storedQRCode = loadQRCodeFromStorage();
-          
           if (storedQRCode) {
-            console.log('Loading existing QR code from storage');
-            userWithQR = {
-              ...userWithQR,
+            // If QR is in storage, add it synchronously
+            initialUser = {
+              ...initialUser,
               qrCode: {
                 id: storedQRCode.data.id,
                 imageUrl: storedQRCode.imageUrl,
                 generatedAt: storedQRCode.data.generatedAt
               }
             };
+            setUser(initialUser); // Update with QR
+            console.log('User loaded with stored QR code:', initialUser.name);
           } else {
-            console.log('Generating new QR code at startup');
-            userWithQR = await generateQRCodeForUser(userWithQR);
+            // Generate QR code asynchronously and update user state
+            console.log('Generating new QR code at startup (async) for:', initialUser.name);
+            generateQRCodeForUser(initialUser).then(userWithQR => {
+              setUser(userWithQR); // Update user state with QR code
+              console.log('User loaded with newly generated QR code:', userWithQR.name);
+            }).catch(qrError => {
+                console.error("Initial QR generation failed for user " + initialUser.id + ":", qrError);
+                // User state remains with core data, QR is missing.
+            });
           }
-          
-          setUser(userWithQR);
-          console.log('User loaded with QR code:', userWithQR);
         } else {
           console.log('No authenticated user found');
           setUser(null);
         }
       } catch (error) {
         console.error('Error initializing user:', error);
-        setUser(null);
+        setUser(null); // Ensure user is null on error
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Set loading false after initial sync setup
       }
     };
 
-    // Remove setTimeout for faster initialization, especially relevant after context-driven login
     initializeUser();
-  }, []);
+  }, []); // generateQRCodeForUser should be stable or wrapped in useCallback if included in deps
 
   const login = async (email: string, password: string): Promise<{ success: boolean; user: User | null; error?: string }> => {
     setIsLoading(true);
@@ -128,18 +133,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       console.log('AuthContext: Logging in user:', email);
+      // MockAuthService.login now has no artificial delay
       const response = await MockAuthService.login(email, password);
       
       if (response.success && response.user) {
-        // TODO: Optimization - Consider if QR code needs regeneration here.
-        // If user logs in and has an existing valid QR from localStorage (loaded in useEffect),
-        // and critical data hasn't changed, this might be an unnecessary regeneration.
-        // For now, it ensures user object always has fresh QR data on login.
         const convertedUser = convertMockUserToUser(response.user);
-        const userWithQR = await generateQRCodeForUser(convertedUser);
-        setUser(userWithQR); // Set user state in context
-        toast.success('Login successful!');
-        return { success: true, user: userWithQR };
+
+        // Set user state immediately without QR code for faster UI response
+        setUser(convertedUser);
+        toast.success('Login successful! User data loaded.'); // Indicate main user data is ready
+        console.log('Core user data set for:', convertedUser.name);
+
+        // Asynchronously generate and add QR code to the user state
+        // No need to await this for the login to be "complete" from UX perspective
+        generateQRCodeForUser(convertedUser).then(userWithQR => {
+          setUser(userWithQR); // Update user state with QR code
+          console.log('QR code generated and user state updated for:', userWithQR.name);
+          // Optionally, a less intrusive toast or no toast for QR update:
+          // toast.info('User QR code ready.');
+        }).catch(qrError => {
+          console.error("QR generation failed post-login for " + convertedUser.id + ":", qrError);
+          // Error already toasted within generateQRCodeForUser typically,
+          // but user state remains with core data.
+        });
+
+        // Return user without waiting for QR code generation
+        return { success: true, user: convertedUser };
       } else {
         const errorMessage = response.error || 'Login failed';
         setError(errorMessage);
@@ -152,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.error(errorMessage);
       return { success: false, user: null, error: errorMessage };
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Context's isLoading for the login operation itself
     }
   };
 
@@ -177,32 +196,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
     
     try {
-      console.log('Updating user with data:', userData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Merge the update data with existing user data
-      const updatedUser = { ...user, ...userData };
-      
-      // Regenerate QR code if critical data changed
+      let updatedUserObject = { ...user, ...userData };
+
+      // Regenerate QR code if critical data changed (existing logic)
       const criticalFields = ['name', 'dob', 'bloodType', 'allergies', 'conditions', 'emergencyContact', 'organDonor'];
       const hasCriticalChanges = criticalFields.some(field => {
         const newValue = userData[field as keyof User];
+        // Ensure to compare with the original 'user' state, not 'updatedUserObject' before QR update
         return newValue !== undefined && JSON.stringify(newValue) !== JSON.stringify(user[field as keyof User]);
       });
-      
+
       if (hasCriticalChanges) {
         console.log('Critical data changed, regenerating QR code...');
-        const userWithNewQR = await generateQRCodeForUser(updatedUser);
-        setUser(userWithNewQR);
+        updatedUserObject = await generateQRCodeForUser(updatedUserObject);
         toast.success('Profile updated and QR code regenerated!');
-      } else {
-        setUser(updatedUser);
+      } else if (Object.keys(userData).length > 0 && !(Object.keys(userData).length === 1 && 'isOnboardingComplete' in userData)) {
+        // Only toast "Profile updated" if actual profile fields changed,
+        // and it wasn't just the onboarding status update triggered internally.
+        // Or if QR toast already showed.
         toast.success('Profile updated successfully!');
       }
       
-      console.log('User update completed:', updatedUser);
+      setUser(updatedUserObject); // Update React state first with potentially new QR
+
+      // If isOnboardingComplete was part of this update and set to true,
+      // ensure MockAuthService is also updated.
+      // This should use user.id from the original user object before it's updated in the current scope.
+      if (userData.isOnboardingComplete === true && user.id) {
+        await MockAuthService.updateUserOnboardingStatus(user.id, true);
+        console.log('Onboarding status updated in MockAuthService for user:', user.id);
+      }
+
+      // console.log('User update completed:', updatedUserObject); // Use the latest user object
       
     } catch (err) {
       const errorMessage = 'Failed to update profile. Please try again.';
