@@ -97,15 +97,27 @@ const HomeScreen: React.FC = () => {
           </div>
           
           <div className="mt-3 space-y-1">
-            {(overdueReminders.length > 0 ? overdueReminders : pendingReminders.slice(0, 3)).map((reminder, index) => (
+            {(overdueReminders.length > 0 ? overdueReminders : pendingReminders).slice(0, 3).map((reminder, index) => (
               <div key={index} className="text-xs text-yellow-700">
                 <span className="font-medium">{reminder.medicationName}</span> - {reminder.dosage} at {reminder.scheduledTime}
               </div>
             ))}
-            {pendingReminders.length > 3 && (
+            {/* Adjust logic for "more medications" count based on what's being displayed */}
+            {overdueReminders.length > 3 && (
               <div className="text-xs text-yellow-600">
-                +{pendingReminders.length - 3} more medications
+                +{overdueReminders.length - 3} more overdue
               </div>
+            )}
+            {overdueReminders.length === 0 && pendingReminders.length > 3 && (
+              <div className="text-xs text-yellow-600">
+                +{pendingReminders.length - 3} more pending
+              </div>
+            )}
+            {/* Case where some overdue are shown (less than 3) and there are still pending ones not shown */}
+            {overdueReminders.length > 0 && overdueReminders.length < 3 && pendingReminders.length > 0 && (overdueReminders.length + pendingReminders.length > 3) && (
+                 <div className="text-xs text-yellow-600">
+                    +{ (overdueReminders.length + pendingReminders.length) - 3 > 0 ? (overdueReminders.length + pendingReminders.length) - 3 : 0 } more medications
+                 </div>
             )}
           </div>
         </CardContent>

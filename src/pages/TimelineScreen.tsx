@@ -45,7 +45,8 @@ const TimelineScreen: React.FC = () => {
     try {
       generateTimelinePDF(user, filteredAndSortedEvents);
     } catch (error) {
-      alert('There was an error generating the PDF. Please try again.');
+      console.error("Error generating timeline PDF:", error);
+      toast.error('There was an error generating the PDF. Please try again.');
     }
   };
 

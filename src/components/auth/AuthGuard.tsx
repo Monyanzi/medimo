@@ -12,7 +12,7 @@ interface AuthGuardProps {
 const AuthGuard: React.FC<AuthGuardProps> = ({ 
   children, 
   requireAuth = true, 
-  redirectTo = '/welcome' 
+  redirectTo = '/login' // Changed default from /welcome to /login
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);

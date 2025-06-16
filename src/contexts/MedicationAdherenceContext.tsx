@@ -88,8 +88,13 @@ export const MedicationAdherenceProvider: React.FC<{ children: React.ReactNode }
           });
           
           // Recalculate adherence score for the day
-          // This is a simplified calculation - in a real app you'd consider prescribed vs taken
-          updatedDay.adherenceScore = Math.min(100, (updatedDay.takenMedications.length / 3) * 100);
+          // TODO: Enhance adherence score calculation.
+          // Current logic is simplified: Assumes a fixed number of (e.g., 3) total expected doses per day.
+          // A robust implementation should:
+          // 1. Know the actual number of prescribed doses for *that specific day* based on all active medication schedules.
+          // 2. Calculate score = (number of unique medications taken / number of unique medications prescribed for the day) * 100.
+          // 3. Handle cases where a medication is taken multiple times if prescribed (e.g. "twice a day").
+          updatedDay.adherenceScore = Math.min(100, (updatedDay.takenMedications.length / 3) * 100); // Simplified
         }
 
         const newData = [...prev];
@@ -107,7 +112,8 @@ export const MedicationAdherenceProvider: React.FC<{ children: React.ReactNode }
             dosage
           }],
           missedMedications: [],
-          adherenceScore: 33 // 1 out of 3 medications
+          // Simplified initial score
+          adherenceScore: 33
         };
         
         return [...prev, newDay].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

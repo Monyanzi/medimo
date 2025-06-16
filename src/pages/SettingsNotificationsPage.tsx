@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Bell, Globe, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,28 +13,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useNotifications } from '@/contexts/NotificationContext'; // Import the hook
+import { toast } from 'sonner'; // For save confirmation
 
 const SettingsNotificationsPage: React.FC = () => {
   const navigate = useNavigate();
-  
-  // Notification settings state
-  const [medicationReminders, setMedicationReminders] = useState(true);
-  const [appointmentReminders, setAppointmentReminders] = useState(true);
-  const [vitalSignsReminders, setVitalSignsReminders] = useState(false);
-  const [caregiverAlerts, setCaregiverAlerts] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(false);
-  
-  // Language & Region settings state
-  const [language, setLanguage] = useState('en');
-  const [region, setRegion] = useState('US');
-  const [timeFormat, setTimeFormat] = useState('12h');
-  const [dateFormat, setDateFormat] = useState('MM/DD/YYYY');
+  const {
+    language, setLanguage,
+    region, setRegion,
+    timeFormat, setTimeFormat,
+    dateFormat, setDateFormat,
+    medicationReminders, setMedicationReminders,
+    appointmentReminders, setAppointmentReminders,
+    vitalSignsReminders, setVitalSignsReminders,
+    caregiverAlerts, setCaregiverAlerts,
+    pushNotifications, setPushNotifications,
+    emailNotifications, setEmailNotifications
+  } = useNotifications(); // Use the context
 
   const handleSave = () => {
-    // Save settings logic would go here
-    console.log('Saving settings...');
-    // Show success message or toast
+    // All settings are saved on change by the context setters.
+    // This button can provide a general save confirmation or be removed.
+    toast.success('Settings have been saved.');
+    console.log('Settings saved (via context on-change persistence).');
   };
 
   const languages = [
@@ -94,12 +95,13 @@ const SettingsNotificationsPage: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-base">Medication Reminders</Label>
+                  <Label htmlFor="medReminders" className="text-base">Medication Reminders</Label>
                   <p className="text-sm text-text-secondary">
                     Get notified when it's time to take your medications
                   </p>
                 </div>
                 <Switch
+                  id="medReminders"
                   checked={medicationReminders}
                   onCheckedChange={setMedicationReminders}
                 />
@@ -107,12 +109,13 @@ const SettingsNotificationsPage: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-base">Appointment Reminders</Label>
+                  <Label htmlFor="apptReminders" className="text-base">Appointment Reminders</Label>
                   <p className="text-sm text-text-secondary">
                     Receive reminders for upcoming appointments
                   </p>
                 </div>
                 <Switch
+                  id="apptReminders"
                   checked={appointmentReminders}
                   onCheckedChange={setAppointmentReminders}
                 />
@@ -120,12 +123,13 @@ const SettingsNotificationsPage: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-base">Vital Signs Reminders</Label>
+                  <Label htmlFor="vitalReminders" className="text-base">Vital Signs Reminders</Label>
                   <p className="text-sm text-text-secondary">
                     Reminders to log your daily vital signs
                   </p>
                 </div>
                 <Switch
+                  id="vitalReminders"
                   checked={vitalSignsReminders}
                   onCheckedChange={setVitalSignsReminders}
                 />
@@ -133,12 +137,13 @@ const SettingsNotificationsPage: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-base">Caregiver Alerts</Label>
+                  <Label htmlFor="caregiverAlerts" className="text-base">Caregiver Alerts</Label>
                   <p className="text-sm text-text-secondary">
                     Allow caregivers to receive health alerts
                   </p>
                 </div>
                 <Switch
+                  id="caregiverAlerts"
                   checked={caregiverAlerts}
                   onCheckedChange={setCaregiverAlerts}
                 />
@@ -151,9 +156,10 @@ const SettingsNotificationsPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Smartphone className="h-4 w-4 text-text-secondary" />
-                    <Label className="text-base">Push Notifications</Label>
+                    <Label htmlFor="pushNotifications" className="text-base">Push Notifications</Label>
                   </div>
                   <Switch
+                    id="pushNotifications"
                     checked={pushNotifications}
                     onCheckedChange={setPushNotifications}
                   />
@@ -162,9 +168,10 @@ const SettingsNotificationsPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Bell className="h-4 w-4 text-text-secondary" />
-                    <Label className="text-base">Email Notifications</Label>
+                    <Label htmlFor="emailNotifications" className="text-base">Email Notifications</Label>
                   </div>
                   <Switch
+                    id="emailNotifications"
                     checked={emailNotifications}
                     onCheckedChange={setEmailNotifications}
                   />

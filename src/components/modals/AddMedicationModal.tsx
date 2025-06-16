@@ -135,19 +135,22 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ isOpen, onOpenC
               value={formData.frequency}
               onChange={(e) => handleInputChange('frequency', e.target.value)}
             />
+            <p className="text-xs text-gray-400 mt-1">Examples: 'Once daily', 'Twice a day', 'Every 6 hours'</p>
           </div>
 
           <div>
             <Label htmlFor="prescriptionDays">Prescription Period (Days)</Label>
+            {/* Ensuring type="number" is already good. Further validation (e.g. positive) could be added via schema if needed. */}
             <Input
               id="prescriptionDays"
               type="number"
-              placeholder="e.g., 30"
+              placeholder="e.g., 30 (optional)"
               value={formData.prescriptionDays}
               onChange={(e) => handleInputChange('prescriptionDays', e.target.value)}
+              min="0" // Basic HTML5 validation for non-negative
             />
             <p className="text-xs text-gray-500 mt-1">
-              Leave empty for ongoing medication
+              Leave empty for ongoing medication. Enter number of days.
             </p>
           </div>
 

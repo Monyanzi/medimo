@@ -118,30 +118,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    const timer = setTimeout(initializeUser, 1000);
-    return () => clearTimeout(timer);
+    // Remove setTimeout for faster initialization, especially relevant after context-driven login
+    initializeUser();
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; user: User | null; error?: string }> => {
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log('Logging in user:', email);
+      console.log('AuthContext: Logging in user:', email);
       const response = await MockAuthService.login(email, password);
       
       if (response.success && response.user) {
-        const userWithQR = await generateQRCodeForUser(convertMockUserToUser(response.user));
-        setUser(userWithQR);
+        // TODO: Optimization - Consider if QR code needs regeneration here.
+        // If user logs in and has an existing valid QR from localStorage (loaded in useEffect),
+        // and critical data hasn't changed, this might be an unnecessary regeneration.
+        // For now, it ensures user object always has fresh QR data on login.
+        const convertedUser = convertMockUserToUser(response.user);
+        const userWithQR = await generateQRCodeForUser(convertedUser);
+        setUser(userWithQR); // Set user state in context
         toast.success('Login successful!');
+        return { success: true, user: userWithQR };
       } else {
-        throw new Error(response.error || 'Login failed');
+        const errorMessage = response.error || 'Login failed';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        return { success: false, user: null, error: errorMessage };
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
       setError(errorMessage);
       toast.error(errorMessage);
-      throw new Error(errorMessage);
+      return { success: false, user: null, error: errorMessage };
     } finally {
       setIsLoading(false);
     }

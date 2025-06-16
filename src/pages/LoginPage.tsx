@@ -17,7 +17,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { MockAuthService } from '@/services/mockAuthService';
+// import { MockAuthService } from '@/services/mockAuthService'; // No longer directly used
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 import { toast } from 'sonner';
 
 const loginSchema = z.object({
@@ -32,6 +33,7 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { login: contextLogin } = useAuth(); // Get login from context
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -46,10 +48,11 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await MockAuthService.login(data.email, data.password);
+      // const response = await MockAuthService.login(data.email, data.password); // Old direct call
+      const response = await contextLogin(data.email, data.password); // New call to context login
       
       if (response.success && response.user) {
-        toast.success('Login successful!');
+        // toast.success('Login successful!'); // Toast is handled by AuthContext.login
         
         // Redirect based on onboarding status
         if (response.user.isOnboardingComplete) {
@@ -58,10 +61,11 @@ const LoginPage: React.FC = () => {
           navigate('/onboarding/setup');
         }
       } else {
-        setError(response.error || 'Login failed');
+        setError(response.error || 'Login failed'); // Error message set for local display
       }
-    } catch (err) {
-      setError('An unexpected error occurred');
+    } catch (err) { // This catch block might be redundant if contextLogin always returns an error object
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred during login.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

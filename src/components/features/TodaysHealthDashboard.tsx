@@ -42,6 +42,14 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
     toast.success(`Marked ${medication.name} as taken`);
   };
 
+  const handleMarkAllTaken = () => {
+    if (pendingMedications.length === 0) return;
+    pendingMedications.forEach(med => {
+      markMedicationTaken(med.id, med.name, med.dosage);
+    });
+    toast.success("All pending medications marked as taken.");
+  };
+
   const getPriorityIcon = () => {
     if (hasOverdueItems || hasExpiringMeds) return <AlertTriangle className="h-5 w-5 text-destructive-action" />;
     return <CheckCircle2 className="h-5 w-5 text-primary-action" />;
@@ -213,6 +221,7 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
             variant="outline" 
             className="flex-1 border-border-divider text-text-primary hover:bg-accent-success/10"
             disabled={pendingMedications.length === 0}
+            onClick={handleMarkAllTaken}
           >
             <Pill className="h-4 w-4 mr-2" />
             Mark All Taken

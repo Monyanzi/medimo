@@ -170,6 +170,7 @@ const EditMedicationTimelineModal: React.FC<EditMedicationTimelineModalProps> = 
                 onChange={(e) => handleInputChange('frequency', e.target.value)}
                 disabled={isSubmitting}
               />
+              <p className="text-xs text-gray-400 mt-1">Examples: 'Once daily', 'Twice a day', 'Every 6 hours'</p>
             </div>
 
             <div>

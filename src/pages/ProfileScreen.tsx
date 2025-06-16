@@ -69,8 +69,12 @@ Emergency Contact: ${keyInfo.emergencyContact}
 Organ Donor: ${keyInfo.organDonor}
 QR Code: ${keyInfo.qrCodeStatus}`;
       
-      alert(message);
-      toast.success('Digital Health Key accessed');
+      // alert(message); // Replaced with toast
+      toast.info(message, {
+        duration: 10000, // Show for longer
+        description: "Digital Health Key Details",
+      });
+      console.log('Digital Health Key accessed toast shown'); // Keep console for verification
       
     } catch (error) {
       console.error('Error accessing digital key:', error);
@@ -110,13 +114,16 @@ QR Code: ${keyInfo.qrCodeStatus}`;
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast.success('Health data export prepared successfully!');
-      alert(`Health Data Export
-
+      const exportMessage = `Health Data Export
 User: ${exportData.user}
 Export Date: ${new Date(exportData.exportDate).toLocaleDateString()}
 Sections Included: ${exportData.sections.join(', ')}
 
-In a real implementation, this would generate and download a PDF file with your complete health profile.`);
+(In a real implementation, this would generate and download a PDF file.)`;
+      toast.info(exportMessage, {
+        duration: 10000, // Show for longer
+        description: "Export Information",
+      });
       
     } catch (error) {
       console.error('Export failed:', error);

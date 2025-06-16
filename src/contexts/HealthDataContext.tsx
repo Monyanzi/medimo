@@ -180,18 +180,32 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const updateMedication = async (id: string, medication: Partial<Medication>): Promise<void> => {
     try {
+      const existingMedication = medications.find(m => m.id === id);
       setMedications(prev => prev.map(med => med.id === id ? { ...med, ...medication } : med));
       
       // Auto-generate timeline event for significant changes
-      if (medication.status === 'discontinued') {
+      let eventGenerated = false;
+      if (medication.status && existingMedication?.status !== medication.status) {
         const timelineEvent = createTimelineEvent({
-          title: "Medication Discontinued",
-          details: `Medication has been discontinued`,
+          title: `Medication Status Updated: ${medication.name || existingMedication?.name}`,
+          details: `Status changed from ${existingMedication?.status} to ${medication.status}`,
           date: new Date().toISOString(),
           category: "Medication",
           relatedId: id
         });
         setTimelineEvents(prev => [...prev, timelineEvent]);
+        eventGenerated = true;
+      } else if (medication.dosage !== undefined && existingMedication?.dosage !== medication.dosage ||
+                 medication.frequency !== undefined && existingMedication?.frequency !== medication.frequency) {
+        const timelineEvent = createTimelineEvent({
+          title: `Medication Updated: ${medication.name || existingMedication?.name}`,
+          details: `Dosage/frequency updated for ${medication.name || existingMedication?.name}. New: ${medication.dosage || existingMedication?.dosage}, ${medication.frequency || existingMedication?.frequency}`,
+          date: new Date().toISOString(),
+          category: "Medication",
+          relatedId: id
+        });
+        setTimelineEvents(prev => [...prev, timelineEvent]);
+        eventGenerated = true;
       }
       
       toast.success('Medication updated successfully!');
@@ -252,7 +266,19 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const updateAppointment = async (id: string, appointment: Partial<Appointment>): Promise<void> => {
     try {
+      const existingAppointment = appointments.find(a => a.id === id);
       setAppointments(prev => prev.map(apt => apt.id === id ? { ...apt, ...appointment } : apt));
+
+      // Auto-generate timeline event for updates
+      const timelineEvent = createTimelineEvent({
+        title: `Appointment Updated: ${appointment.title || existingAppointment?.title}`,
+        details: `Details updated for appointment with ${appointment.doctorName || existingAppointment?.doctorName}.`,
+        date: new Date().toISOString(), // Or use appointment.dateTime if it's more relevant for "update" time
+        category: "Appointment",
+        relatedId: id
+      });
+      setTimelineEvents(prev => [...prev, timelineEvent]);
+
       toast.success('Appointment updated successfully!');
     } catch (err) {
       toast.error('Failed to update appointment');
@@ -369,6 +395,24 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const updateVitalSigns = async (id: string, vitals: Partial<VitalSigns>): Promise<void> => {
     try {
       setVitalSigns(prev => prev.map(v => v.id === id ? { ...v, ...vitals } : v));
+
+      // Auto-generate timeline event for updates
+      const details = [];
+      if (vitals.bloodPressureSystolic && vitals.bloodPressureDiastolic) {
+        details.push(`BP: ${vitals.bloodPressureSystolic}/${vitals.bloodPressureDiastolic} mmHg`);
+      }
+      if (vitals.heartRate) details.push(`HR: ${vitals.heartRate} bpm`);
+      // Add other vital fields as needed for the details string
+
+      const timelineEvent = createTimelineEvent({
+        title: "Vitals Updated",
+        details: details.length > 0 ? `Updated: ${details.join(', ')}` : 'Vital signs record updated.',
+        date: new Date().toISOString(), // Or use vitals.recordedDate if that's being updated
+        category: "Vitals",
+        relatedId: id
+      });
+      setTimelineEvents(prev => [...prev, timelineEvent]);
+
       toast.success('Vital signs updated successfully!');
     } catch (err) {
       toast.error('Failed to update vital signs');

@@ -71,12 +71,19 @@ const DocumentItem: React.FC<DocumentItemProps> = ({ document }) => {
   };
 
   const handleDownload = () => {
-    console.log('Downloading:', document.fileName);
-    // In a real app, this would trigger the actual download
-    const link = window.document.createElement('a');
-    link.href = document.storagePath;
-    link.download = document.fileName;
-    link.click();
+    console.log('Attempting to download:', document.fileName, 'from mock path:', document.storagePath);
+    // For mock purposes, actual download from a relative path like '/documents/...' won't work.
+    // Instead, we can simulate the intent or show a message.
+    // If storagePath was a full external URL, it might work.
+    if (document.storagePath && !document.storagePath.startsWith('/')) { // Basic check if it's an external URL
+        const link = window.document.createElement('a');
+        link.href = document.storagePath;
+        link.download = document.fileName;
+        link.click();
+        toast.success(`Download started for ${document.fileName}`);
+    } else {
+        toast.info(`Download not available for "${document.fileName}" in this mock version. Path: ${document.storagePath}`);
+    }
   };
 
   const handleDelete = async () => {

@@ -8,6 +8,17 @@ import { format, parseISO } from 'date-fns';
 import { Pill, Calendar, FileText, Activity, Stethoscope, Clock, Trash2, Edit, Check, X } from 'lucide-react';
 import EditMedicationTimelineModal from '@/components/modals/EditMedicationTimelineModal';
 import EditAppointmentTimelineModal from '@/components/modals/EditAppointmentTimelineModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface TimelineEventCardProps {
   event: TimelineEvent;
@@ -62,9 +73,8 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this timeline event?')) {
-      onDelete(event.id);
-    }
+    // This will be triggered by AlertDialog action
+    onDelete(event.id);
   };
 
   const handleEditClick = () => {
@@ -165,14 +175,34 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
                   >
                     <Edit className="h-4 w-4 text-blue-500" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={handleDelete}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Timeline Event?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete the event: "{event.title}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDelete}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </>
               )}
             </div>
