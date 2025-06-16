@@ -14,8 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useHealthData } from "@/contexts/HealthDataContext";
 import { TimelineEvent, Medication } from "@/types";
-import { Pill } from "lucide-react";
+import { Pill, AlertTriangle } from "lucide-react"; // Added AlertTriangle
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from "@/components/ui/alert"; // Added Alert
 
 interface EditMedicationTimelineModalProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ const EditMedicationTimelineModal: React.FC<EditMedicationTimelineModalProps> = 
   });
   const [originalMedication, setOriginalMedication] = useState<Medication | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null); // Renamed for consistency
 
   useEffect(() => {
     if (isOpen && event && event.category === 'Medication' && event.relatedId) {
@@ -48,16 +49,16 @@ const EditMedicationTimelineModal: React.FC<EditMedicationTimelineModalProps> = 
           status: medicationToEdit.status
         });
         setOriginalMedication(medicationToEdit);
-        setError(null);
+        setSubmissionError(null); // Clear error on successful load
       } else {
-        setError("Could not find the medication to edit. It might have been deleted.");
+        setSubmissionError("Could not find the medication to edit. It might have been deleted.");
         setOriginalMedication(null);
       }
     } else if (!isOpen) {
       // Reset form when modal is closed
       setFormData({ name: '', dosage: '', frequency: '', instructions: '', status: 'active' });
       setOriginalMedication(null);
-      setError(null);
+      setSubmissionError(null); // Clear error on close
     }
   }, [isOpen, event, medications]);
 
@@ -70,14 +71,14 @@ const EditMedicationTimelineModal: React.FC<EditMedicationTimelineModalProps> = 
 
   const handleSubmit = async () => {
     if (!event || !event.relatedId || !originalMedication) {
-      toast.error("Cannot submit: Event data or related medication is missing.");
+      setSubmissionError("Cannot submit: Event data or related medication is missing.");
       return;
     }
     if (!formData.name || !formData.dosage || !formData.frequency) {
-      toast.warning("Please fill in all required fields: Name, Dosage, and Frequency.");
+      setSubmissionError("Please fill in all required fields: Name, Dosage, and Frequency.");
       return;
     }
-
+    setSubmissionError(null); // Clear previous submission errors
     setIsSubmitting(true);
     try {
       const medicationUpdates: Partial<Medication> = {
@@ -105,8 +106,9 @@ const EditMedicationTimelineModal: React.FC<EditMedicationTimelineModalProps> = 
       onOpenChange(false);
     } catch (err) {
       console.error('Error updating medication timeline event:', err);
-      toast.error('Failed to update medication. Please try again.');
-      setError('Failed to update. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : "Failed to update medication. Please try again.";
+      setSubmissionError(errorMessage);
+      // toast.error removed, error displayed in modal
     } finally {
       setIsSubmitting(false);
     }
@@ -116,8 +118,10 @@ const EditMedicationTimelineModal: React.FC<EditMedicationTimelineModalProps> = 
     return formData.name?.trim() && formData.dosage?.trim() && formData.frequency?.trim();
   };
 
-  if (!event || !originalMedication && isOpen && !error) {
-     // Still loading or event is not suitable
+  if (!event || (isOpen && !originalMedication && !submissionError)) {
+    // If open, but no original med and no error yet (could be loading or bad event)
+    // To prevent rendering with inconsistent state if originalMedication is null but no error message is set yet.
+    // Or, if there's an error related to finding the med, submissionError will be set and this check passes.
     return null;
   }
 
@@ -131,13 +135,19 @@ const EditMedicationTimelineModal: React.FC<EditMedicationTimelineModalProps> = 
             <span>Edit Medication Details</span>
           </DialogTitle>
           <DialogDescription>
-            Update the details for {originalMedication?.name || 'this medication'}. Changes will reflect on the timeline.
+            Update the details for {originalMedication?.name || event?.title || 'this medication'}. Changes will reflect on the timeline.
           </DialogDescription>
         </DialogHeader>
         
-        {error && <p className="text-sm text-red-500 py-2">{error}</p>}
+        {submissionError && (
+          <Alert variant="destructive" className="my-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{submissionError}</AlertDescription>
+          </Alert>
+        )}
 
-        {!error && originalMedication && (
+        {/* Render form only if originalMedication is loaded and no initial critical error */}
+        {originalMedication && !submissionError && (
           <div className="space-y-4 py-4">
             <div>
               <Label htmlFor="edit-med-name">Medication Name *</Label>
@@ -211,7 +221,7 @@ const EditMedicationTimelineModal: React.FC<EditMedicationTimelineModalProps> = 
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={!isFormValid() || isSubmitting || !!error || !originalMedication}
+            disabled={!isFormValid() || isSubmitting || !originalMedication} // Error state implicitly handled by not allowing submit if critical error occurred
           >
             {isSubmitting ? 'Saving...' : 'Save Changes'}
           </Button>

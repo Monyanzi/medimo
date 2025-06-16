@@ -7,14 +7,14 @@ import TimelineEventCard from './TimelineEventCard';
 interface TimelineEventGroupProps {
   dateKey: string;
   events: TimelineEvent[];
-  onDeleteEvent: (eventId: string) => void;
+  onDeleteEvent: (event: TimelineEvent) => void; // Changed to pass full event
   onEditEvent: (eventId: string, updates: Partial<TimelineEvent>) => void;
 }
 
 const TimelineEventGroup: React.FC<TimelineEventGroupProps> = ({
   dateKey,
   events,
-  onDeleteEvent,
+  onDeleteEvent, // Prop name is kept, but its signature is effectively changed by TimelineScreen
   onEditEvent
 }) => {
   return (

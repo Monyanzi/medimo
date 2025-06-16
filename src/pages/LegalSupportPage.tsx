@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, FileText, Shield, HelpCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner'; // Import toast
 
 const LegalSupportPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,27 +28,27 @@ const LegalSupportPage: React.FC = () => {
     {
       title: 'Frequently Asked Questions',
       description: 'Common questions and answers',
-      action: () => console.log('FAQ clicked')
+      action: () => toast.info('This support action will be available soon.', { description: 'This section is currently informational.' })
     },
     {
       title: 'Contact Support',
       description: 'Get help from our team',
-      action: () => console.log('Contact support clicked')
+      action: () => toast.info('This support action will be available soon.', { description: 'This section is currently informational.' })
     },
     {
       title: 'User Guide',
       description: 'Learn how to use the app',
-      action: () => console.log('User guide clicked')
+      action: () => toast.info('This support action will be available soon.', { description: 'This section is currently informational.' })
     },
     {
       title: 'Report a Bug',
       description: 'Help us improve the app',
-      action: () => console.log('Report bug clicked')
+      action: () => toast.info('This support action will be available soon.', { description: 'This section is currently informational.' })
     },
     {
       title: 'Feature Request',
       description: 'Suggest new features',
-      action: () => console.log('Feature request clicked')
+      action: () => toast.info('This support action will be available soon.', { description: 'This section is currently informational.' })
     }
   ];
 
@@ -95,7 +96,7 @@ const LegalSupportPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         className="mt-3"
-                        onClick={() => console.log(`${item.title} read more clicked`)}
+                        onClick={() => toast.info('Detailed document view is coming soon.', { description: 'This section is currently informational.' })}
                       >
                         Read Full Document
                         <ExternalLink className="h-3 w-3 ml-1" />

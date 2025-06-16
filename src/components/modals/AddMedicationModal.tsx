@@ -14,8 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useHealthData } from "@/contexts/HealthDataContext";
-import { Pill } from "lucide-react";
+import { Pill, AlertTriangle } from "lucide-react"; // Added AlertTriangle
 import { format, addDays } from 'date-fns';
+import { Alert, AlertDescription } from "@/components/ui/alert"; // Added Alert
 
 interface AddMedicationModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ isOpen, onOpenC
     prescriptionDays: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null); // Added error state
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -43,9 +45,11 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ isOpen, onOpenC
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.dosage || !formData.frequency) {
+      // Basic client-side validation, could be enhanced
+      setSubmissionError("Please fill in Medication Name, Dosage, and Frequency.");
       return;
     }
-
+    setSubmissionError(null); // Clear previous errors
     setIsSubmitting(true);
     try {
       const medicationData: any = {
@@ -81,9 +85,21 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ isOpen, onOpenC
         prescriptionDays: ''
       });
       
+      // Reset form and close modal on success
+      setFormData({
+        name: '',
+        dosage: '',
+        frequency: '',
+        instructions: '',
+        status: 'active',
+        prescriptionDays: ''
+      });
       onOpenChange(false);
+      // Assuming HealthDataContext.addMedication calls toast.success
     } catch (error) {
       console.error('Error adding medication:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to add medication. Please try again.";
+      setSubmissionError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,6 +121,13 @@ const AddMedicationModal: React.FC<AddMedicationModalProps> = ({ isOpen, onOpenC
             Add a new medication to your medical records
           </DialogDescription>
         </DialogHeader>
+
+        {submissionError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{submissionError}</AlertDescription>
+          </Alert>
+        )}
         
         <div className="space-y-4">
           <div>

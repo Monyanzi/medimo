@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert"; // Added Alert
+import { AlertTriangle } from "lucide-react"; // Added Icon
 import { useHealthData } from "@/contexts/HealthDataContext";
 import { Calendar } from "lucide-react";
 
@@ -31,6 +33,7 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onOpe
     notes: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null); // Added error state
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -43,7 +46,7 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onOpe
     if (!formData.title || !formData.doctorName || !formData.date || !formData.time) {
       return;
     }
-
+    setSubmissionError(null); // Clear previous errors
     setIsSubmitting(true);
     try {
       // Combine date and time into ISO string
@@ -67,9 +70,29 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onOpe
         notes: ''
       });
       
-      onOpenChange(false);
+      // Reset form
+      setFormData({
+        title: '',
+        doctorName: '',
+        location: '',
+        date: '',
+        time: '',
+        notes: ''
+      });
+      // toast.success is likely called from HealthDataContext.addAppointment if it's a global pattern
+      // For now, let's assume the modal is responsible for its specific success toast.
+      // This was already in the prompt: toast.success("Appointment added successfully!");
+      // The HealthDataContext usually calls toast on its own. Let's remove the direct toast here
+      // to avoid double toasting if HealthDataContext also toasts.
+      // If HealthDataContext does NOT toast, then the line below should be reinstated.
+      // toast.success("Appointment added successfully!");
+
+      onOpenChange(false); // Close modal on success
     } catch (error) {
       console.error('Error adding appointment:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to add appointment. Please try again.";
+      setSubmissionError(errorMessage);
+      // Modal stays open because onOpenChange(false) is not called here
     } finally {
       setIsSubmitting(false);
     }
@@ -92,6 +115,13 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onOpe
           </DialogDescription>
         </DialogHeader>
         
+        {submissionError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{submissionError}</AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-4">
           <div>
             <Label htmlFor="title">Appointment Title *</Label>

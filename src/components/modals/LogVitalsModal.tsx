@@ -36,6 +36,7 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [vitalsAlerts, setVitalsAlerts] = useState<{[key: string]: { status: VitalStatus; message: string }}>({});
+  const [submissionError, setSubmissionError] = useState<string | null>(null); // Added error state
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -65,8 +66,16 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
   };
 
   const handleSubmit = async () => {
+    setSubmissionError(null); // Clear previous submission errors
     setIsSubmitting(true);
     try {
+      // Basic form validation (at least one vital sign should be entered)
+      if (!isFormValid()) {
+        setSubmissionError("Please enter at least one vital sign value.");
+        setIsSubmitting(false);
+        return;
+      }
+
       const vitalsData = {
         bloodPressureSystolic: formData.bloodPressureSystolic ? parseInt(formData.bloodPressureSystolic) : undefined,
         bloodPressureDiastolic: formData.bloodPressureDiastolic ? parseInt(formData.bloodPressureDiastolic) : undefined,
@@ -94,9 +103,12 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
       });
       setVitalsAlerts({});
       
-      onOpenChange(false);
+      onOpenChange(false); // Close modal on success
+      // Assuming HealthDataContext.addVitalSigns calls toast.success
     } catch (error) {
       console.error('Error saving vital signs:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to save vital signs. Please try again.";
+      setSubmissionError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -121,6 +133,13 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
             Record your current vital signs and measurements
           </DialogDescription>
         </DialogHeader>
+
+        {submissionError && (
+          <Alert variant="destructive" className="my-2"> {/* Adjusted margin */}
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{submissionError}</AlertDescription>
+          </Alert>
+        )}
         
         <div className="space-y-4">
           {/* Blood Pressure */}

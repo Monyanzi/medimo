@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, QrCode, Share2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import QRCodeModal from '@/components/modals/QRCodeModal';
 import { User } from '@/types';
+import { toast } from 'sonner'; // Import toast
 
 interface DigitalHealthKeyProps {
   user: User;
@@ -140,6 +141,9 @@ const DigitalHealthKey: React.FC<DigitalHealthKeyProps> = ({ user }) => {
             <Button 
               variant="outline" 
               className="flex-1 border-primary-action text-primary-action hover:bg-primary-action/10"
+              onClick={() => toast.info('Sharing feature is coming soon!', {
+                description: 'This feature is currently under development.'
+              })}
             >
               <Share2 className="h-4 w-4 mr-2" />
               Quick Share

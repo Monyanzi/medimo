@@ -139,26 +139,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (response.success && response.user) {
         const convertedUser = convertMockUserToUser(response.user);
 
-        // Set user state immediately without QR code for faster UI response
-        setUser(convertedUser);
-        toast.success('Login successful! User data loaded.'); // Indicate main user data is ready
-        console.log('Core user data set for:', convertedUser.name);
+        let userToSet = convertMockUserToUser(response.user);
 
-        // Asynchronously generate and add QR code to the user state
-        // No need to await this for the login to be "complete" from UX perspective
-        generateQRCodeForUser(convertedUser).then(userWithQR => {
-          setUser(userWithQR); // Update user state with QR code
-          console.log('QR code generated and user state updated for:', userWithQR.name);
-          // Optionally, a less intrusive toast or no toast for QR update:
-          // toast.info('User QR code ready.');
-        }).catch(qrError => {
-          console.error("QR generation failed post-login for " + convertedUser.id + ":", qrError);
-          // Error already toasted within generateQRCodeForUser typically,
-          // but user state remains with core data.
-        });
+        toast.success('Login successful! Core user data loaded.');
+        console.log('Core user data set for:', userToSet.name);
 
-        // Return user without waiting for QR code generation
-        return { success: true, user: convertedUser };
+        // Attempt to load QR code from storage
+        const storedQRCode = loadQRCodeFromStorage();
+        if (storedQRCode && storedQRCode.data.medicalId === userToSet.id) {
+          console.log('Using stored QR code for user:', userToSet.name);
+          userToSet.qrCode = {
+            id: storedQRCode.data.qrId, // Ensure mapping from new QRCodeData structure
+            imageUrl: storedQRCode.imageUrl,
+            generatedAt: storedQRCode.data.generatedAt
+          };
+          setUser(userToSet); // Set user with stored QR
+        } else {
+          // No stored QR or mismatched ID, set core user first, then generate QR async
+          setUser(userToSet);
+          console.log('No valid stored QR code found or ID mismatch for', userToSet.name + '. Generating new QR asynchronously.');
+          generateQRCodeForUser(userToSet).then(userWithQR => {
+            setUser(userWithQR); // Update user state with QR code
+            console.log('QR code generated and user state updated for:', userWithQR.name);
+          }).catch(qrError => {
+            console.error("QR generation failed post-login for " + userToSet.id + ":", qrError);
+          });
+        }
+        // Return user (potentially without QR if generation is async and not yet complete)
+        return { success: true, user: userToSet };
       } else {
         const errorMessage = response.error || 'Login failed';
         setError(errorMessage);
@@ -197,27 +205,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       let updatedUserObject = { ...user, ...userData };
+      let qrRegenerated = false;
 
-      // Regenerate QR code if critical data changed (existing logic)
-      const criticalFields = ['name', 'dob', 'bloodType', 'allergies', 'conditions', 'emergencyContact', 'organDonor'];
-      const hasCriticalChanges = criticalFields.some(field => {
-        const newValue = userData[field as keyof User];
-        // Ensure to compare with the original 'user' state, not 'updatedUserObject' before QR update
-        return newValue !== undefined && JSON.stringify(newValue) !== JSON.stringify(user[field as keyof User]);
+      // Regenerate QR code if relevant data changed
+      // After PI-PROF-001, QRCodeData contains: qrId, userName, medicalId, emergencyContactName, emergencyContactPhone, generatedAt
+      // User fields that map to this are: user.name (for userName), user.id (for medicalId), user.emergencyContact (for name & phone)
+      const qrRelevantFields: (keyof User)[] = ['name', 'emergencyContact'];
+      const hasQrRelevantChanges = qrRelevantFields.some(fieldKey => {
+        if (!userData.hasOwnProperty(fieldKey)) return false; // Only check if field is in userData
+
+        const newValue = userData[fieldKey];
+        const oldValue = user[fieldKey];
+
+        if (fieldKey === 'emergencyContact') {
+          const oldEc = oldValue as User['emergencyContact']; // Type assertion
+          const newEc = newValue as Partial<User['emergencyContact']>; // Type assertion
+          // Check if newEc is provided and if its relevant sub-fields differ
+          return newEc && (newEc.name !== oldEc.name || newEc.phone !== oldEc.phone);
+        }
+        return newValue !== undefined && JSON.stringify(newValue) !== JSON.stringify(oldValue);
       });
 
-      if (hasCriticalChanges) {
-        console.log('Critical data changed, regenerating QR code...');
+      if (hasQrRelevantChanges) {
+        console.log('QR relevant data changed, regenerating QR code for user:', user.id);
         updatedUserObject = await generateQRCodeForUser(updatedUserObject);
         toast.success('Profile updated and QR code regenerated!');
-      } else if (Object.keys(userData).length > 0 && !(Object.keys(userData).length === 1 && 'isOnboardingComplete' in userData)) {
-        // Only toast "Profile updated" if actual profile fields changed,
-        // and it wasn't just the onboarding status update triggered internally.
-        // Or if QR toast already showed.
-        toast.success('Profile updated successfully!');
+        qrRegenerated = true;
+      } else if (!updatedUserObject.qrCode && updatedUserObject.id) {
+        // Case: User had no QR code before (e.g. first update after registration, or cleared storage)
+        // And it's not an empty update (e.g. just isOnboardingComplete status change without other fields)
+        if (Object.keys(userData).filter(k => k !== 'isOnboardingComplete').length > 0) {
+            console.log('User has no QR code, generating one for user:', user.id);
+            updatedUserObject = await generateQRCodeForUser(updatedUserObject);
+            toast.info('QR code generated for your profile.');
+            qrRegenerated = true; // Technically generated, not regenerated
+        }
       }
-      
-      setUser(updatedUserObject); // Update React state first with potentially new QR
+
+      // If QR was not regenerated, but other userData was provided (not just isOnboardingComplete)
+      if (!qrRegenerated && Object.keys(userData).some(k => k !== 'isOnboardingComplete' && userData[k as keyof User] !== undefined)) {
+          toast.success('Profile updated successfully!');
+      }
+
+      setUser(updatedUserObject); // Update React state with all changes
 
       // If isOnboardingComplete was part of this update and set to true,
       // ensure MockAuthService is also updated.

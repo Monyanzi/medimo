@@ -14,9 +14,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useHealthData } from "@/contexts/HealthDataContext";
 import { TimelineEvent, Appointment } from "@/types";
-import { Calendar } from "lucide-react";
+import { Calendar, AlertTriangle } from "lucide-react"; // Added AlertTriangle
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
+import { Alert, AlertDescription } from "@/components/ui/alert"; // Added Alert
 
 interface EditAppointmentTimelineModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ const EditAppointmentTimelineModal: React.FC<EditAppointmentTimelineModalProps> 
   });
   const [originalAppointment, setOriginalAppointment] = useState<Appointment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null); // Added error state
 
   useEffect(() => {
     if (isOpen && event && event.category === 'Appointment' && event.relatedId) {
@@ -67,14 +69,14 @@ const EditAppointmentTimelineModal: React.FC<EditAppointmentTimelineModalProps> 
 
   const handleSubmit = async () => {
     if (!event || !event.relatedId || !originalAppointment) {
-      toast.error("Cannot submit: Event data or related appointment is missing.");
+      setSubmissionError("Cannot submit: Event data or related appointment is missing.");
       return;
     }
     if (!formData.title || !formData.doctorName || !formData.date || !formData.time) {
-      toast.warning("Please fill in all required fields: Title, Doctor Name, Date, and Time.");
+      setSubmissionError("Please fill in all required fields: Title, Doctor Name, Date, and Time.");
       return;
     }
-
+    setSubmissionError(null); // Clear previous error
     setIsSubmitting(true);
     try {
       const dateTime = new Date(`${formData.date}T${formData.time}`).toISOString();
@@ -101,7 +103,9 @@ const EditAppointmentTimelineModal: React.FC<EditAppointmentTimelineModalProps> 
       onOpenChange(false);
     } catch (err) {
       console.error('Error updating appointment timeline event:', err);
-      toast.error('Failed to update appointment. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : "Failed to update appointment. Please try again.";
+      setSubmissionError(errorMessage);
+      // toast.error is removed as error is shown in modal
     } finally {
       setIsSubmitting(false);
     }
@@ -127,6 +131,13 @@ const EditAppointmentTimelineModal: React.FC<EditAppointmentTimelineModalProps> 
             Update the details for this appointment. Changes will reflect on the timeline.
           </DialogDescription>
         </DialogHeader>
+
+        {submissionError && (
+          <Alert variant="destructive" className="my-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{submissionError}</AlertDescription>
+          </Alert>
+        )}
         
         {originalAppointment && (
           <div className="space-y-4 py-4">

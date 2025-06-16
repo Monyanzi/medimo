@@ -216,22 +216,18 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const deleteMedication = async (id: string): Promise<void> => {
     try {
-      const medication = medications.find(med => med.id === id);
+      const medicationToDelete = medications.find(med => med.id === id);
       setMedications(prev => prev.filter(med => med.id !== id));
       
-      // Auto-generate timeline event
-      if (medication) {
-        const timelineEvent = createTimelineEvent({
-          title: "Medication Removed",
-          details: `${medication.name} removed from medication list`,
-          date: new Date().toISOString(),
-          category: "Medication",
-          relatedId: id
-        });
-        setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
+      if (medicationToDelete) {
+        // Also remove related timeline events
+        setMasterTimelineEvents(prev =>
+          prev.filter(event => !(event.category === "Medication" && event.relatedId === id))
+        );
+        toast.success('Medication and related timeline events removed successfully!');
+      } else {
+        toast.warn('Medication not found for deletion.');
       }
-      
-      toast.success('Medication removed successfully!');
     } catch (err) {
       toast.error('Failed to remove medication');
       throw err;
@@ -287,22 +283,18 @@ export const HealthDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const deleteAppointment = async (id: string): Promise<void> => {
     try {
-      const appointment = appointments.find(apt => apt.id === id);
+      const appointmentToDelete = appointments.find(apt => apt.id === id);
       setAppointments(prev => prev.filter(apt => apt.id !== id));
       
-      // Auto-generate timeline event
-      if (appointment) {
-        const timelineEvent = createTimelineEvent({
-          title: "Appointment Cancelled",
-          details: `${appointment.title} appointment cancelled`,
-          date: new Date().toISOString(),
-          category: "Appointment",
-          relatedId: id
-        });
-        setMasterTimelineEvents(prev => [...prev, timelineEvent].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()));
+      if (appointmentToDelete) {
+        // Also remove related timeline events
+        setMasterTimelineEvents(prev =>
+          prev.filter(event => !(event.category === "Appointment" && event.relatedId === id))
+        );
+        toast.success('Appointment and related timeline events cancelled successfully!');
+      } else {
+        toast.warn('Appointment not found for deletion.');
       }
-      
-      toast.success('Appointment cancelled successfully!');
     } catch (err) {
       toast.error('Failed to cancel appointment');
       throw err;

@@ -22,7 +22,7 @@ import {
 
 interface TimelineEventCardProps {
   event: TimelineEvent;
-  onDelete: (eventId: string) => void;
+  onDelete: (event: TimelineEvent) => void; // Changed to pass full event
   onEdit: (eventId: string, updates: Partial<TimelineEvent>) => void;
 }
 
@@ -72,10 +72,8 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
     }
   };
 
-  const handleDelete = () => {
-    // This will be triggered by AlertDialog action
-    onDelete(event.id);
-  };
+  // handleDelete is now directly called by the button, passing the event
+  // The AlertDialog is removed from here and will be managed by TimelineScreen
 
   const handleEditClick = () => {
     if (event.category === 'Medication' && event.relatedId) {
@@ -175,34 +173,14 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
                   >
                     <Edit className="h-4 w-4 text-blue-500" />
                   </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Timeline Event?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete the event: "{event.title}"? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDelete}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onDelete(event)} // Pass full event object
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
                 </>
               )}
             </div>
