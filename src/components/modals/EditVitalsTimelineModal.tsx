@@ -11,10 +11,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useHealthData } from "@/contexts/HealthDataContext";
+import { useAppSettings } from "@/contexts/AppSettingsContext";
 import { TimelineEvent, VitalSigns } from "@/types";
 import { Activity, AlertTriangle } from "lucide-react";
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  getWeightUnit,
+  getHeightUnit,
+  getTemperatureUnit,
+  getWeightPlaceholder,
+  getHeightPlaceholder,
+  getTemperaturePlaceholder,
+  toStorageWeight,
+  toStorageHeight,
+  toStorageTemperature,
+  fromStorageWeight,
+  fromStorageHeight,
+  fromStorageTemperature,
+} from "@/utils/unitConversions";
 
 interface EditVitalsTimelineModalProps {
   isOpen: boolean;
@@ -24,13 +39,25 @@ interface EditVitalsTimelineModalProps {
 
 const EditVitalsTimelineModal: React.FC<EditVitalsTimelineModalProps> = ({ isOpen, onOpenChange, event }) => {
   const { vitalSigns, updateVitalSigns, updateTimelineEvent } = useHealthData();
-  const [formData, setFormData] = useState<Partial<VitalSigns>>({
+  const { measurementUnit } = useAppSettings();
+  // Form data stores display values (user's preferred unit)
+  const [formData, setFormData] = useState<{
+    bloodPressureSystolic?: number;
+    bloodPressureDiastolic?: number;
+    heartRate?: number;
+    weight: string;
+    height: string;
+    temperature: string;
+    oxygenSaturation?: number;
+    notes: string;
+    recordedDate: string;
+  }>({
     bloodPressureSystolic: undefined,
     bloodPressureDiastolic: undefined,
     heartRate: undefined,
-    weight: undefined,
-    height: undefined,
-    temperature: undefined,
+    weight: '',
+    height: '',
+    temperature: '',
     oxygenSaturation: undefined,
     notes: '',
     recordedDate: new Date().toISOString()
@@ -43,13 +70,14 @@ const EditVitalsTimelineModal: React.FC<EditVitalsTimelineModalProps> = ({ isOpe
     if (isOpen && event && event.category === 'Vitals' && event.relatedId) {
       const vitalToEdit = vitalSigns.find(vital => vital.id === event.relatedId);
       if (vitalToEdit) {
+        // Convert stored metric values to display values
         setFormData({
           bloodPressureSystolic: vitalToEdit.bloodPressureSystolic ?? undefined,
           bloodPressureDiastolic: vitalToEdit.bloodPressureDiastolic ?? undefined,
           heartRate: vitalToEdit.heartRate ?? undefined,
-          weight: vitalToEdit.weight ?? undefined,
-          height: vitalToEdit.height ?? undefined,
-          temperature: vitalToEdit.temperature ?? undefined,
+          weight: vitalToEdit.weight != null ? fromStorageWeight(vitalToEdit.weight, measurementUnit).toFixed(1) : '',
+          height: vitalToEdit.height != null ? fromStorageHeight(vitalToEdit.height, measurementUnit).toFixed(1) : '',
+          temperature: vitalToEdit.temperature != null ? fromStorageTemperature(vitalToEdit.temperature, measurementUnit).toFixed(1) : '',
           oxygenSaturation: vitalToEdit.oxygenSaturation ?? undefined,
           notes: vitalToEdit.notes ?? '',
           recordedDate: vitalToEdit.recordedDate
@@ -66,9 +94,9 @@ const EditVitalsTimelineModal: React.FC<EditVitalsTimelineModalProps> = ({ isOpe
         bloodPressureSystolic: undefined,
         bloodPressureDiastolic: undefined,
         heartRate: undefined,
-        weight: undefined,
-        height: undefined,
-        temperature: undefined,
+        weight: '',
+        height: '',
+        temperature: '',
         oxygenSaturation: undefined,
         notes: '',
         recordedDate: new Date().toISOString()
@@ -76,12 +104,14 @@ const EditVitalsTimelineModal: React.FC<EditVitalsTimelineModalProps> = ({ isOpe
       setOriginalVital(null);
       setSubmissionError(null);
     }
-  }, [isOpen, event, vitalSigns]);
+  }, [isOpen, event, vitalSigns, measurementUnit]);
 
-  const handleInputChange = (field: keyof VitalSigns, value: string) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value ? (field === 'notes' ? value : Number(value)) : undefined
+      [field]: field === 'notes' || field === 'weight' || field === 'height' || field === 'temperature' 
+        ? value 
+        : (value ? Number(value) : undefined)
     }));
   };
 
@@ -96,9 +126,9 @@ const EditVitalsTimelineModal: React.FC<EditVitalsTimelineModalProps> = ({ isOpe
       formData.bloodPressureSystolic !== undefined,
       formData.bloodPressureDiastolic !== undefined,
       formData.heartRate !== undefined,
-      formData.weight !== undefined,
-      formData.height !== undefined,
-      formData.temperature !== undefined,
+      formData.weight !== '',
+      formData.height !== '',
+      formData.temperature !== '',
       formData.oxygenSaturation !== undefined
     ].some(Boolean);
 
@@ -111,13 +141,14 @@ const EditVitalsTimelineModal: React.FC<EditVitalsTimelineModalProps> = ({ isOpe
     setIsSubmitting(true);
 
     try {
+      // Convert display values to storage values (metric)
       const vitalUpdates: Partial<VitalSigns> = {
         bloodPressureSystolic: formData.bloodPressureSystolic ?? null,
         bloodPressureDiastolic: formData.bloodPressureDiastolic ?? null,
         heartRate: formData.heartRate ?? null,
-        weight: formData.weight ?? null,
-        height: formData.height ?? null,
-        temperature: formData.temperature ?? null,
+        weight: formData.weight ? toStorageWeight(parseFloat(formData.weight), measurementUnit) : null,
+        height: formData.height ? toStorageHeight(parseFloat(formData.height), measurementUnit) : null,
+        temperature: formData.temperature ? toStorageTemperature(parseFloat(formData.temperature), measurementUnit) : null,
         oxygenSaturation: formData.oxygenSaturation ?? null,
         notes: formData.notes || null,
         recordedDate: formData.recordedDate || new Date().toISOString()
@@ -125,15 +156,15 @@ const EditVitalsTimelineModal: React.FC<EditVitalsTimelineModalProps> = ({ isOpe
       
       await updateVitalSigns(event.relatedId, vitalUpdates);
 
-      // Update the timeline event's title and details
+      // Update the timeline event's title and details (display in user's preferred unit)
       const details = [];
       if (vitalUpdates.bloodPressureSystolic && vitalUpdates.bloodPressureDiastolic) {
         details.push(`BP: ${vitalUpdates.bloodPressureSystolic}/${vitalUpdates.bloodPressureDiastolic} mmHg`);
       }
       if (vitalUpdates.heartRate) details.push(`HR: ${vitalUpdates.heartRate} bpm`);
-      if (vitalUpdates.weight) details.push(`Weight: ${vitalUpdates.weight} lbs`);
-      if (vitalUpdates.height) details.push(`Height: ${vitalUpdates.height} in`);
-      if (vitalUpdates.temperature) details.push(`Temp: ${vitalUpdates.temperature}°F`);
+      if (formData.weight) details.push(`Weight: ${formData.weight} ${getWeightUnit(measurementUnit)}`);
+      if (formData.height) details.push(`Height: ${formData.height} ${getHeightUnit(measurementUnit)}`);
+      if (formData.temperature) details.push(`Temp: ${formData.temperature}${getTemperatureUnit(measurementUnit)}`);
       if (vitalUpdates.oxygenSaturation) details.push(`SpO2: ${vitalUpdates.oxygenSaturation}%`);
       
       const newTimelineTitle = `Vitals Updated`;
@@ -215,25 +246,25 @@ const EditVitalsTimelineModal: React.FC<EditVitalsTimelineModalProps> = ({ isOpe
           {/* Weight and Height */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="weight">Weight (lbs)</Label>
+              <Label htmlFor="weight">Weight ({getWeightUnit(measurementUnit)})</Label>
               <Input
                 id="weight"
                 type="number"
                 step="0.1"
-                value={formData.weight ?? ''}
+                value={formData.weight}
                 onChange={(e) => handleInputChange('weight', e.target.value)}
-                placeholder="150.5"
+                placeholder={getWeightPlaceholder(measurementUnit)}
               />
             </div>
             <div>
-              <Label htmlFor="height">Height (in)</Label>
+              <Label htmlFor="height">Height ({getHeightUnit(measurementUnit)})</Label>
               <Input
                 id="height"
                 type="number"
                 step="0.1"
-                value={formData.height ?? ''}
+                value={formData.height}
                 onChange={(e) => handleInputChange('height', e.target.value)}
-                placeholder="68.5"
+                placeholder={getHeightPlaceholder(measurementUnit)}
               />
             </div>
           </div>
@@ -241,14 +272,14 @@ const EditVitalsTimelineModal: React.FC<EditVitalsTimelineModalProps> = ({ isOpe
           {/* Temperature and Oxygen Saturation */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="temperature">Temperature (°F)</Label>
+              <Label htmlFor="temperature">Temperature ({getTemperatureUnit(measurementUnit)})</Label>
               <Input
                 id="temperature"
                 type="number"
                 step="0.1"
-                value={formData.temperature ?? ''}
+                value={formData.temperature}
                 onChange={(e) => handleInputChange('temperature', e.target.value)}
-                placeholder="98.6"
+                placeholder={getTemperaturePlaceholder(measurementUnit)}
               />
             </div>
             <div>
