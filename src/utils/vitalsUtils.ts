@@ -1,13 +1,19 @@
 
 import { CriticalVitalRanges, VitalRange } from '@/types/vitals';
 
-// Ranges are stored in metric (Celsius for temperature)
-export const DEFAULT_VITAL_RANGES: CriticalVitalRanges = {
+// Extended ranges including blood glucose
+export interface ExtendedVitalRanges extends CriticalVitalRanges {
+  bloodGlucose: VitalRange;
+}
+
+// Ranges are stored in metric (Celsius for temperature, mg/dL for glucose)
+export const DEFAULT_VITAL_RANGES: ExtendedVitalRanges = {
   bloodPressureSystolic: { min: 90, max: 140, unit: 'mmHg' },
   bloodPressureDiastolic: { min: 60, max: 90, unit: 'mmHg' },
   heartRate: { min: 60, max: 100, unit: 'bpm' },
   temperature: { min: 36.1, max: 37.5, unit: '°C' }, // Metric (Celsius)
-  oxygenSaturation: { min: 95, max: 100, unit: '%' }
+  oxygenSaturation: { min: 95, max: 100, unit: '%' },
+  bloodGlucose: { min: 70, max: 140, unit: 'mg/dL' } // Fasting: 70-100, Post-meal: up to 140
 };
 
 export type VitalStatus = 'normal' | 'warning' | 'critical';
@@ -39,14 +45,16 @@ export const getVitalMessage = (vitalType: string, value: number, status: VitalS
       bloodPressureDiastolic: 'Blood pressure is critically abnormal. Contact your doctor immediately.',
       heartRate: 'Heart rate is at dangerous levels. Seek medical help now.',
       temperature: 'Temperature indicates serious condition. Contact healthcare provider immediately.',
-      oxygenSaturation: 'Oxygen levels are critically low. Seek emergency care.'
+      oxygenSaturation: 'Oxygen levels are critically low. Seek emergency care.',
+      bloodGlucose: 'Blood glucose is at dangerous levels. Seek immediate medical attention.'
     },
     warning: {
       bloodPressureSystolic: 'Blood pressure is elevated. Monitor closely.',
       bloodPressureDiastolic: 'Blood pressure reading is concerning. Consider consulting your doctor.',
       heartRate: 'Heart rate is outside normal range. Monitor and rest.',
       temperature: 'Temperature is elevated. Monitor symptoms.',
-      oxygenSaturation: 'Oxygen levels are low. Rest and monitor breathing.'
+      oxygenSaturation: 'Oxygen levels are low. Rest and monitor breathing.',
+      bloodGlucose: 'Blood glucose is outside normal range. Monitor and consult your doctor if persistent.'
     }
   };
 
