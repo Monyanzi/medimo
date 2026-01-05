@@ -95,11 +95,11 @@ const HomeScreen: React.FC = () => {
 
           <main className="px-4 py-6 pb-28 lg:pb-8 max-w-[1800px] mx-auto lg:px-10 xl:px-14">
             {/* Compact Hero Section - Horizontal on desktop */}
-            <div className="relative mb-8 reveal-1">
+            <div className="relative mb-8">
               {/* Background gradient accent */}
-              <div className="absolute -top-6 -left-4 w-24 h-24 bg-[var(--medimo-accent)]/10 rounded-full blur-3xl" />
+              <div className="absolute -top-6 -left-4 w-24 h-24 bg-[var(--medimo-accent)]/10 rounded-full blur-3xl animate-pulse" />
 
-              <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 animate-slide-up">
                 {/* Left: Greeting */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
@@ -137,12 +137,12 @@ const HomeScreen: React.FC = () => {
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 pb-8">
 
               {/* Health ID Card - Left Column on Large Screens */}
-              <div className="xl:col-span-4 reveal-2 h-full">
+              <div className="xl:col-span-4 h-full animate-slide-up delay-75">
                 <DigitalHealthKey user={user} medications={medications} />
               </div>
 
               {/* Today's Health Dashboard - Right Column - Wider work area */}
-              <div className="xl:col-span-8 reveal-3 h-full">
+              <div className="xl:col-span-8 h-full animate-slide-up delay-150">
                 <TodaysHealthDashboard
                   upcomingAppointment={upcomingAppointment}
                   activeMedications={activeMedications}
@@ -150,7 +150,7 @@ const HomeScreen: React.FC = () => {
               </div>
 
               {/* Vital Signs Tracker - Full Width Bottom Row */}
-              <div className="xl:col-span-12 reveal-5">
+              <div className="xl:col-span-12 animate-slide-up delay-225">
                 <VitalTracker />
               </div>
             </div>
