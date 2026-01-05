@@ -1,10 +1,10 @@
 /* ============================================
    MEDIMO DESIGN SYSTEM - Production Ready
-   Premium Healthcare Aesthetic with Apple-level Polish
+   Vibrant Healthcare Aesthetic - Uplifting & Energetic
    ============================================ */
 
-/* System font stack for premium native feel - SF Pro inspired */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Premium font pairing - Plus Jakarta Sans for modern, friendly feel */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -12,73 +12,79 @@
 
 @layer base {
   :root {
-    /* Elevated Healthcare Minimal - Light Mode */
-    --background: 40 20% 99%; /* #FDFCFA - Warm cream */
-    --foreground: 215 18% 12%; /* #1A1F25 - Deep charcoal */
+    /* Vibrant Healthcare - Light Mode */
+    --background: 180 25% 98%; /* Fresh mint-tinted white */
+    --foreground: 220 25% 10%; /* Rich dark for contrast */
     
     --card: 0 0% 100%;
-    --card-foreground: 215 18% 12%;
+    --card-foreground: 220 25% 10%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 215 18% 12%;
+    --popover-foreground: 220 25% 10%;
     
-    /* Primary: Deep Teal - Trustworthy, Calming */
-    --primary: 178 81% 24%; /* #0D7377 */
+    /* Primary: Vibrant Teal - Energetic yet Trustworthy */
+    --primary: 168 76% 42%; /* #14B8A6 - Brighter teal */
     --primary-foreground: 0 0% 100%;
     
-    /* Secondary: Warm Stone */
-    --secondary: 220 9% 46%; /* #6B7280 */
+    /* Secondary: Soft Violet for variety */
+    --secondary: 250 40% 55%; /* Gentle purple accent */
     --secondary-foreground: 0 0% 100%;
     
-    --muted: 40 10% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 180 15% 95%;
+    --muted-foreground: 220 15% 45%;
     
-    --accent: 178 70% 95%; /* Teal wash */
-    --accent-foreground: 178 81% 24%;
+    --accent: 168 60% 94%; /* Light teal wash */
+    --accent-foreground: 168 76% 36%;
     
-    --destructive: 0 72% 51%; /* #DC2626 */
+    --destructive: 0 84% 60%; /* Vivid red */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 35 8% 90%; /* #E8E6E3 - Warm grey */
-    --input: 35 8% 90%;
-    --ring: 178 81% 24%;
+    --border: 180 12% 88%; /* Subtle teal-tinted border */
+    --input: 180 12% 88%;
+    --ring: 168 76% 42%;
     
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    /* Medimo Semantic Tokens */
-    --medimo-bg-primary: #FDFCFA;
+    /* Medimo Semantic Tokens - VIBRANT */
+    --medimo-bg-primary: #F0FDFA; /* Minty fresh background */
     --medimo-bg-elevated: #FFFFFF;
-    --medimo-text-primary: #1A1F25;
-    --medimo-text-secondary: #5D6470;
-    --medimo-text-muted: #9CA3AF;
-    --medimo-accent: #0D7377;
-    --medimo-accent-soft: rgba(13, 115, 119, 0.08);
-    --medimo-success: #059669;
-    --medimo-warning: #D97706;
-    --medimo-critical: #DC2626;
-    --medimo-border: #E8E6E3;
+    --medimo-text-primary: #134E4A; /* Deep teal text */
+    --medimo-text-secondary: #5B7A78;
+    --medimo-text-muted: #94A3B8;
+    --medimo-accent: #14B8A6; /* Vibrant teal */
+    --medimo-accent-soft: rgba(20, 184, 166, 0.12);
+    --medimo-success: #10B981; /* Bright emerald */
+    --medimo-warning: #F59E0B; /* Warm amber */
+    --medimo-critical: #EF4444; /* Vivid red */
+    --medimo-border: #D1E7E5;
+    
+    /* Vibrant accent palette for visual variety */
+    --medimo-violet: #8B5CF6;
+    --medimo-pink: #EC4899;
+    --medimo-orange: #F97316;
+    --medimo-sky: #0EA5E9;
 
-    /* Health Compass Map */
-    --hc-accent-success: #059669;
-    --hc-accent-warning: #D97706;
-    --hc-accent-critical: #DC2626;
-    --hc-accent-info: #0D7377;
-    --hc-neutral-axis: #5D6470;
-    --hc-neutral-grid: #E8E6E3;
+    /* Health Compass Map - Brighter */
+    --hc-accent-success: #10B981;
+    --hc-accent-warning: #F59E0B;
+    --hc-accent-critical: #EF4444;
+    --hc-accent-info: #14B8A6;
+    --hc-neutral-axis: #5B7A78;
+    --hc-neutral-grid: #D1E7E5;
 
     --hc-chart-axis: var(--hc-neutral-axis);
     --hc-chart-grid: var(--hc-neutral-grid);
 
-    /* Soft accent surfaces */
-    --hc-accent-success-soft: #ECFDF5;
-    --hc-accent-warning-soft: #FFFBEB;
-    --hc-accent-critical-soft: #FEF2F2;
-    --hc-accent-info-soft: rgba(13, 115, 119, 0.08);
+    /* Soft accent surfaces - More saturated */
+    --hc-accent-success-soft: #D1FAE5;
+    --hc-accent-warning-soft: #FEF3C7;
+    --hc-accent-critical-soft: #FEE2E2;
+    --hc-accent-info-soft: rgba(20, 184, 166, 0.15);
 
-    /* Premium elevation shadows */
-    --hc-elev-surface: 0 1px 2px rgba(0,0,0,0.04);
-    --hc-elev-raised: 0 4px 12px -2px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    --hc-elev-overlay: 0 12px 40px -8px rgba(0,0,0,0.15), 0 4px 12px -2px rgba(0,0,0,0.08);
+    /* Premium elevation shadows with color */
+    --hc-elev-surface: 0 1px 3px rgba(20, 184, 166, 0.06);
+    --hc-elev-raised: 0 4px 16px -2px rgba(20, 184, 166, 0.12), 0 1px 3px rgba(0,0,0,0.04);
+    --hc-elev-overlay: 0 16px 48px -8px rgba(20, 184, 166, 0.18), 0 4px 12px -2px rgba(0,0,0,0.08);
     
     /* Apple-inspired spring animation timing */
     --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -87,52 +93,59 @@
   }
 
   .dark {
-    --background: 220 12% 8%; /* #12151a */
-    --foreground: 210 40% 98%; /* #F9FAFB */
+    --background: 220 20% 7%; /* Deep blue-black */
+    --foreground: 180 20% 98%;
     
-    --card: 220 10% 12%; /* #1d2026 */
-    --card-foreground: 210 40% 98%;
+    --card: 220 18% 11%;
+    --card-foreground: 180 20% 98%;
     
-    --popover: 220 10% 12%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 18% 11%;
+    --popover-foreground: 180 20% 98%;
     
-    --primary: 168 65% 45%; /* Brighter teal */
-    --primary-foreground: 220 10% 6%;
+    /* Primary stays vibrant in dark */
+    --primary: 168 76% 50%; /* Even brighter teal */
+    --primary-foreground: 220 20% 7%;
     
-    --secondary: 220 9% 55%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 250 45% 65%;
+    --secondary-foreground: 180 20% 98%;
     
-    --muted: 220 8% 18%;
-    --muted-foreground: 220 9% 65%;
+    --muted: 220 15% 16%;
+    --muted-foreground: 220 15% 60%;
     
-    --accent: 220 8% 18%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 220 15% 16%;
+    --accent-foreground: 180 20% 98%;
     
-    --destructive: 0 65% 55%;
+    --destructive: 0 75% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 220 8% 22%;
-    --input: 220 8% 22%;
-    --ring: 168 65% 45%;
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 168 76% 50%;
 
-    /* Medimo Semantic Tokens - Dark - Improved Contrast */
-    --medimo-bg-primary: #12151a;
-    --medimo-bg-elevated: #1d2026;
-    --medimo-text-primary: #FFFFFF;
-    --medimo-text-secondary: #B0B5BD;
-    --medimo-text-muted: #7A8089;
+    /* Medimo Semantic Tokens - Dark - Vibrant */
+    --medimo-bg-primary: #0A1514;
+    --medimo-bg-elevated: #111B1A;
+    --medimo-text-primary: #F0FDFA;
+    --medimo-text-secondary: #A7C4C2;
+    --medimo-text-muted: #6B8A88;
     --medimo-accent: #2DD4BF;
-    --medimo-accent-soft: rgba(45, 212, 191, 0.15);
+    --medimo-accent-soft: rgba(45, 212, 191, 0.18);
     --medimo-success: #34D399;
     --medimo-warning: #FBBF24;
     --medimo-critical: #F87171;
-    --medimo-border: #3A3F47;
+    --medimo-border: #1F3331;
+    
+    /* Dark mode vibrant accents */
+    --medimo-violet: #A78BFA;
+    --medimo-pink: #F472B6;
+    --medimo-orange: #FB923C;
+    --medimo-sky: #38BDF8;
     
     /* Dark mode soft surfaces */
-    --hc-accent-success-soft: rgba(52, 211, 153, 0.15);
-    --hc-accent-warning-soft: rgba(251, 191, 36, 0.15);
-    --hc-accent-critical-soft: rgba(248, 113, 113, 0.15);
-    --hc-accent-info-soft: rgba(45, 212, 191, 0.15);
+    --hc-accent-success-soft: rgba(52, 211, 153, 0.18);
+    --hc-accent-warning-soft: rgba(251, 191, 36, 0.18);
+    --hc-accent-critical-soft: rgba(248, 113, 113, 0.18);
+    --hc-accent-info-soft: rgba(45, 212, 191, 0.18);
   }
 }
 
@@ -149,7 +162,7 @@
   
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -158,15 +171,15 @@
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
-    letter-spacing: -0.025em;
-    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 700;
   }
   
   /* Fluid typography scale */
-  h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); line-height: 1.1; }
-  h2 { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; } /* 24px minimum at 16px base */
-  h3 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); line-height: 1.3; }
+  h1 { font-size: clamp(1.875rem, 4vw, 2.75rem); line-height: 1.1; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2.125rem); line-height: 1.2; }
+  h3 { font-size: clamp(1.25rem, 2.5vw, 1.625rem); line-height: 1.3; }
   
   code, pre, .font-mono {
     font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
@@ -546,17 +559,42 @@
   }
 }
 
-/* Gradient text utility */
+/* Gradient text utility - More vibrant */
 .text-gradient {
-  background: linear-gradient(135deg, var(--medimo-accent) 0%, #14B8A6 100%);
+  background: linear-gradient(135deg, #14B8A6 0%, #0EA5E9 50%, #8B5CF6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Accent gradient for CTAs */
+.text-gradient-warm {
+  background: linear-gradient(135deg, #F59E0B 0%, #EC4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Accent gradient for CTAs - Brighter */
 .bg-accent-gradient {
-  background: linear-gradient(135deg, var(--medimo-accent) 0%, #0E9488 100%);
+  background: linear-gradient(135deg, #14B8A6 0%, #0D9488 50%, #0EA5E9 100%);
+}
+
+/* Vibrant card backgrounds */
+.bg-vibrant-card {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(14, 165, 233, 0.03) 100%);
+}
+
+/* Colorful decorative gradients */
+.bg-gradient-teal-sky {
+  background: linear-gradient(135deg, #14B8A6 0%, #0EA5E9 100%);
+}
+
+.bg-gradient-violet-pink {
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+}
+
+.bg-gradient-warm {
+  background: linear-gradient(135deg, #F59E0B 0%, #F97316 100%);
 }
 
 /* Enhanced reveal animations with spring physics */

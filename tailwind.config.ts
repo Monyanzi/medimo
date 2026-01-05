@@ -22,10 +22,10 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif'],
         mono: ['SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', 'monospace'],
-        body: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Segoe UI', 'Roboto', 'sans-serif'],
+        body: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -61,20 +61,24 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Medimo Semantic Colors
-        "background-main": "#FDFCFA",
-        "accent-success": "#059669",
+        // Medimo Vibrant Semantic Colors
+        "background-main": "#F0FDFA",
+        "accent-success": "#10B981",
         "surface-card": "#FFFFFF",
-        "border-divider": "#E8E6E3",
-        "text-primary": "#1A1F25",
-        "text-secondary": "#5D6470",
-        "primary-action": "#0D7377",
-        "destructive-action": "#DC2626",
-        "medimo-silver": "#9CA3AF",
-        // Extended semantic
-        "medimo-warning": "#D97706",
-        "medimo-success": "#059669",
-        "medimo-accent-soft": "rgba(13, 115, 119, 0.08)",
+        "border-divider": "#D1E7E5",
+        "text-primary": "#134E4A",
+        "text-secondary": "#5B7A78",
+        "primary-action": "#14B8A6",
+        "destructive-action": "#EF4444",
+        "medimo-silver": "#94A3B8",
+        // Vibrant accent palette
+        "medimo-warning": "#F59E0B",
+        "medimo-success": "#10B981",
+        "medimo-accent-soft": "rgba(20, 184, 166, 0.12)",
+        "medimo-violet": "#8B5CF6",
+        "medimo-pink": "#EC4899",
+        "medimo-orange": "#F97316",
+        "medimo-sky": "#0EA5E9",
       },
       borderRadius: {
         lg: "var(--radius)",
