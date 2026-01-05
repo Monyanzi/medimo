@@ -66,30 +66,11 @@ export const generateQRCodeData = (
 };
 
 export const generateQRCodeImage = async (qrData: QRCodeData): Promise<string> => {
-  // Create compact data object for URL encoding
-  const compactData = {
-    n: qrData.userName,
-    d: qrData.dob || '',
-    b: qrData.bloodType || '',
-    a: qrData.allergies.join(','),
-    e: qrData.emergencyContactName || '',
-    ep: qrData.emergencyContactPhone || '',
-    er: qrData.emergencyContactRelationship || '',
-    c: qrData.conditions.join(','),
-    m: qrData.currentMedications.join(','),
-    nt: qrData.importantNotes ? qrData.importantNotes.substring(0, 100) : '',
-    g: new Date(qrData.generatedAt).toLocaleDateString(),
-  };
-
-  // Base64 encode the data and create a URL to the emergency view page
-  const encoded = btoa(JSON.stringify(compactData));
-  
-  // Use current origin or fallback to a relative path
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const emergencyUrl = `${baseUrl}/e?d=${encoded}`;
+  // Use plain text format - displays directly when scanned, no URL dependency
+  const textContent = generateCompactText(qrData);
 
   try {
-    const qrCodeUrl = await QRCode.toDataURL(emergencyUrl, {
+    const qrCodeUrl = await QRCode.toDataURL(textContent, {
       width: 400,
       margin: 2,
       errorCorrectionLevel: 'L',
