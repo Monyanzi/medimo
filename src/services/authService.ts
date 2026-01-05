@@ -199,6 +199,27 @@ export const logout = (): void => {
 };
 
 /**
+ * Delete user account permanently
+ */
+export const deleteAccount = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const response = await api.delete('/auth/account');
+        const { success, error } = response.data;
+
+        if (success) {
+            // Clear all local data after successful deletion
+            logout();
+            return { success: true };
+        }
+
+        return { success: false, error: error || 'Failed to delete account' };
+    } catch (error: any) {
+        const message = error.response?.data?.error || 'Failed to delete account. Please try again.';
+        return { success: false, error: message };
+    }
+};
+
+/**
  * Initialize auth state from stored data
  * Returns stored user if token exists, null otherwise
  */
@@ -217,6 +238,7 @@ const authService = {
     logout,
     getProfile,
     updateProfile,
+    deleteAccount,
     getToken,
     setToken,
     removeToken,

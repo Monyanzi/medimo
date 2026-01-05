@@ -1,13 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Bell, Globe, Smartphone, Ruler } from 'lucide-react';
+import { ChevronLeft, Bell, Globe, Smartphone, Ruler, Trash2, AlertTriangle } from 'lucide-react';
 import DesktopSidebar from '@/components/shared/DesktopSidebar';
 import BottomNavigation from '@/components/shared/BottomNavigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -15,11 +16,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 const SettingsNotificationsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, deleteCurrentAccount, isLoading } = useAuth();
   const {
     language, setLanguage,
     region, setRegion,
@@ -34,10 +47,32 @@ const SettingsNotificationsPage: React.FC = () => {
     emailNotifications, setEmailNotifications
   } = useAppSettings();
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const CONFIRM_TEXT = 'DELETE';
+
   const handleSave = () => {
-    // All settings are saved on change by the context setters.
-    // This button can provide a general save confirmation or be removed.
     toast.success('Settings have been saved.');
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== CONFIRM_TEXT) {
+      toast.error(`Please type "${CONFIRM_TEXT}" to confirm deletion`);
+      return;
+    }
+
+    setIsDeleting(true);
+    const result = await deleteCurrentAccount();
+    setIsDeleting(false);
+
+    if (result.success) {
+      // Validate: user should be logged out, redirect to welcome
+      setShowDeleteDialog(false);
+      navigate('/welcome');
+    }
+    // Error handling is done in deleteCurrentAccount via toast
   };
 
   const languages = [
@@ -294,8 +329,94 @@ const SettingsNotificationsPage: React.FC = () => {
           >
             Save Settings
           </Button>
+
+          {/* Danger Zone - Delete Account */}
+          <Card className="bg-surface-card border-destructive/30">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                <span>Danger Zone</span>
+              </CardTitle>
+              <CardDescription>
+                Irreversible actions that affect your account
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-medium text-text-primary">Delete Account</h4>
+                <p className="text-sm text-text-secondary">
+                  Permanently delete your account and all associated data including medications, 
+                  appointments, documents, and health records. This action cannot be undone.
+                </p>
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="mt-2"
+                  disabled={isLoading}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete My Account
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Delete Account Permanently?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                This will permanently delete your account <strong>({user?.email})</strong> and all your data:
+              </p>
+              <ul className="list-disc list-inside text-sm space-y-1">
+                <li>All medications and reminders</li>
+                <li>All appointments and timeline history</li>
+                <li>All uploaded documents</li>
+                <li>All vital signs and health records</li>
+                <li>Emergency contacts and medical information</li>
+              </ul>
+              <p className="font-medium text-destructive">
+                This action is irreversible and cannot be undone.
+              </p>
+              <div className="pt-2">
+                <Label htmlFor="confirm-delete" className="text-sm font-medium">
+                  Type <strong>{CONFIRM_TEXT}</strong> to confirm:
+                </Label>
+                <Input
+                  id="confirm-delete"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())}
+                  placeholder={CONFIRM_TEXT}
+                  className="mt-1"
+                  autoComplete="off"
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => setDeleteConfirmText('')}
+              disabled={isDeleting}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmText !== CONFIRM_TEXT || isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete My Account'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <BottomNavigation />
     </div>

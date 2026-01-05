@@ -156,4 +156,34 @@ auth.get('/me', authMiddleware, async (c) => {
     }
 });
 
+/**
+ * DELETE /api/auth/account
+ * Permanently delete user account and all associated data (protected)
+ */
+auth.delete('/account', authMiddleware, async (c) => {
+    try {
+        const authUser = c.get('user');
+
+        // Verify user exists before deletion
+        const user = await db.query.users.findFirst({
+            where: eq(users.id, authUser.id),
+        });
+
+        if (!user) {
+            return c.json({ error: 'User not found' }, 404);
+        }
+
+        // Delete user - cascading deletes will handle related data
+        await db.delete(users).where(eq(users.id, authUser.id));
+
+        return c.json({ 
+            success: true, 
+            message: 'Account permanently deleted' 
+        });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        return c.json({ error: 'Failed to delete account' }, 500);
+    }
+});
+
 export default auth;
