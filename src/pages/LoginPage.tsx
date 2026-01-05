@@ -78,19 +78,19 @@ const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Premium Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-slate-900 dark:via-slate-800 dark:to-teal-950" />
+      <div className="absolute inset-0 bg-gradient-to-br from-teal-50 via-emerald-50/50 to-cyan-50 dark:from-slate-900 dark:via-teal-950/50 dark:to-slate-900" />
       
-      {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-teal-200/30 to-transparent dark:from-teal-800/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-emerald-200/30 to-transparent dark:from-emerald-800/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
+      {/* Decorative Elements - More vibrant */}
+      <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-gradient-to-bl from-teal-300/40 via-emerald-200/30 to-transparent dark:from-teal-700/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-cyan-300/30 via-teal-200/20 to-transparent dark:from-cyan-700/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
+      <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-gradient-radial from-violet-200/20 to-transparent dark:from-violet-800/10 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2" />
       
-      {/* Floating Medical Icons - Subtle Background Pattern */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.03] dark:opacity-[0.02]">
-        <div className="absolute top-[10%] left-[15%] text-6xl">💊</div>
-        <div className="absolute top-[20%] right-[20%] text-5xl">🩺</div>
-        <div className="absolute bottom-[30%] left-[10%] text-4xl">❤️</div>
-        <div className="absolute bottom-[15%] right-[15%] text-5xl">🏥</div>
-        <div className="absolute top-[50%] left-[50%] text-4xl">📋</div>
+      {/* Floating decorative shapes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[15%] left-[10%] w-3 h-3 rounded-full bg-teal-400/40 animate-pulse" />
+        <div className="absolute top-[25%] right-[15%] w-2 h-2 rounded-full bg-emerald-400/50 animate-pulse delay-300" />
+        <div className="absolute bottom-[30%] left-[20%] w-4 h-4 rounded-full bg-cyan-400/30 animate-pulse delay-150" />
+        <div className="absolute bottom-[20%] right-[25%] w-2 h-2 rounded-full bg-violet-400/40 animate-pulse delay-225" />
       </div>
 
       {/* Header */}
