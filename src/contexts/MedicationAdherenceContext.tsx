@@ -1,5 +1,5 @@
-
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useAuth } from './AuthContext';
 import { format } from 'date-fns';
 
 export interface MedicationDose {
@@ -42,21 +42,90 @@ export const MedicationAdherenceProvider: React.FC<{ children: React.ReactNode }
   const [dailyAdherence, setDailyAdherence] = useState<DailyAdherence[]>([]);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const { user } = useAuth();
 
-  // Load data from localStorage on mount
+  const getStorageKey = useCallback(() => {
+    return user ? `medicationAdherence__${user.id}` : 'medicationAdherence__anon';
+  }, [user]);
+
+  // Load data when user changes
   useEffect(() => {
-    const savedAdherence = localStorage.getItem('medicationAdherence');
+    const key = getStorageKey();
+    const savedAdherence = localStorage.getItem(key);
     if (savedAdherence) {
-      const parsedData = JSON.parse(savedAdherence);
-      setDailyAdherence(parsedData);
+      try {
+        const parsedData = JSON.parse(savedAdherence);
+        setDailyAdherence(parsedData);
+      } catch (e) {
+        console.error('Failed to parse medication adherence data:', e);
+        localStorage.removeItem(key); // Clear corrupted data
+        setDailyAdherence([]);
+      }
+    } else {
+      setDailyAdherence([]);
     }
-  }, []);
+  }, [getStorageKey]);
 
-  // Save data to localStorage whenever dailyAdherence changes
+  // Save data to localStorage whenever dailyAdherence changes (Debounced)
   useEffect(() => {
+    const key = getStorageKey();
     if (dailyAdherence.length > 0) {
-      localStorage.setItem('medicationAdherence', JSON.stringify(dailyAdherence));
+      const timeoutId = setTimeout(() => {
+        localStorage.setItem(key, JSON.stringify(dailyAdherence));
+      }, 1000); // 1 second debounce
+      return () => clearTimeout(timeoutId);
     }
+  }, [dailyAdherence, getStorageKey]);
+
+  const calculateStreaks = useCallback(() => {
+    if (dailyAdherence.length === 0) return { current: 0, best: 0 };
+
+    // Sort by date descending (newest first)
+    const sortedDays = [...dailyAdherence].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    let currentStreak = 0;
+    let bestStreak = 0;
+    let tempStreak = 0;
+    let prevDate: Date | null = null;
+
+    // Calculate streaks by checking date consecutiveness
+    for (let i = 0; i < sortedDays.length; i++) {
+      const day = sortedDays[i];
+      const currentDate = new Date(day.date);
+      const isGoodAdherence = day.adherenceScore >= 80;
+
+      // Check if this date is exactly 1 day after the previous
+      let isConsecutive = true;
+      if (prevDate !== null) {
+        const diffMs = prevDate.getTime() - currentDate.getTime();
+        const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+        isConsecutive = diffDays === 1;
+      }
+
+      if (isGoodAdherence && isConsecutive) {
+        tempStreak++;
+        // Track current streak (from today backwards)
+        if (i === 0 || currentStreak === i) {
+          currentStreak = tempStreak;
+        }
+      } else if (isGoodAdherence && !isConsecutive) {
+        // Gap in dates, reset temp streak but start new one
+        if (tempStreak > bestStreak) bestStreak = tempStreak;
+        tempStreak = 1;
+        // If this is day 0, it can start a current streak
+        if (i === 0) currentStreak = 1;
+      } else {
+        // Adherence < 80%, end current streak calculation
+        if (tempStreak > bestStreak) bestStreak = tempStreak;
+        tempStreak = 0;
+      }
+
+      prevDate = currentDate;
+    }
+
+    if (tempStreak > bestStreak) bestStreak = tempStreak;
+
+    return { current: currentStreak, best: Math.max(bestStreak, currentStreak) };
   }, [dailyAdherence]);
 
   // Calculate streaks whenever dailyAdherence changes
@@ -64,7 +133,7 @@ export const MedicationAdherenceProvider: React.FC<{ children: React.ReactNode }
     const { current, best } = calculateStreaks();
     setCurrentStreak(current);
     setBestStreak(best);
-  }, [dailyAdherence]);
+  }, [dailyAdherence, calculateStreaks]);
 
   const markMedicationTaken = (medicationId: string, medicationName: string, dosage: string) => {
     const today = format(new Date(), 'yyyy-MM-dd');
@@ -72,12 +141,12 @@ export const MedicationAdherenceProvider: React.FC<{ children: React.ReactNode }
 
     setDailyAdherence(prev => {
       const existingDayIndex = prev.findIndex(day => day.date === today);
-      
+
       if (existingDayIndex >= 0) {
         // Update existing day
         const updatedDay = { ...prev[existingDayIndex] };
         const alreadyTaken = updatedDay.takenMedications.some(med => med.medicationId === medicationId);
-        
+
         if (!alreadyTaken) {
           updatedDay.takenMedications.push({
             medicationId,
@@ -86,15 +155,18 @@ export const MedicationAdherenceProvider: React.FC<{ children: React.ReactNode }
             timeTaken: now,
             dosage
           });
-          
+
           // Recalculate adherence score for the day
-          // TODO: Enhance adherence score calculation.
-          // Current logic is simplified: Assumes a fixed number of (e.g., 3) total expected doses per day.
-          // A robust implementation should:
-          // 1. Know the actual number of prescribed doses for *that specific day* based on all active medication schedules.
-          // 2. Calculate score = (number of unique medications taken / number of unique medications prescribed for the day) * 100.
-          // 3. Handle cases where a medication is taken multiple times if prescribed (e.g. "twice a day").
-          updatedDay.adherenceScore = Math.min(100, (updatedDay.takenMedications.length / 3) * 100); // Simplified
+          // Logic: (Taken Doses / Prescribed Doses) * 100
+          // We will approximate by assuming:
+          // 1. If a medication is taken, it was expected.
+          // 2. We track unique medications taken vs unique medications expected.
+
+          const uniqueTaken = new Set(updatedDay.takenMedications.map(m => m.medicationId)).size;
+          // Simple robust logic for v1: 
+          // If you took something, you're doing good. 
+          // We'll refine this when we link full schedule data.
+          updatedDay.adherenceScore = Math.min(100, (uniqueTaken * 33)); // ~3 meds = 100%
         }
 
         const newData = [...prev];
@@ -115,7 +187,7 @@ export const MedicationAdherenceProvider: React.FC<{ children: React.ReactNode }
           // Simplified initial score
           adherenceScore: 33
         };
-        
+
         return [...prev, newDay].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       }
     });
@@ -132,39 +204,7 @@ export const MedicationAdherenceProvider: React.FC<{ children: React.ReactNode }
     return dailyAdherence.find(day => day.date === today) || null;
   };
 
-  const calculateStreaks = () => {
-    if (dailyAdherence.length === 0) return { current: 0, best: 0 };
-
-    const sortedDays = [...dailyAdherence].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
-    let currentStreak = 0;
-    let bestStreak = 0;
-    let tempStreak = 0;
-
-    // Calculate current streak from today backwards
-    for (let i = 0; i < sortedDays.length; i++) {
-      const day = sortedDays[i];
-      if (day.adherenceScore >= 80) { // Consider 80%+ as good adherence
-        if (i === currentStreak) {
-          currentStreak++;
-        }
-        tempStreak++;
-      } else {
-        if (tempStreak > bestStreak) {
-          bestStreak = tempStreak;
-        }
-        tempStreak = 0;
-      }
-    }
-
-    if (tempStreak > bestStreak) {
-      bestStreak = tempStreak;
-    }
-
-    return { current: currentStreak, best: Math.max(bestStreak, currentStreak) };
-  };
-
-  const overallAdherenceScore = dailyAdherence.length > 0 
+  const overallAdherenceScore = dailyAdherence.length > 0
     ? Math.round(dailyAdherence.reduce((sum, day) => sum + day.adherenceScore, 0) / dailyAdherence.length)
     : 0;
 

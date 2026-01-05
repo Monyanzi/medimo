@@ -2,9 +2,11 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 
-// Create axios instance
+// Create axios instance with configurable base URL
+// In development: points to local server (localhost:3001)
+// In production: points to deployed API
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://api.medimo.app',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
   timeout: 10000,
 });
 
@@ -30,7 +32,7 @@ api.interceptors.response.use(
   },
   (error) => {
     console.error('API Error:', error);
-    
+
     if (error.response?.status === 401) {
       // Clear auth token and redirect to login
       localStorage.removeItem('medimo_auth_token');
@@ -46,7 +48,7 @@ api.interceptors.response.use(
     } else {
       toast.error('An unexpected error occurred.');
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -59,12 +61,12 @@ export const authAPI = {
     const response = await api.post('/auth/login', { email, password });
     return response.data;
   },
-  
+
   getProfile: async () => {
     const response = await api.get('/auth/profile');
     return response.data;
   },
-  
+
   updateProfile: async (userData: any) => {
     const response = await api.put('/auth/profile', userData);
     return response.data;
@@ -76,17 +78,17 @@ export const healthAPI = {
     const response = await api.get('/medications');
     return response.data;
   },
-  
+
   getAppointments: async () => {
     const response = await api.get('/appointments');
     return response.data;
   },
-  
+
   getDocuments: async () => {
     const response = await api.get('/documents');
     return response.data;
   },
-  
+
   getTimelineEvents: async () => {
     const response = await api.get('/timeline');
     return response.data;

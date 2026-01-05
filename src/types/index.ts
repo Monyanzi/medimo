@@ -7,6 +7,7 @@ export interface User {
   allergies: string[];
   conditions: string[];
   organDonor: boolean;
+  importantNotes?: string; // Persistent notes for medical professionals (e.g. pregnancy, implants)
   emergencyContact: {
     name: string;
     phone: string;
@@ -43,7 +44,8 @@ export interface User {
 
 export interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ success: boolean; user: User | null; error?: string }>;
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; user: User | null; error?: string }>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => Promise<void>;
   regenerateQRCode: () => Promise<void>;
@@ -56,6 +58,7 @@ export interface TimelineEventFilters {
   categoryFilter?: string; // e.g., 'all', 'Medication', 'Appointment'
   dateFilter?: string; // e.g., 'all', 'today', 'past_7_days', 'past_30_days'
   sortOrder?: 'asc' | 'desc';
+  systemFilter?: 'all' | 'user' | 'system';
 }
 
 export interface HealthRecord {
@@ -66,7 +69,7 @@ export interface HealthRecord {
   date: string;
   provider?: string;
   status?: string;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export interface Appointment {
@@ -117,6 +120,8 @@ export interface VitalSigns {
   height?: number; // Added field
   temperature?: number;
   oxygenSaturation?: number; // Added field
+  respiratoryRate?: number; // Added field
+  bloodGlucose?: number; // Added field (mg/dL)
   recordedDate: string;
   notes?: string;
 }
@@ -127,7 +132,7 @@ export interface Document {
   fileType: string;
   uploadDate: string;
   storagePath: string;
-  category: 'Medical Records' | 'Lab Results' | 'Prescriptions' | 'Insurance' | 'Images' | 'Other';
+  category: 'Medical Records' | 'Lab Results' | 'Prescriptions' | 'Insurance' | 'Imaging' | 'Images' | 'Other';
   fileSize: number;
   description?: string;
   tags?: string[];
@@ -140,6 +145,9 @@ export interface TimelineEvent {
   date: string;
   category: 'Medication' | 'Appointment' | 'Document' | 'Vitals' | 'Test' | 'Other';
   relatedId?: string;
+  notes?: string; // user-entered free text shown in export Notes column
+  isSystem?: boolean; // auto-generated (not user-driven)
+  systemType?: 'threshold' | 'summary';
 }
 
 export interface HealthDataContextType {
@@ -148,6 +156,9 @@ export interface HealthDataContextType {
   documents: Document[];
   timelineEvents: TimelineEvent[];
   vitalSigns: VitalSigns[];
+  purgeUserData: () => void; // remove all user-scoped health data
+  exportEventCategories: string[]; // categories selected for export
+  setExportEventCategories: (cats: string[]) => void;
   addMedication: (medication: Omit<Medication, 'id'>) => Promise<void>;
   updateMedication: (id: string, medication: Partial<Medication>) => Promise<void>;
   deleteMedication: (id: string) => Promise<void>;

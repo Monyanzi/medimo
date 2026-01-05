@@ -6,35 +6,53 @@ import { useNotifications } from '@/contexts/NotificationContext';
 import { MedicationAdherenceProvider } from '@/contexts/MedicationAdherenceContext';
 import Header from '@/components/shared/Header';
 import BottomNavigation from '@/components/shared/BottomNavigation';
+import DesktopSidebar from '@/components/shared/DesktopSidebar';
 import DigitalHealthKey from '@/components/features/DigitalHealthKey';
 import TodaysHealthDashboard from '@/components/features/TodaysHealthDashboard';
-import HealthProgress from '@/components/features/HealthProgress';
-import QuickCheckIn from '@/components/features/QuickCheckIn';
 import VitalTracker from '@/components/features/VitalTracker';
-import FAB from '@/components/shared/FAB';
+
 import { medicationReminderService } from '@/services/medicationReminderService';
-import { Card, CardContent } from '@/components/ui/card';
-import { Bell, Pill } from 'lucide-react';
+import { Bell } from 'lucide-react';
+import { format } from 'date-fns';
+
 
 const HomeScreen: React.FC = () => {
   const { user } = useAuth();
   const { appointments, medications, isLoading } = useHealthData();
   const { addNotification } = useNotifications();
 
-  // Generate medication reminders on load
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const getCurrentDate = () => {
+    return format(new Date(), 'EEEE, MMMM d');
+  };
+
+  // Set current user on medication reminder service for proper data isolation
   useEffect(() => {
-    if (medications.length > 0) {
-      const reminders = medicationReminderService.generateDailyReminders(medications);
-      console.log('Generated reminders for today:', reminders);
+    medicationReminderService.setCurrentUser(user?.id || null);
+  }, [user?.id]);
+
+  // Generate reminders when medications change
+  useEffect(() => {
+    if (user && medications.length > 0) {
+      medicationReminderService.generateDailyReminders(medications);
     }
-  }, [medications]);
+  }, [user, medications]);
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background-main flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-text-primary mb-2">Loading...</h2>
-          <p className="text-text-secondary">Please wait while we load your data</p>
+      <div className="min-h-screen bg-[var(--medimo-bg-primary)] flex items-center justify-center">
+        <div className="text-center reveal-1">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-[var(--medimo-accent)] flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          </div>
+          <h2 className="font-display text-xl font-semibold text-[var(--medimo-text-primary)] mb-2">Loading...</h2>
+          <p className="text-[var(--medimo-text-secondary)]">Please wait while we load your data</p>
         </div>
       </div>
     );
@@ -42,14 +60,14 @@ const HomeScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background-main font-inter">
+      <div className="min-h-screen bg-[var(--medimo-bg-primary)]">
         <Header />
-        <main className="px-4 py-6 pb-24 space-y-6">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-text-primary mb-2">
+        <main className="px-4 py-6 pb-24 space-y-6 max-w-3xl mx-auto">
+          <div className="text-center reveal-1">
+            <h1 className="font-display text-2xl font-bold text-[var(--medimo-text-primary)] mb-2">
               Hello, {user.name.split(' ')[0]}! 👋
             </h1>
-            <p className="text-text-secondary">Loading your health information...</p>
+            <p className="text-[var(--medimo-text-secondary)]">Loading your health information...</p>
           </div>
         </main>
         <BottomNavigation />
@@ -57,113 +75,88 @@ const HomeScreen: React.FC = () => {
     );
   }
 
-  // Find the next upcoming appointment
   const now = new Date();
   const upcomingAppointment = appointments
     .filter(apt => new Date(apt.dateTime) > now)
     .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())[0];
 
-  // Get active medications
   const activeMedications = medications.filter(med => med.status === 'active');
-
-  // Get pending medication reminders
   const pendingReminders = medicationReminderService.getPendingReminders();
-  const overdueReminders = medicationReminderService.getOverdueReminders();
-
-  const MedicationReminderCard = () => {
-    if (pendingReminders.length === 0) return null;
-
-    return (
-      <Card className="bg-yellow-50 border border-yellow-200 shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                <Pill className="h-4 w-4 text-white" />
-              </div>
-            </div>
-            <div className="flex-1">
-              <h4 className="font-medium text-yellow-800">
-                {overdueReminders.length > 0 ? 'Overdue Medications' : 'Medication Reminders'}
-              </h4>
-              <p className="text-sm text-yellow-700">
-                {overdueReminders.length > 0 
-                  ? `${overdueReminders.length} medication${overdueReminders.length > 1 ? 's' : ''} overdue`
-                  : `${pendingReminders.length} medication${pendingReminders.length > 1 ? 's' : ''} pending today`
-                }
-              </p>
-            </div>
-            <Bell className="h-5 w-5 text-yellow-600" />
-          </div>
-          
-          <div className="mt-3 space-y-1">
-            {(overdueReminders.length > 0 ? overdueReminders : pendingReminders).slice(0, 3).map((reminder, index) => (
-              <div key={index} className="text-xs text-yellow-700">
-                <span className="font-medium">{reminder.medicationName}</span> - {reminder.dosage} at {reminder.scheduledTime}
-              </div>
-            ))}
-            {/* Adjust logic for "more medications" count based on what's being displayed */}
-            {overdueReminders.length > 3 && (
-              <div className="text-xs text-yellow-600">
-                +{overdueReminders.length - 3} more overdue
-              </div>
-            )}
-            {overdueReminders.length === 0 && pendingReminders.length > 3 && (
-              <div className="text-xs text-yellow-600">
-                +{pendingReminders.length - 3} more pending
-              </div>
-            )}
-            {/* Case where some overdue are shown (less than 3) and there are still pending ones not shown */}
-            {overdueReminders.length > 0 && overdueReminders.length < 3 && pendingReminders.length > 0 && (overdueReminders.length + pendingReminders.length > 3) && (
-                 <div className="text-xs text-yellow-600">
-                    +{ (overdueReminders.length + pendingReminders.length) - 3 > 0 ? (overdueReminders.length + pendingReminders.length) - 3 : 0 } more medications
-                 </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
 
   return (
     <MedicationAdherenceProvider>
-      <div className="min-h-screen bg-background-main font-inter">
-        <Header />
-        
-        <main className="px-4 py-6 pb-24 space-y-6">
-          {/* Welcome Message */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-text-primary mb-2">
-              Hello, {user.name.split(' ')[0]}! 👋
-            </h1>
-            <p className="text-text-secondary">
-              Your health information is secure and up to date
-            </p>
-          </div>
+      <div className="min-h-screen bg-[var(--medimo-bg-primary)]">
+        {/* Desktop Sidebar - hidden on mobile */}
+        <DesktopSidebar />
 
-          {/* PRIORITY #1: Digital Health Key - Always first */}
-          <DigitalHealthKey user={user} />
+        {/* Main content with sidebar offset on desktop */}
+        <div className="xl:pl-64 transition-all duration-300">
+          <Header />
 
-          {/* PRIORITY #2: Medication Reminders - Critical daily reminders */}
-          <MedicationReminderCard />
+          <main className="px-4 py-6 pb-28 lg:pb-8 max-w-[1800px] mx-auto lg:px-10 xl:px-14">
+            {/* Compact Hero Section - Horizontal on desktop */}
+            <div className="relative mb-8 reveal-1">
+              {/* Background gradient accent */}
+              <div className="absolute -top-6 -left-4 w-24 h-24 bg-[var(--medimo-accent)]/10 rounded-full blur-3xl" />
 
-          {/* PRIORITY #3: Today's Health Dashboard - Critical daily reminders */}
-          <TodaysHealthDashboard 
-            upcomingAppointment={upcomingAppointment}
-            activeMedications={activeMedications}
-          />
+              <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                {/* Left: Greeting */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[11px] font-mono text-[var(--medimo-text-muted)] uppercase tracking-[0.12em]">
+                      {getCurrentDate()}
+                    </span>
+                  </div>
 
-          {/* PRIORITY #4: Vital Signs Tracker - Show health trends over time */}
-          <VitalTracker />
+                  <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold text-[var(--medimo-text-primary)] tracking-tight leading-[1.15]">
+                    {getGreeting()}, <span className="bg-gradient-to-r from-[var(--medimo-accent)] to-teal-500 bg-clip-text text-transparent">{user.name.split(' ')[0]}</span>
+                  </h1>
 
-          {/* PRIORITY #5: Enhanced Gamification with Real Data - Combined Health Progress */}
-          <HealthProgress />
+                  <p className="text-[var(--medimo-text-secondary)] text-sm md:text-base mt-2 hidden lg:block max-w-2xl">
+                    {pendingReminders.length > 0 ? (
+                      <>You have <span className="font-medium text-[var(--medimo-accent)]">{pendingReminders.length} pending medication{pendingReminders.length > 1 ? 's' : ''}</span>. Stay on track!</>
+                    ) : (
+                      <>Your health overview looks great today. All systems nominal.</>
+                    )}
+                  </p>
 
-          {/* PRIORITY #6: Quick Check-in */}
-          <QuickCheckIn />
-        </main>
+                  <p className="text-[var(--medimo-text-secondary)] text-sm md:text-base mt-1 lg:hidden">
+                    {pendingReminders.length > 0 ? (
+                      <>Take <span className="font-medium text-[var(--medimo-accent)]">{pendingReminders[0]?.medicationName || 'your medication'}</span> soon</>
+                    ) : upcomingAppointment ? (
+                      <>Next: <span className="font-medium text-[var(--medimo-text-primary)]">{upcomingAppointment.title}</span></>
+                    ) : (
+                      <>All caught up ✓</>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-        <FAB />
+            {/* Bento Grid Layout - Optimized for full screen utilization */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 pb-8">
+
+              {/* Health ID Card - Left Column on Large Screens */}
+              <div className="xl:col-span-4 reveal-2 h-full">
+                <DigitalHealthKey user={user} medications={medications} />
+              </div>
+
+              {/* Today's Health Dashboard - Right Column - Wider work area */}
+              <div className="xl:col-span-8 reveal-3 h-full">
+                <TodaysHealthDashboard
+                  upcomingAppointment={upcomingAppointment}
+                  activeMedications={activeMedications}
+                />
+              </div>
+
+              {/* Vital Signs Tracker - Full Width Bottom Row */}
+              <div className="xl:col-span-12 reveal-5">
+                <VitalTracker />
+              </div>
+            </div>
+          </main>
+        </div>
+
         <BottomNavigation />
       </div>
     </MedicationAdherenceProvider>

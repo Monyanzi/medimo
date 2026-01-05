@@ -24,32 +24,15 @@ interface NotificationContextType {
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'isRead'>) => void;
   checkForMissedCheckIns: () => void;
 
-  // App Settings
-  language: string;
-  setLanguage: (language: string) => void;
-  region: string;
-  setRegion: (region: string) => void;
-  timeFormat: string;
-  setTimeFormat: (format: string) => void;
-  dateFormat: string;
-  setDateFormat: (format: string) => void;
-
-  // Notification Preferences
+  // Preferences (read-only snapshot; gating logic only)
   medicationReminders: boolean;
-  setMedicationReminders: (enabled: boolean) => void;
   appointmentReminders: boolean;
-  setAppointmentReminders: (enabled: boolean) => void;
   vitalSignsReminders: boolean;
-  setVitalSignsReminders: (enabled: boolean) => void;
   caregiverAlerts: boolean;
-  setCaregiverAlerts: (enabled: boolean) => void;
-  pushNotifications: boolean;
-  setPushNotifications: (enabled: boolean) => void;
-  emailNotifications: boolean;
-  setEmailNotifications: (enabled: boolean) => void;
 }
 
-const APP_SETTINGS_KEY = 'medimo_app_settings';
+// Base key for app settings; actual storage will be user-scoped
+// Legacy: settings moved to AppSettingsContext. Keep minimal preference flags for generation gating.
 
 interface AppSettings {
   language: string;
@@ -80,74 +63,18 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { user } = useAuth(); // Assuming this hook doesn't cause re-renders if user is stable
 
   // App Settings State
-  const [language, setLanguageState] = useState<string>('en');
-  const [region, setRegionState] = useState<string>('US');
-  const [timeFormat, setTimeFormatState] = useState<string>('12h');
-  const [dateFormat, setDateFormatState] = useState<string>('MM/DD/YYYY');
+  // Removed language/region/time/date (now in AppSettingsContext)
   const [medicationReminders, setMedicationRemindersState] = useState<boolean>(true);
   const [appointmentReminders, setAppointmentRemindersState] = useState<boolean>(true);
   const [vitalSignsReminders, setVitalSignsRemindersState] = useState<boolean>(false);
   const [caregiverAlerts, setCaregiverAlertsState] = useState<boolean>(true);
-  const [pushNotifications, setPushNotificationsState] = useState<boolean>(true);
-  const [emailNotifications, setEmailNotificationsState] = useState<boolean>(false);
 
-  // Load settings from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedSettings = localStorage.getItem(APP_SETTINGS_KEY);
-      if (savedSettings) {
-        const parsedSettings: AppSettings = JSON.parse(savedSettings);
-        setLanguageState(parsedSettings.language || 'en');
-        setRegionState(parsedSettings.region || 'US');
-        setTimeFormatState(parsedSettings.timeFormat || '12h');
-        setDateFormatState(parsedSettings.dateFormat || 'MM/DD/YYYY');
-        setMedicationRemindersState(parsedSettings.medicationReminders !== undefined ? parsedSettings.medicationReminders : true);
-        setAppointmentRemindersState(parsedSettings.appointmentReminders !== undefined ? parsedSettings.appointmentReminders : true);
-        setVitalSignsRemindersState(parsedSettings.vitalSignsReminders !== undefined ? parsedSettings.vitalSignsReminders : false);
-        setCaregiverAlertsState(parsedSettings.caregiverAlerts !== undefined ? parsedSettings.caregiverAlerts : true);
-        setPushNotificationsState(parsedSettings.pushNotifications !== undefined ? parsedSettings.pushNotifications : true);
-        setEmailNotificationsState(parsedSettings.emailNotifications !== undefined ? parsedSettings.emailNotifications : false);
-      }
-    } catch (error) {
-      console.error("Error loading app settings from localStorage:", error);
-      // Defaults are already set, so no further action needed
-    }
-  }, []);
-
-  const saveSettingsToLocalStorage = (settings: AppSettings) => {
-    try {
-      localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(settings));
-    } catch (error) {
-      console.error("Error saving app settings to localStorage:", error);
-    }
-  };
-
-  // Setter functions that also save to localStorage
-  const setLanguage = (lang: string) => { setLanguageState(lang); saveSettingsToLocalStorage(getCurrentAppSettings()); };
-  const setRegion = (reg: string) => { setRegionState(reg); saveSettingsToLocalStorage(getCurrentAppSettings()); };
-  const setTimeFormat = (tf: string) => { setTimeFormatState(tf); saveSettingsToLocalStorage(getCurrentAppSettings()); };
-  const setDateFormat = (df: string) => { setDateFormatState(df); saveSettingsToLocalStorage(getCurrentAppSettings()); };
-  const setMedicationReminders = (enabled: boolean) => { setMedicationRemindersState(enabled); saveSettingsToLocalStorage(getCurrentAppSettings()); };
-  const setAppointmentReminders = (enabled: boolean) => { setAppointmentRemindersState(enabled); saveSettingsToLocalStorage(getCurrentAppSettings()); };
-  const setVitalSignsReminders = (enabled: boolean) => { setVitalSignsRemindersState(enabled); saveSettingsToLocalStorage(getCurrentAppSettings()); };
-  const setCaregiverAlerts = (enabled: boolean) => { setCaregiverAlertsState(enabled); saveSettingsToLocalStorage(getCurrentAppSettings()); };
-  const setPushNotifications = (enabled: boolean) => { setPushNotificationsState(enabled); saveSettingsToLocalStorage(getCurrentAppSettings()); };
-  const setEmailNotifications = (enabled: boolean) => { setEmailNotificationsState(enabled); saveSettingsToLocalStorage(getCurrentAppSettings()); };
-
-  const getCurrentAppSettings = (): AppSettings => ({
-    language, region, timeFormat, dateFormat,
-    medicationReminders, appointmentReminders, vitalSignsReminders,
-    caregiverAlerts, pushNotifications, emailNotifications
-  });
-
-  // Update localStorage whenever a setting changes
-  useEffect(() => {
-    saveSettingsToLocalStorage(getCurrentAppSettings());
-  }, [
-    language, region, timeFormat, dateFormat,
-    medicationReminders, appointmentReminders, vitalSignsReminders,
-    caregiverAlerts, pushNotifications, emailNotifications
-  ]);
+  // Compute a user-scoped key when user changes
+  // Legacy persistence removed (now handled centrally in AppSettingsContext)
+  const setMedicationReminders = (enabled: boolean) => { setMedicationRemindersState(enabled); };
+  const setAppointmentReminders = (enabled: boolean) => { setAppointmentRemindersState(enabled); };
+  const setVitalSignsReminders = (enabled: boolean) => { setVitalSignsRemindersState(enabled); };
+  const setCaregiverAlerts = (enabled: boolean) => { setCaregiverAlertsState(enabled); };
 
   // Check for missed check-ins periodically
   const checkForMissedCheckIns = () => {
@@ -263,28 +190,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       markAllAsRead,
       addNotification,
       checkForMissedCheckIns,
-      // App Settings
-      language,
-      setLanguage,
-      region,
-      setRegion,
-      timeFormat,
-      setTimeFormat,
-      dateFormat,
-      setDateFormat,
-      // Notification Preferences
-      medicationReminders,
-      setMedicationReminders,
-      appointmentReminders,
-      setAppointmentReminders,
-      vitalSignsReminders,
-      setVitalSignsReminders,
-      caregiverAlerts,
-      setCaregiverAlerts,
-      pushNotifications,
-      setPushNotifications,
-      emailNotifications,
-      setEmailNotifications
+  // Minimal preference flags kept locally (will migrate to AppSettingsContext consumption later)
+  medicationReminders,
+  appointmentReminders,
+  vitalSignsReminders,
+  caregiverAlerts
     }}>
       {children}
     </NotificationContext.Provider>

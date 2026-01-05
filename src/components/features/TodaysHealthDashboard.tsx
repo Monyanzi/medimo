@@ -1,12 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Pill, Activity, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { format, differenceInDays, parseISO, isToday, isTomorrow } from 'date-fns';
+import { Clock, Pill, Activity, Calendar, AlertTriangle, CheckCircle2, Sparkles } from 'lucide-react';
+import { format, differenceInDays, parseISO } from 'date-fns';
 import { useMedicationAdherence } from '@/contexts/MedicationAdherenceContext';
 import { toast } from 'sonner';
+import LogVitalsModal from '@/components/modals/LogVitalsModal';
 
 interface TodaysHealthDashboardProps {
   upcomingAppointment?: any;
@@ -18,19 +19,18 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
   activeMedications
 }) => {
   const { isMedicationTakenToday, markMedicationTaken } = useMedicationAdherence();
-  
+  const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
+
   const pendingMedications = activeMedications.filter(med => !isMedicationTakenToday(med.id));
   const takenMedications = activeMedications.filter(med => isMedicationTakenToday(med.id));
-  
-  // Get medications expiring within 7 days
+
   const expiringMedications = activeMedications.filter(med => {
     if (!med.prescriptionPeriod?.endDate) return false;
     const daysUntilExpiry = differenceInDays(parseISO(med.prescriptionPeriod.endDate), new Date());
     return daysUntilExpiry >= 0 && daysUntilExpiry <= 7;
   });
 
-  // Get days until upcoming appointment
-  const appointmentDays = upcomingAppointment ? 
+  const appointmentDays = upcomingAppointment ?
     differenceInDays(parseISO(upcomingAppointment.dateTime), new Date()) : null;
 
   const hasOverdueItems = pendingMedications.length > 0;
@@ -50,184 +50,231 @@ const TodaysHealthDashboard: React.FC<TodaysHealthDashboardProps> = ({
     toast.success("All pending medications marked as taken.");
   };
 
-  const getPriorityIcon = () => {
-    if (hasOverdueItems || hasExpiringMeds) return <AlertTriangle className="h-5 w-5 text-destructive-action" />;
-    return <CheckCircle2 className="h-5 w-5 text-primary-action" />;
-  };
-
-  const getPriorityMessage = () => {
-    if (hasOverdueItems) return `${pendingMedications.length} medication${pendingMedications.length > 1 ? 's' : ''} pending`;
-    if (hasExpiringMeds) return `${expiringMedications.length} medication${expiringMedications.length > 1 ? 's' : ''} expiring soon`;
-    if (hasUpcomingAppointment && appointmentDays !== null) {
-      if (appointmentDays === 0) return 'Appointment today';
-      if (appointmentDays === 1) return 'Appointment tomorrow';
-      return `Appointment in ${appointmentDays} days`;
-    }
-    return 'All caught up! Great job';
-  };
+  const completionRate = activeMedications.length > 0
+    ? Math.round((takenMedications.length / activeMedications.length) * 100)
+    : 100;
 
   return (
-    <Card className="bg-surface-card border border-border-divider shadow-sm">
+    <Card className="bg-[var(--medimo-bg-elevated)] border border-[var(--medimo-border)] rounded-2xl overflow-hidden">
       <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <Activity className="h-5 w-5 text-primary-action" />
-            <h3 className="font-semibold text-text-primary">Today's Health</h3>
+        {/* Header with Progress Ring */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-11 h-11 rounded-xl bg-[var(--medimo-accent-soft)] flex items-center justify-center">
+              <Activity className="h-5 w-5 text-[var(--medimo-accent)]" />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-[var(--medimo-text-primary)]">Today's Health</h3>
+              <p className="text-xs text-[var(--medimo-text-muted)]">
+                {format(new Date(), 'EEEE, MMM d')}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            {getPriorityIcon()}
-            <span className={`text-sm font-medium ${(hasOverdueItems || hasExpiringMeds) ? 'text-destructive-action' : 'text-primary-action'}`}>
-              {getPriorityMessage()}
-            </span>
+
+          {/* Progress Circle */}
+          <div className="relative w-14 h-14">
+            <svg className="w-14 h-14 -rotate-90">
+              <circle
+                cx="28"
+                cy="28"
+                r="24"
+                stroke="var(--medimo-border)"
+                strokeWidth="4"
+                fill="none"
+              />
+              <circle
+                cx="28"
+                cy="28"
+                r="24"
+                stroke="var(--medimo-accent)"
+                strokeWidth="4"
+                fill="none"
+                strokeDasharray={`${(completionRate / 100) * 150.8} 150.8`}
+                strokeLinecap="round"
+                className="transition-all duration-500"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="font-mono text-sm font-bold text-[var(--medimo-text-primary)]">{completionRate}%</span>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-4">
-          {/* Expiring Medications Alert */}
-          {hasExpiringMeds && (
-            <div className="border-l-4 border-orange-500 pl-4 py-2">
-              <div className="flex items-center space-x-2 mb-2">
-                <Clock className="h-4 w-4 text-orange-500" />
-                <h4 className="font-medium text-text-primary">Medications Expiring Soon</h4>
-                <Badge className="bg-orange-500/10 text-orange-500 text-xs">
-                  {expiringMedications.length} expiring
-                </Badge>
-              </div>
-              <div className="space-y-2">
-                {expiringMedications.slice(0, 2).map((med) => {
-                  const daysLeft = differenceInDays(parseISO(med.prescriptionPeriod.endDate), new Date());
-                  return (
-                    <div key={med.id} className="flex items-center justify-between py-1">
-                      <div>
-                        <span className="text-sm text-text-primary font-medium">{med.name}</span>
-                        <span className="text-xs text-text-secondary ml-2">{med.dosage}</span>
-                      </div>
-                      <Badge className="bg-orange-500/10 text-orange-500 text-xs">
-                        {daysLeft === 0 ? 'Expires today' : `${daysLeft} day${daysLeft > 1 ? 's' : ''} left`}
-                      </Badge>
-                    </div>
-                  );
-                })}
-                {expiringMedications.length > 2 && (
-                  <p className="text-xs text-text-secondary">+{expiringMedications.length - 2} more expiring</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Medications Due Section */}
-          {pendingMedications.length > 0 && (
-            <div className="border-l-4 border-destructive-action pl-4 py-2">
-              <div className="flex items-center space-x-2 mb-2">
-                <Pill className="h-4 w-4 text-destructive-action" />
-                <h4 className="font-medium text-text-primary">Medications Due</h4>
-                <Badge className="bg-destructive-action/10 text-destructive-action text-xs">
-                  {pendingMedications.length} pending
-                </Badge>
-              </div>
-              <div className="space-y-2">
-                {pendingMedications.slice(0, 2).map((med) => (
-                  <div key={med.id} className="flex items-center justify-between py-1">
-                    <div>
-                      <span className="text-sm text-text-primary font-medium">{med.name}</span>
-                      <span className="text-xs text-text-secondary ml-2">{med.dosage}</span>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => handleMarkTaken(med)}
-                      className="bg-accent-success hover:bg-accent-success/90 text-white text-xs"
-                    >
-                      Mark Taken
-                    </Button>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Column 1: Critical Actions (Expiring & Due) */}
+          <div className="space-y-4">
+            {/* Expiring Medications Alert */}
+            {hasExpiringMeds && (
+              <div className="p-4 bg-[var(--hc-accent-warning-soft)] rounded-xl border border-[var(--medimo-warning)]/20">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--medimo-warning)]/20 flex items-center justify-center">
+                    <Clock className="h-4 w-4 text-[var(--medimo-warning)]" />
                   </div>
-                ))}
-                {pendingMedications.length > 2 && (
-                  <p className="text-xs text-text-secondary">+{pendingMedications.length - 2} more</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Taken Medications Section */}
-          {takenMedications.length > 0 && (
-            <div className="border-l-4 border-accent-success pl-4 py-2">
-              <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle2 className="h-4 w-4 text-accent-success" />
-                <h4 className="font-medium text-text-primary">Medications Taken</h4>
-                <Badge className="bg-accent-success/10 text-accent-success text-xs">
-                  {takenMedications.length} completed
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                {takenMedications.slice(0, 2).map((med) => (
-                  <div key={med.id} className="flex items-center justify-between py-1">
-                    <span className="text-sm text-text-secondary">{med.name}</span>
-                    <span className="text-xs text-accent-success">✓ Taken</span>
+                  <div className="flex-1">
+                    <h4 className="font-display font-medium text-[var(--medimo-text-primary)] text-sm">Expiring Soon</h4>
                   </div>
-                ))}
-                {takenMedications.length > 2 && (
-                  <p className="text-xs text-text-secondary">+{takenMedications.length - 2} more</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Appointments Section */}
-          {upcomingAppointment && (
-            <div className="border-l-4 border-primary-action pl-4 py-2">
-              <div className="flex items-center space-x-2 mb-2">
-                <Calendar className="h-4 w-4 text-primary-action" />
-                <h4 className="font-medium text-text-primary">Next Appointment</h4>
-                {appointmentDays !== null && (
-                  <Badge className="bg-primary-action/10 text-primary-action text-xs">
-                    {appointmentDays === 0 ? 'Today' : 
-                     appointmentDays === 1 ? 'Tomorrow' : 
-                     `In ${appointmentDays} days`}
+                  <Badge className="bg-[var(--medimo-warning)]/10 text-[var(--medimo-warning)] text-[10px] font-mono">
+                    {expiringMedications.length}
                   </Badge>
-                )}
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-text-primary">{upcomingAppointment.type || upcomingAppointment.title}</p>
-                  <p className="text-xs text-text-secondary">
-                    {format(new Date(upcomingAppointment.dateTime), 'MMM d, h:mm a')}
-                  </p>
                 </div>
-                <Badge className="bg-primary-action/10 text-primary-action text-xs">
-                  {upcomingAppointment.location}
-                </Badge>
+                <div className="space-y-2">
+                  {expiringMedications.slice(0, 2).map((med) => {
+                    const daysLeft = differenceInDays(parseISO(med.prescriptionPeriod.endDate), new Date());
+                    return (
+                      <div key={med.id} className="flex items-center justify-between">
+                        <span className="text-sm text-[var(--medimo-text-primary)]">{med.name}</span>
+                        <span className="text-xs font-mono text-[var(--medimo-warning)]">
+                          {daysLeft === 0 ? 'Today' : `${daysLeft}d left`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* All Clear State */}
-          {!hasOverdueItems && !upcomingAppointment && !hasExpiringMeds && (
-            <div className="text-center py-4">
-              <CheckCircle2 className="h-8 w-8 text-primary-action mx-auto mb-2" />
-              <p className="text-sm font-medium text-text-primary">All caught up!</p>
-              <p className="text-xs text-text-secondary">Your health routine is on track</p>
+            {/* Medications Due Section */}
+            {pendingMedications.length > 0 ? (
+              <div className="p-4 bg-[var(--hc-accent-critical-soft)] rounded-xl border border-[var(--medimo-critical)]/20 h-full">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--medimo-critical)]/20 flex items-center justify-center">
+                    <Pill className="h-4 w-4 text-[var(--medimo-critical)]" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-display font-medium text-[var(--medimo-text-primary)] text-sm">Medications Due</h4>
+                  </div>
+                  <Badge className="bg-[var(--medimo-critical)]/10 text-[var(--medimo-critical)] text-[10px] font-mono">
+                    {pendingMedications.length} pending
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  {pendingMedications.slice(0, 5).map((med) => (
+                    <div key={med.id} className="flex items-center justify-between py-2 border-b border-[var(--medimo-critical)]/5 last:border-0 last:pb-0">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-[var(--medimo-text-primary)]">{med.name}</span>
+                        <span className="text-[10px] text-[var(--medimo-text-muted)] font-mono">{med.dosage}</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleMarkTaken(med)}
+                        className="h-8 px-4 bg-[var(--medimo-success)] hover:bg-[var(--medimo-success)]/90 text-white text-xs font-medium rounded-lg shadow-sm"
+                      >
+                        Taking
+                      </Button>
+                    </div>
+                  ))}
+                  {pendingMedications.length > 5 && (
+                    <p className="text-xs text-[var(--medimo-text-muted)] text-center pt-1">+{pendingMedications.length - 5} more</p>
+                  )}
+                </div>
+              </div>
+            ) : !hasUpcomingAppointment && !takenMedications.length && !hasExpiringMeds && (
+              /* Empty State placeholder if nothing else is showing in col 1 but we want to balance layout? 
+                 Actually, if all clear, the All Clear block below handles it. */
+              null
+            )}
+          </div>
+
+          {/* Column 2: Status & Info */}
+          <div className="space-y-4">
+            {/* Appointments Section */}
+            {upcomingAppointment && (
+              <div className="p-4 bg-[var(--medimo-accent-soft)] rounded-xl border border-[var(--medimo-accent)]/20">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--medimo-accent)]/20 flex items-center justify-center">
+                    <Calendar className="h-4 w-4 text-[var(--medimo-accent)]" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-display font-medium text-[var(--medimo-text-primary)] text-sm">Next Appointment</h4>
+                  </div>
+                  {appointmentDays !== null && (
+                    <Badge className="bg-[var(--medimo-accent)]/10 text-[var(--medimo-accent)] text-[10px] font-mono">
+                      {appointmentDays === 0 ? 'Today' : appointmentDays === 1 ? 'Tomorrow' : `${appointmentDays}d`}
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-[var(--medimo-text-primary)]">
+                      {upcomingAppointment.type || upcomingAppointment.title}
+                    </p>
+                    <p className="text-xs text-[var(--medimo-text-muted)] font-mono mt-0.5">
+                      {format(new Date(upcomingAppointment.dateTime), 'MMM d • h:mm a')}
+                    </p>
+                  </div>
+                  <span className="text-xs text-[var(--medimo-accent)] bg-white/50 px-2 py-1 rounded-lg">
+                    {upcomingAppointment.location}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Taken Medications Section */}
+            {takenMedications.length > 0 && (
+              <div className="p-4 bg-[var(--hc-accent-success-soft)] rounded-xl border border-[var(--medimo-success)]/20">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--medimo-success)]/20 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4 text-[var(--medimo-success)]" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-display font-medium text-[var(--medimo-text-primary)] text-sm">Completed Today</h4>
+                  </div>
+                  <Badge className="bg-[var(--medimo-success)]/10 text-[var(--medimo-success)] text-[10px] font-mono">
+                    {takenMedications.length}/{activeMedications.length}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {takenMedications.slice(0, 6).map((med) => (
+                    <span key={med.id} className="px-2.5 py-1 bg-white/50 rounded-lg text-xs text-[var(--medimo-text-secondary)] border border-[var(--medimo-success)]/10">
+                      {med.name} ✓
+                    </span>
+                  ))}
+                  {takenMedications.length > 6 && (
+                    <span className="px-2.5 py-1 text-xs text-[var(--medimo-text-muted)]">
+                      +{takenMedications.length - 6}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* If Col 2 is empty but Col 1 has stuff, maybe we want to show a 'Nice Job' or empty spacer? 
+                For now, let it be empty, grid handles height. */}
+          </div>
+
+          {/* All Clear State - spans both cols */}
+          {!hasOverdueItems && !upcomingAppointment && !hasExpiringMeds && !takenMedications.length && (
+            <div className="col-span-1 lg:col-span-2 text-center py-12 bg-[var(--medimo-bg-primary)]/50 rounded-xl border border-dashed border-[var(--medimo-border)]">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[var(--medimo-accent)] to-teal-500 flex items-center justify-center shadow-lg shadow-[var(--medimo-accent)]/20">
+                <Sparkles className="h-8 w-8 text-white" />
+              </div>
+              <h4 className="font-display font-semibold text-[var(--medimo-text-primary)] mb-1">All clear for today!</h4>
+              <p className="text-sm text-[var(--medimo-text-secondary)]">No urgent tasks or medications pending.</p>
             </div>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div className="flex space-x-2 mt-4 pt-4 border-t border-border-divider">
-          <Button size="sm" className="flex-1 bg-primary-action hover:bg-primary-action/90 text-white">
+        <div className="flex space-x-3 mt-6 pt-5 border-t border-[var(--medimo-border)]">
+          <Button
+            className="flex-1 h-11 bg-[var(--medimo-accent)] hover:bg-[var(--medimo-accent)]/90 text-white rounded-xl font-display font-medium"
+            onClick={() => setVitalsModalOpen(true)}
+          >
             <Clock className="h-4 w-4 mr-2" />
             Log Vitals
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="flex-1 border-border-divider text-text-primary hover:bg-accent-success/10"
+          <Button
+            variant="outline"
+            className="flex-1 h-11 border-[var(--medimo-border)] hover:border-[var(--medimo-accent)] hover:bg-[var(--medimo-accent-soft)] text-[var(--medimo-text-primary)] rounded-xl font-display font-medium"
             disabled={pendingMedications.length === 0}
             onClick={handleMarkAllTaken}
           >
-            <Pill className="h-4 w-4 mr-2" />
-            Mark All Taken
+            <CheckCircle2 className="h-4 w-4 mr-2" />
+            Mark All Done
           </Button>
         </div>
       </CardContent>
+      <LogVitalsModal isOpen={vitalsModalOpen} onOpenChange={setVitalsModalOpen} />
     </Card>
   );
 };

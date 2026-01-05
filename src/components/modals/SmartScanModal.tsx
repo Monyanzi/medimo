@@ -16,6 +16,11 @@ const SmartScanModal: React.FC<SmartScanModalProps> = ({ isOpen, onOpenChange })
   const [scanResult, setScanResult] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
   const scanTypes = [
     {
       id: 'prescription',
@@ -54,15 +59,70 @@ const SmartScanModal: React.FC<SmartScanModalProps> = ({ isOpen, onOpenChange })
     }
   ];
 
-  const handleScanType = (scanType: string) => {
+  const startCamera = async () => {
     setIsScanning(true);
-    
-    // Simulate OCR processing
-    setTimeout(() => {
+    setCameraActive(true);
+    setCameraError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      setCameraError("Could not access camera. Please ensure permissions are granted.");
+      setCameraActive(false);
       setIsScanning(false);
-      setScanResult(`Scanned ${scanType} successfully!`);
-      toast.success(`${scanType} information extracted and ready to save`);
-    }, 2000);
+      toast.error("Camera access denied or unavailable");
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setCameraActive(false);
+    setIsScanning(false);
+  };
+
+  const captureImage = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // const imageDataUrl = canvas.toDataURL('image/png'); // Can be used to display preview or upload
+        stopCamera();
+        setScanResult("Image captured successfully!");
+        toast.success("Image captured and processed");
+      }
+    }
+  };
+
+  // Stop camera when modal closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      stopCamera();
+    }
+  }, [isOpen]);
+
+  const handleScanType = (scanType: string) => {
+    if (scanType === 'Camera') {
+      startCamera();
+    } else {
+      setIsScanning(true);
+      // Simulate OCR processing for non-camera options
+      setTimeout(() => {
+        setIsScanning(false);
+        setScanResult(`Scanned ${scanType} successfully!`);
+        toast.success(`${scanType} information extracted and ready to save`);
+      }, 2000);
+    }
   };
 
   const handleFileUpload = () => {
@@ -73,7 +133,7 @@ const SmartScanModal: React.FC<SmartScanModalProps> = ({ isOpen, onOpenChange })
     const file = event.target.files?.[0];
     if (file) {
       setIsScanning(true);
-      
+
       // Simulate OCR processing
       setTimeout(() => {
         setIsScanning(false);
@@ -86,16 +146,36 @@ const SmartScanModal: React.FC<SmartScanModalProps> = ({ isOpen, onOpenChange })
   const handleReset = () => {
     setScanResult(null);
     setIsScanning(false);
+    setCameraActive(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) stopCamera();
+      onOpenChange(open);
+    }}>
       <DialogContent className="sm:max-w-md font-inter">
         <DialogHeader>
           <DialogTitle className="text-text-primary">Smart Scan</DialogTitle>
         </DialogHeader>
 
-        {isScanning ? (
+        {cameraActive ? (
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+            <div className="flex space-x-3 w-full">
+              <Button onClick={stopCamera} variant="outline" className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={captureImage} className="flex-1 bg-primary-action hover:bg-primary-action/90">
+                <Camera className="h-4 w-4 mr-2" />
+                Capture
+              </Button>
+            </div>
+          </div>
+        ) : isScanning && !cameraActive ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-action mx-auto mb-4"></div>
             <p className="text-text-secondary">Processing your scan...</p>
@@ -123,9 +203,9 @@ const SmartScanModal: React.FC<SmartScanModalProps> = ({ isOpen, onOpenChange })
               {scanTypes.map((type) => {
                 const Icon = type.icon;
                 return (
-                  <Card 
-                    key={type.id} 
-                    className="cursor-pointer hover:shadow-md transition-shadow"
+                  <Card
+                    key={type.id}
+                    className="cursor-pointer transition-shadow hover:elev-raised"
                     onClick={() => handleScanType(type.title)}
                   >
                     <CardContent className="p-4">

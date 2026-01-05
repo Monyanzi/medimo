@@ -1,30 +1,81 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Medimo - Personal Health Record</title>
-    <meta name="description" content="Secure, offline-first Personal Health Record platform" />
-    <meta name="author" content="Medimo" />
-    
-    <!-- Inter Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <meta property="og:title" content="Medimo - Personal Health Record" />
-    <meta property="og:description" content="Secure, offline-first Personal Health Record platform" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
+  <!-- Primary Meta Tags -->
+  <title>Medimo - Your Personal Health Record</title>
+  <meta name="title" content="Medimo - Your Personal Health Record" />
+  <meta name="description"
+    content="Secure, offline-first Personal Health Record platform. Take control of your health data with Medimo." />
+  <meta name="author" content="Medimo" />
+  <meta name="keywords"
+    content="health record, PHR, personal health, medical records, health tracking, secure health data" />
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <!-- Theme & App Configuration -->
+  <meta name="theme-color" content="#0D7377" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#12151a" media="(prefers-color-scheme: dark)" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Medimo" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Fonts - Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://medimo.app/" />
+  <meta property="og:title" content="Medimo - Your Personal Health Record" />
+  <meta property="og:description"
+    content="Secure, offline-first Personal Health Record platform. Take control of your health data with Medimo." />
+  <meta property="og:image" content="https://medimo.app/og-image.png" />
+  <meta property="og:site_name" content="Medimo" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://medimo.app/" />
+  <meta name="twitter:title" content="Medimo - Your Personal Health Record" />
+  <meta name="twitter:description"
+    content="Secure, offline-first Personal Health Record platform. Take control of your health data with Medimo." />
+  <meta name="twitter:image" content="https://medimo.app/og-image.png" />
+
+  <!-- Security -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <!-- Structured Data for Health Application -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Medimo",
+      "description": "Secure, offline-first Personal Health Record platform",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+</head>
+
+<body>
+  <!-- Skip to main content for accessibility -->
+  <a href="#main-content"
+    class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg">
+    Skip to main content
+  </a>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

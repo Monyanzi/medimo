@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { MockAuthService } from '@/services/mockAuthService';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 const registerSchema = z.object({
@@ -43,6 +43,7 @@ const RegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { register: contextRegister } = useAuth();
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -59,16 +60,16 @@ const RegisterPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await MockAuthService.register(data.email, data.password, data.name);
-      
+      const response = await contextRegister(data.name, data.email, data.password);
+
       if (response.success) {
-        toast.success('Account created successfully!');
         navigate('/onboarding/setup');
       } else {
         setError(response.error || 'Registration failed');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred during registration.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -149,10 +150,10 @@ const RegisterPage: React.FC = () => {
                         <FormLabel>Password</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Input 
-                              {...field} 
-                              type={showPassword ? 'text' : 'password'} 
-                              placeholder="Create a password" 
+                            <Input
+                              {...field}
+                              type={showPassword ? 'text' : 'password'}
+                              placeholder="Create a password"
                             />
                             <Button
                               type="button"
@@ -182,10 +183,10 @@ const RegisterPage: React.FC = () => {
                         <FormLabel>Confirm Password</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Input 
-                              {...field} 
-                              type={showConfirmPassword ? 'text' : 'password'} 
-                              placeholder="Confirm your password" 
+                            <Input
+                              {...field}
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              placeholder="Confirm your password"
                             />
                             <Button
                               type="button"
@@ -207,8 +208,8 @@ const RegisterPage: React.FC = () => {
                     )}
                   />
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={isLoading}
                     className="w-full bg-primary-action hover:bg-primary-action/90"
                   >

@@ -9,10 +9,12 @@ interface TimelineFiltersProps {
   setSearchTerm: (term: string) => void;
   categoryFilter: string;
   setCategoryFilter: (category: string) => void;
+  systemFilter?: string;
+  setSystemFilter?: (v: string) => void;
   dateFilter: string;
   setDateFilter: (filter: string) => void;
-  sortOrder: 'newest' | 'oldest';
-  setSortOrder: (order: 'newest' | 'oldest') => void;
+  sortOrder: 'asc' | 'desc';
+  setSortOrder: (order: 'asc' | 'desc') => void;
 }
 
 const TimelineFilters: React.FC<TimelineFiltersProps> = ({
@@ -20,6 +22,8 @@ const TimelineFilters: React.FC<TimelineFiltersProps> = ({
   setSearchTerm,
   categoryFilter,
   setCategoryFilter,
+  systemFilter = 'all',
+  setSystemFilter = () => {},
   dateFilter,
   setDateFilter,
   sortOrder,
@@ -68,13 +72,27 @@ const TimelineFilters: React.FC<TimelineFiltersProps> = ({
             </SelectContent>
           </Select>
 
-          <Select value={sortOrder} onValueChange={(value: 'newest' | 'oldest') => setSortOrder(value)}>
-            <SelectTrigger className="w-32">
+          <Select value={systemFilter} onValueChange={setSystemFilter}>
+            <SelectTrigger className="w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="all">All Events</SelectItem>
+              <SelectItem value="user">User Only</SelectItem>
+              <SelectItem value="system">System Only</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={sortOrder}
+            onValueChange={setSortOrder}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Newest First</SelectItem>
+              <SelectItem value="asc">Oldest First</SelectItem>
             </SelectContent>
           </Select>
         </div>

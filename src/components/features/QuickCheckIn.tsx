@@ -109,7 +109,7 @@ const QuickCheckIn: React.FC = () => {
 
   if (hasCheckedIn && !isOverdue) {
     return (
-      <Card className="bg-surface-card border border-border-divider shadow-sm">
+  <Card className="bg-surface-card border border-border-divider elev-surface">
         <CardContent className="p-6 text-center">
           <div className="text-primary-action text-3xl mb-3">✓</div>
           <h3 className="font-semibold text-text-primary mb-2">Check-in Complete!</h3>
@@ -144,7 +144,7 @@ const QuickCheckIn: React.FC = () => {
   }
 
   return (
-    <Card className={`bg-surface-card border shadow-sm ${isOverdue ? 'border-red-500 bg-red-50' : 'border-border-divider'}`}>
+  <Card className={`bg-surface-card border elev-surface ${isOverdue ? 'border-red-500 bg-red-50' : 'border-border-divider'}`}>
       <CardContent className="p-6">
         <div className="flex items-center space-x-2 mb-4">
           <Heart className="h-5 w-5 text-primary-action" />

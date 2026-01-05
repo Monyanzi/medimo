@@ -31,9 +31,9 @@ const setupSchema = z.object({
   email: z.string().email('Invalid email address'),
   dob: z.string().min(1, 'Date of birth is required'),
   bloodType: z.string().min(1, 'Blood type is required'),
-  emergencyContactName: z.string().min(2, 'Emergency contact name is required'),
-  emergencyContactPhone: z.string().min(10, 'Valid phone number is required'),
-  emergencyContactRelationship: z.string().min(1, 'Relationship is required'),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+  emergencyContactRelationship: z.string().optional(),
 });
 
 type SetupForm = z.infer<typeof setupSchema>;
@@ -70,12 +70,12 @@ const OnboardingSetupPage: React.FC = () => {
         email: data.email,
         dob: data.dob,
         bloodType: data.bloodType,
-        emergencyContact: {
+        emergencyContact: data.emergencyContactName ? {
           name: data.emergencyContactName,
-          phone: data.emergencyContactPhone,
-          relationship: data.emergencyContactRelationship
-        },
-        isOnboardingComplete: true // Add this line
+          phone: data.emergencyContactPhone || '',
+          relationship: data.emergencyContactRelationship || ''
+        } : undefined,
+        isOnboardingComplete: true
       };
 
       await updateUser(updateData);
@@ -88,11 +88,11 @@ const OnboardingSetupPage: React.FC = () => {
   const validateCurrentStep = async () => {
     const fields = getFieldsForStep(currentStep);
     const isValid = await form.trigger(fields);
-    
+
     if (isValid && !completedSteps.includes(currentStep)) {
       setCompletedSteps([...completedSteps, currentStep]);
     }
-    
+
     return isValid;
   };
 
@@ -207,7 +207,7 @@ const OnboardingSetupPage: React.FC = () => {
               name="emergencyContactName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Emergency Contact Name</FormLabel>
+                  <FormLabel>Emergency Contact Name (Optional)</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="Enter contact name" />
                   </FormControl>
@@ -221,7 +221,7 @@ const OnboardingSetupPage: React.FC = () => {
               name="emergencyContactPhone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>Phone Number (Optional)</FormLabel>
                   <FormControl>
                     <Input {...field} type="tel" placeholder="Enter phone number" />
                   </FormControl>
@@ -235,7 +235,7 @@ const OnboardingSetupPage: React.FC = () => {
               name="emergencyContactRelationship"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Relationship</FormLabel>
+                  <FormLabel>Relationship (Optional)</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -320,7 +320,7 @@ const OnboardingSetupPage: React.FC = () => {
                 {/* Navigation Buttons */}
                 <div className="flex space-x-3 mt-6">
                   {currentStep < totalSteps ? (
-                    <Button 
+                    <Button
                       type="button"
                       onClick={nextStep}
                       className="flex-1 bg-primary-action hover:bg-primary-action/90"
@@ -329,7 +329,7 @@ const OnboardingSetupPage: React.FC = () => {
                       <ChevronRight className="h-4 w-4 ml-2" />
                     </Button>
                   ) : (
-                    <Button 
+                    <Button
                       type="submit"
                       disabled={isLoading}
                       className="flex-1 bg-primary-action hover:bg-primary-action/90"

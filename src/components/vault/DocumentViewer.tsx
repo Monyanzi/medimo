@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -20,13 +21,10 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, isOpen, onOpe
   if (!document) return null;
 
   const handleDownload = () => {
-    // In a real app, this would download the actual file
-    console.log('Downloading document:', document.fileName);
-    // Create a mock download link
-    const link = window.document.createElement('a');
-    link.href = '#';
-    link.download = document.fileName;
-    link.click();
+    // TODO: Implement actual download when storage is connected
+    toast.info('Download not yet implemented', {
+      description: `File: ${document.fileName}`
+    });
   };
 
   const isImage = document.fileType === 'Image' || document.fileName.match(/\.(jpg|jpeg|png|gif)$/i);
@@ -53,14 +51,14 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, isOpen, onOpe
             </div>
           </div>
         </DialogHeader>
-        
+
         <div className="flex-1 overflow-auto">
           {isImage ? (
             <div className="flex justify-center p-4">
-              <img 
-                src="/placeholder.svg" 
+              <img
+                src="/placeholder.svg"
                 alt={document.fileName}
-                className="max-w-full max-h-96 object-contain rounded-lg shadow-lg"
+                className="max-w-full max-h-96 object-contain rounded-lg elev-raised"
               />
             </div>
           ) : isPDF ? (
@@ -80,7 +78,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, isOpen, onOpe
               </p>
             </div>
           )}
-          
+
           {/* Document Details */}
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <h4 className="font-medium mb-2">Document Details</h4>
@@ -113,7 +111,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, isOpen, onOpe
                 <span className="text-gray-500">Tags:</span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {document.tags.map((tag, index) => (
-                    <span 
+                    <span
                       key={index}
                       className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
                     >

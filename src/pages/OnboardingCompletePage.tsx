@@ -4,13 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Heart, Calendar, FileText, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MockAuthService } from '@/services/mockAuthService';
 
 const OnboardingCompletePage: React.FC = () => {
   const navigate = useNavigate();
-
-  // useEffect hook that called MockAuthService.updateUserOnboardingStatus is removed.
-  // This logic is now handled by AuthContext.updateUser when OnboardingSetupPage submits.
 
   const nextSteps = [
     {
@@ -59,10 +55,10 @@ const OnboardingCompletePage: React.FC = () => {
             <h2 className="text-lg font-semibold text-text-primary mb-4">
               Recommended Next Steps
             </h2>
-            
+
             {nextSteps.map((step, index) => (
-              <Card 
-                key={index} 
+              <Card
+                key={index}
                 className="bg-surface-card border-border-divider cursor-pointer hover:bg-surface-card/80 transition-colors"
                 onClick={step.action}
               >
@@ -81,7 +77,7 @@ const OnboardingCompletePage: React.FC = () => {
 
           {/* Main Action */}
           <div className="pt-6">
-            <Button 
+            <Button
               onClick={() => navigate('/')}
               className="w-full bg-primary-action hover:bg-primary-action/90 text-white py-3"
             >

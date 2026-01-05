@@ -51,7 +51,7 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onOpe
     try {
       // Combine date and time into ISO string
       const dateTime = new Date(`${formData.date}T${formData.time}`).toISOString();
-      
+
       await addAppointment({
         title: formData.title,
         doctorName: formData.doctorName,
@@ -59,7 +59,7 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onOpe
         dateTime: dateTime,
         notes: formData.notes || undefined
       });
-      
+
       // Reset form
       setFormData({
         title: '',
@@ -69,23 +69,6 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onOpe
         time: '',
         notes: ''
       });
-      
-      // Reset form
-      setFormData({
-        title: '',
-        doctorName: '',
-        location: '',
-        date: '',
-        time: '',
-        notes: ''
-      });
-      // toast.success is likely called from HealthDataContext.addAppointment if it's a global pattern
-      // For now, let's assume the modal is responsible for its specific success toast.
-      // This was already in the prompt: toast.success("Appointment added successfully!");
-      // The HealthDataContext usually calls toast on its own. Let's remove the direct toast here
-      // to avoid double toasting if HealthDataContext also toasts.
-      // If HealthDataContext does NOT toast, then the line below should be reinstated.
-      // toast.success("Appointment added successfully!");
 
       onOpenChange(false); // Close modal on success
     } catch (error) {
@@ -114,7 +97,7 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onOpe
             Schedule a new medical appointment
           </DialogDescription>
         </DialogHeader>
-        
+
         {submissionError && (
           <Alert variant="destructive" className="mb-4">
             <AlertTriangle className="h-4 w-4" />
@@ -190,8 +173,8 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onOpe
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={!isFormValid() || isSubmitting}
           >
             {isSubmitting ? 'Scheduling...' : 'Schedule Appointment'}

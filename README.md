@@ -1,60 +1,255 @@
 
-# Welcome to your Lovable project
+# MediMove - Personal Health Management
 
-## Project info
+A comprehensive health management application for tracking medical information, appointments, medications, and vital signs with a focus on user experience and data security.
 
-**URL**: https://lovable.dev/projects/6cf26425-1c91-47c9-8967-4adc6c9c2efd
+## Application Tabs & Features
 
-This application is a personal health management tool designed to help users track their medical information, appointments, medications, and overall well-being.
+### 🏠 Home Tab
+#### Digital Health Key Card
+- Displays emergency medical information with quick access
+- Shows blood type, allergies, and medical conditions
+- Emergency contacts with direct call functionality
+- QR code access to critical health information
+- Organ donor status indicator
 
-## Key Features
+#### Medication Reminders
+- Real-time medication schedule tracking
+- Visual indicators for overdue and pending medications
+- Dosage and timing information
+- Quick access to medication details
+- Notification system for missed doses
 
-**1. Dashboard & Home Screen:**
-    *   **Personalized Greeting:** Welcomes the user.
-    *   **Digital Health Key:** Displays critical emergency medical information including conditions, allergies, blood type, emergency contact, and insurance details. Includes a QR code for quick access.
-    *   **Today's Health Dashboard:** Provides an overview of daily health tasks:
-        *   Upcoming appointments.
-        *   Active medication reminders (pending and taken).
-        *   Ability to mark medications as taken.
-        *   Quick access to log vitals.
-    *   **Health Score:** Calculates and displays an overall health score based on medication adherence, profile data completeness, and regular check-ins.
-    *   **Medication Streak:** Tracks and displays the number of consecutive days medications have been taken correctly.
-    *   **Quick Check-In:** (Functionality for quick health status updates).
+#### Today's Health Dashboard
+- Daily medication schedule overview
+- Upcoming appointment notifications
+- Health task completion tracking
+- Quick access to common actions
+  - Log vitals
+  - Record symptoms
+  - Add new medications
 
-**2. Medical Timeline:**
-    *   Chronological view of all medical events (medications, appointments, documents, vitals, tests, other).
-    *   **Event Management:** Add, delete, and edit timeline events.
-        *   Editing for 'Medication' and 'Appointment' categories opens a detailed modal matching the add-event interface.
-        *   Other categories allow for inline editing of title and details.
-    *   **Filtering & Sorting:** Filter events by search term, category, date range, and sort by date.
-    *   **PDF Export:** Generate and download a PDF summary of the filtered timeline.
+#### Vital Signs Tracker
+- Blood pressure monitoring with visual trends
+- Blood glucose level tracking
+- Weight and BMI progress
+- Customizable measurement frequency
+- Exportable reports for healthcare providers
 
-**3. Medication Management:**
-    *   Track active medications, including dosage and frequency.
-    *   Contextual medication adherence tracking.
-    *   Reminders and ability to mark medications as taken.
+#### Health Progress
+- Visual health score calculation
+- Medication adherence tracking
+- Appointment attendance history
+- Goal setting and achievement tracking
+- Weekly/Monthly progress reports
 
-**4. Appointment Tracking:**
-    *   Manage upcoming and past appointments.
-    *   View appointment details (type, doctor, date/time, location).
+### 📅 Timeline Tab
+#### Event Overview
+- Chronological display of all health events
+  - Medical appointments
+  - Medication changes
+  - Vital sign measurements
+  - Document uploads
+- Color-coded event categories
+- Expandable event details
 
-**5. Document Vault (Implied):**
-    *   A section for storing and managing health-related documents.
+#### Advanced Filtering
+- Search by keyword across all event fields
+- Filter by event type (medication, appointment, vitals, documents)
+- Date range selection (today, 7 days, 30 days, custom)
+- Category-specific filters
+- Sort by date (newest/oldest first)
 
-**6. Vitals Logging (Implied):**
-    *   Functionality to log and track vital signs.
+#### Event Management
+- Add new health events with rich details
+- Edit existing events with change history
+- Delete or archive past events
+- Bulk export to PDF
+- Share individual events with providers
 
-**7. Profile Management (Implied):**
-    *   Users can manage their personal and medical information.
+### 📂 Vault Tab
+#### Document Management
+- Secure storage for medical documents
+- Support for multiple file types (PDF, JPG, PNG, DOCX)
+- Automatic document categorization
+- File preview functionality
+- Bulk upload/download options
 
-**8. Notifications (Implied):**
-    *   System for health-related notifications and reminders.
+#### Advanced Search & Filter
+- Full-text search across document contents
+- Filter by document type (reports, prescriptions, scans)
+- Category-based organization
+- Date-based filtering
+- Tagging system for quick retrieval
 
-**9. User Authentication:**
-    *   Secure access to personal health data.
+#### Document Security
+- Role-based access control
+- Audit trail for document access
+- Automatic backup and sync
+- Encryption at rest and in transit
+- Version history for documents
 
-**10. Quick Actions:**
-    *   Floating Action Button (FAB) for quickly adding new health data (e.g., medications, appointments, documents, vitals).
+### 👤 Profile Tab
+#### Personal Information
+- Contact details management
+- Emergency contacts configuration
+- Insurance information storage
+- Healthcare provider directory
+- Personal health records access
+
+#### Account Settings
+- Notification preferences
+- Privacy and security settings
+- Data export options
+- Account recovery settings
+- Two-factor authentication
+
+#### Digital Health Key
+- Emergency medical information
+- QR code generation
+- Access permissions management
+- Information sharing controls
+- Activity log
+
+## Core Features
+
+### 🔐 Security & Privacy
+- End-to-end encryption for all health data
+- Biometric authentication
+- Automatic session timeout
+- Activity logging
+- Compliance with healthcare regulations (HIPAA, GDPR)
+
+### 🔄 Data Management
+- Automatic cloud backup
+- Cross-device synchronization
+- Data export in multiple formats
+- Bulk operations
+- Data retention policies
+
+### 🔔 Notifications
+- Customizable alerts for medications
+- Appointment reminders
+- Health check-in prompts
+- System notifications
+- Email/SMS integration
+
+### 📊 Reporting
+- Health trend analysis
+- Medication adherence reports
+- Appointment history
+- Vitals tracking
+- Custom report generation
+
+### 🏠 Dashboard
+- **Personalized Health Overview**
+  - Dynamic greeting with user's name
+  - Health score visualization
+  - Medication adherence streak counter
+  - Upcoming appointments summary
+  - Health trends and insights
+
+- **Digital Health Key**
+  - Emergency medical information access
+  - QR code for quick access to critical data
+  - Blood type, allergies, and conditions display
+  - Emergency contacts with direct call functionality
+
+- **Health Progress**
+  - Visual tracking of health metrics over time
+  - Goal setting and achievement tracking
+  - Customizable health indicators
+
+### 📅 Medical Timeline
+- **Comprehensive Event Tracking**
+  - Chronological display of all health-related events
+  - Color-coded event categories (medications, appointments, vitals)
+  - Detailed event cards with relevant information
+
+- **Advanced Filtering**
+  - Filter by event type (medication, appointment, vitals)
+  - Date range selection
+  - Search functionality across all events
+  - Custom tag support for categorization
+
+- **Event Management**
+  - Add new health events with rich details
+  - Edit existing events with version history
+  - Delete or archive events
+  - Export timeline as PDF for sharing with healthcare providers
+
+### 💊 Health Tracking
+- **Medication Management**
+  - Medication inventory with dosage tracking
+  - Customizable medication schedules
+  - Refill reminders and tracking
+  - Adherence monitoring and reports
+  - Medication interaction warnings
+
+- **Appointment Tracking**
+  - Calendar view of all healthcare appointments
+  - Appointment reminders and notifications
+  - Healthcare provider directory
+  - Visit notes and follow-up tracking
+
+- **Vital Signs**
+  - Log and track vital measurements (BP, glucose, weight, etc.)
+  - Visual trend analysis
+  - Customizable vital thresholds
+  - Exportable reports for healthcare providers
+
+- **Document Vault**
+  - Secure storage for medical documents
+  - PDF, image, and document support
+  - Organization with folders and tags
+  - Quick access to important documents
+
+### 👤 User Profile
+- **Personal Information**
+  - Contact details
+  - Emergency contacts
+  - Insurance information
+  - Preferred healthcare providers
+
+- **Medical Profile**
+  - Current medications
+  - Known allergies and reactions
+  - Medical conditions
+  - Surgical history
+  - Family medical history
+
+- **Account Settings**
+  - Notification preferences
+  - Privacy controls
+  - Data backup and sync options
+  - Two-factor authentication
+
+## Getting Started
+
+### Prerequisites
+- Node.js (v16 or later)
+- npm or yarn
+
+### Installation
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Start the development server:
+   ```
+   npm run dev
+   ```
+
+## Technologies Used
+- React with TypeScript
+- Tailwind CSS for styling
+- React Query for data management
+- Date-fns for date handling
+- React Router for navigation
+
+## License
+MIT
 
 ## How can I edit this code?
 
@@ -115,12 +310,6 @@ This project is built with:
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/6cf26425-1c91-47c9-8967-4adc6c9c2efd) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
 

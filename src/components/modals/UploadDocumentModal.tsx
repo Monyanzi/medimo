@@ -36,8 +36,6 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({ isOpen, onOpe
     if (file) {
       setSelectedFile(file);
       setFileName(file.name);
-      
-      // Auto-detect category based on file name
       const name = file.name.toLowerCase();
       if (name.includes('lab') || name.includes('test') || name.includes('result')) {
         setCategory('Lab Results');
@@ -88,9 +86,8 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({ isOpen, onOpe
 
     setIsUploading(true);
     try {
-      // Simulate file upload (in real app, this would upload to storage)
       const mockStoragePath = `/documents/${selectedFile.name}`;
-      
+
       const documentData: Omit<Document, 'id'> = {
         fileName: fileName || selectedFile.name,
         fileType: getFileTypeFromMimeType(selectedFile.type),
@@ -103,14 +100,13 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({ isOpen, onOpe
       };
 
       await addDocument(documentData);
-      
-      // Reset form
+
       setSelectedFile(null);
       setFileName('');
       setCategory('Other');
       setDescription('');
       setTags('');
-      
+
       onOpenChange(false);
     } catch (error) {
       console.error('Error uploading document:', error);
@@ -136,10 +132,10 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({ isOpen, onOpe
             Add a new document to your health vault
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* File Upload Area */}
-          <div 
+          <div
             className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary-action transition-colors cursor-pointer"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -152,7 +148,7 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({ isOpen, onOpe
               onChange={handleFileSelect}
               className="hidden"
             />
-            
+
             {selectedFile ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -202,7 +198,8 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({ isOpen, onOpe
                 <SelectItem value="Lab Results">Lab Results</SelectItem>
                 <SelectItem value="Prescriptions">Prescriptions</SelectItem>
                 <SelectItem value="Insurance">Insurance</SelectItem>
-                <SelectItem value="Images">Images</SelectItem>
+                <SelectItem value="Imaging">Imaging (X-rays, MRI, CT)</SelectItem>
+                <SelectItem value="Images">Photos & Images</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
@@ -235,8 +232,8 @@ const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({ isOpen, onOpe
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isUploading}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleUpload} 
+          <Button
+            onClick={handleUpload}
             disabled={!selectedFile || isUploading}
           >
             {isUploading ? 'Uploading...' : 'Upload'}

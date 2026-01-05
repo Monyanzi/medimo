@@ -13,23 +13,67 @@ export interface AuthResponse {
   error?: string;
 }
 
+// Public (sanitized) user info without password exposure
+export interface MockUserPublic {
+  id: string;
+  email: string;
+  name: string;
+  isOnboardingComplete: boolean;
+}
+
 const MOCK_USERS_KEY = 'medimo_mock_users';
 const CURRENT_USER_KEY = 'medimo_current_user';
 
-// Default test user
-const defaultTestUser: MockUser = {
-  id: "USR-2024-001",
-  email: "sarah.johnson@email.com",
-  password: "Password123!",
-  name: "Sarah Johnson",
-  isOnboardingComplete: true
-};
+// Default test users (Sarah, David, and Kenji for isolation tests)
+const defaultTestUsers: MockUser[] = [
+  {
+    id: "USR-2024-001",
+    email: "sarah.johnson@email.com",
+    password: "Password123!",
+    name: "Sarah Johnson",
+    isOnboardingComplete: true
+  },
+  {
+    id: "USR-2024-002",
+    email: "david.martinez@example.com",
+    password: "Password123!",
+    name: "David Martinez",
+    isOnboardingComplete: true
+  },
+  {
+    // Kenji Nakamura - Vastly different test user for data isolation verification
+    // If ANY of Sarah or David's data appears for this user, it's a FAIL
+    id: "USR-2024-003",
+    email: "kenji.nakamura@test.jp",
+    password: "Isolation2026!",
+    name: "Kenji Nakamura",
+    isOnboardingComplete: true
+  }
+];
 
 export class MockAuthService {
   private static initializeStorage(): void {
-    const existingUsers = localStorage.getItem(MOCK_USERS_KEY);
-    if (!existingUsers) {
-      localStorage.setItem(MOCK_USERS_KEY, JSON.stringify([defaultTestUser]));
+    const existingUsersRaw = localStorage.getItem(MOCK_USERS_KEY);
+    if (!existingUsersRaw) {
+      localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(defaultTestUsers));
+      return;
+    }
+    try {
+      const existingUsers: MockUser[] = JSON.parse(existingUsersRaw);
+      // Ensure both default users exist for backward compatibility
+      let changed = false;
+      defaultTestUsers.forEach(def => {
+        if (!existingUsers.find(u => u.email.toLowerCase() === def.email.toLowerCase())) {
+          existingUsers.push(def);
+          changed = true;
+        }
+      });
+      if (changed) {
+        localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(existingUsers));
+      }
+    } catch {
+      // If parsing fails, reset to defaults to ensure demo continuity
+      localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(defaultTestUsers));
     }
   }
 
@@ -46,7 +90,7 @@ export class MockAuthService {
   static async register(email: string, password: string, name: string): Promise<AuthResponse> {
     const users = this.getUsers();
     const normalizedEmailInput = email.toLowerCase();
-    
+
     // Check if user already exists
     if (users.find(user => user.email.toLowerCase() === normalizedEmailInput)) {
       return {
@@ -61,7 +105,7 @@ export class MockAuthService {
       email: normalizedEmailInput, // Store email as lowercase
       password, // In real app, this would be hashed
       name,
-      isOnboardingComplete: false
+      isOnboardingComplete: true  // Skip onboarding - name/email/password already collected
     };
 
     users.push(newUser);
@@ -99,7 +143,14 @@ export class MockAuthService {
 
   static getCurrentUser(): MockUser | null {
     const userData = localStorage.getItem(CURRENT_USER_KEY);
-    return userData ? JSON.parse(userData) : null;
+    if (!userData) return null;
+    try {
+      return JSON.parse(userData);
+    } catch (e) {
+      console.error('Failed to parse current user data:', e);
+      localStorage.removeItem(CURRENT_USER_KEY); // Clear corrupted entry
+      return null;
+    }
   }
 
   static logout(): void {
@@ -109,7 +160,7 @@ export class MockAuthService {
   static async updateUserOnboardingStatus(userId: string, isComplete: boolean): Promise<void> {
     const users = this.getUsers();
     const userIndex = users.findIndex(u => u.id === userId);
-    
+
     if (userIndex !== -1) {
       users[userIndex].isOnboardingComplete = isComplete;
       this.saveUsers(users);
@@ -121,5 +172,15 @@ export class MockAuthService {
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
       }
     }
+  }
+
+  // Return all users (sanitized) for account switching UI
+  static getAllUsersPublic(): MockUserPublic[] {
+    return this.getUsers().map(u => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      isOnboardingComplete: u.isOnboardingComplete
+    }));
   }
 }

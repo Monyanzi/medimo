@@ -9,15 +9,15 @@ export const useTimelineFilters = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // Default to newest first
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [systemFilter, setSystemFilter] = useState<'all' | 'user' | 'system'>('all');
 
-  // The filtering and sorting logic has moved to HealthDataContext.
-  // This hook now primarily manages the state of these filter options.
 
   const currentFilters: TimelineEventFilters = {
     searchTerm: searchTerm || undefined, // Pass undefined if empty string for cleaner filter object
     categoryFilter: categoryFilter,
     dateFilter: dateFilter,
     sortOrder: sortOrder,
+    systemFilter: systemFilter,
   };
 
   return {
@@ -29,6 +29,8 @@ export const useTimelineFilters = () => {
     setSortOrder,
     dateFilter,
     setDateFilter,
+    systemFilter,
+    setSystemFilter,
     currentFilters, // Expose the combined filter object for convenience
   };
 };

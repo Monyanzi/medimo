@@ -17,33 +17,60 @@ export interface DailyReminders {
 
 class MedicationReminderService {
   private reminders: DailyReminders[] = [];
+  private currentUserId: string | null = null;
 
   constructor() {
-    this.loadFromStorage();
+    // Don't load on construction - wait for user to be set
+  }
+
+  // Set the current user - MUST be called when user logs in or changes
+  setCurrentUser(userId: string | null) {
+    if (this.currentUserId !== userId) {
+      this.currentUserId = userId;
+      this.reminders = []; // Clear in-memory cache
+      if (userId) {
+        this.loadFromStorage();
+      }
+    }
+  }
+
+  // Clear all data (call on logout)
+  clearData() {
+    this.reminders = [];
+    this.currentUserId = null;
+  }
+
+  private getStorageKey(): string {
+    // Namespace by user ID to prevent cross-user data leakage
+    return this.currentUserId
+      ? `medicationReminders_${this.currentUserId}`
+      : 'medicationReminders_anonymous';
   }
 
   private loadFromStorage() {
-    const saved = localStorage.getItem('medicationReminders');
+    if (!this.currentUserId) return;
+    const saved = localStorage.getItem(this.getStorageKey());
     if (saved) {
       this.reminders = JSON.parse(saved);
     }
   }
 
   private saveToStorage() {
-    localStorage.setItem('medicationReminders', JSON.stringify(this.reminders));
+    if (!this.currentUserId) return;
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(this.reminders));
   }
 
   generateDailyReminders(medications: any[]) {
     const today = format(new Date(), 'yyyy-MM-dd');
-    
+
     // Check if we already have reminders for today
     const existingIndex = this.reminders.findIndex(r => r.date === today);
-    
+
     const todayReminders: MedicationReminder[] = [];
-    
+
     medications.filter(med => med.status === 'active').forEach(med => {
       const times = this.parseFrequencyToTimes(med.frequency);
-      
+
       times.forEach(time => {
         todayReminders.push({
           medicationId: med.id,
@@ -78,7 +105,7 @@ class MedicationReminderService {
 
   private parseFrequencyToTimes(frequency: string): string[] {
     const freq = frequency.toLowerCase();
-    
+
     if (freq.includes('once daily') || freq.includes('daily')) {
       return ['08:00']; // 8 AM
     } else if (freq.includes('twice daily') || freq.includes('twice')) {
@@ -94,7 +121,7 @@ class MedicationReminderService {
     } else if (freq.includes('every 12 hours')) {
       return ['08:00', '20:00'];
     }
-    
+
     // Default to once daily if we can't parse
     return ['08:00'];
   }
@@ -108,12 +135,12 @@ class MedicationReminderService {
   markReminderCompleted(medicationId: string, scheduledTime: string) {
     const today = format(new Date(), 'yyyy-MM-dd');
     const todayIndex = this.reminders.findIndex(r => r.date === today);
-    
+
     if (todayIndex >= 0) {
       const reminderIndex = this.reminders[todayIndex].reminders.findIndex(
         r => r.medicationId === medicationId && r.scheduledTime === scheduledTime
       );
-      
+
       if (reminderIndex >= 0) {
         this.reminders[todayIndex].reminders[reminderIndex].isCompleted = true;
         this.saveToStorage();
@@ -131,7 +158,7 @@ class MedicationReminderService {
   getOverdueReminders(): MedicationReminder[] {
     const now = new Date();
     const currentTime = format(now, 'HH:mm');
-    
+
     return this.getPendingReminders().filter(reminder => {
       return reminder.scheduledTime <= currentTime;
     });
@@ -140,7 +167,7 @@ class MedicationReminderService {
   getCompletionRate(): number {
     const todayReminders = this.getTodaysReminders();
     if (todayReminders.length === 0) return 100;
-    
+
     const completed = todayReminders.filter(r => r.isCompleted).length;
     return Math.round((completed / todayReminders.length) * 100);
   }

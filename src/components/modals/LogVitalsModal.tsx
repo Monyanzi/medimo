@@ -20,20 +20,59 @@ import { checkVitalInRange, DEFAULT_VITAL_RANGES, getVitalStatusColor, getVitalM
 interface LogVitalsModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  initialData?: {
+    id?: string;
+    bloodPressureSystolic?: number | null;
+    bloodPressureDiastolic?: number | null;
+    heartRate?: number | null;
+    weight?: number | null;
+    height?: number | null;
+    temperature?: number | null;
+    oxygenSaturation?: number | null;
+    notes?: string | null;
+    recordedDate?: string;
+  } | null;
 }
 
-const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange }) => {
-  const { addVitalSigns } = useHealthData();
+const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, initialData = null }) => {
+  const { addVitalSigns, updateVitalSigns } = useHealthData();
   const [formData, setFormData] = useState({
-    bloodPressureSystolic: '',
-    bloodPressureDiastolic: '',
-    heartRate: '',
-    weight: '',
-    height: '',
-    temperature: '',
-    oxygenSaturation: '',
-    notes: ''
+    bloodPressureSystolic: initialData?.bloodPressureSystolic?.toString() || '',
+    bloodPressureDiastolic: initialData?.bloodPressureDiastolic?.toString() || '',
+    heartRate: initialData?.heartRate?.toString() || '',
+    weight: initialData?.weight?.toString() || '',
+    height: initialData?.height?.toString() || '',
+    temperature: initialData?.temperature?.toString() || '',
+    oxygenSaturation: initialData?.oxygenSaturation?.toString() || '',
+    notes: initialData?.notes?.toString() || ''
   });
+  
+  // Reset form when initialData changes
+  React.useEffect(() => {
+    if (initialData) {
+      setFormData({
+        bloodPressureSystolic: initialData.bloodPressureSystolic?.toString() || '',
+        bloodPressureDiastolic: initialData.bloodPressureDiastolic?.toString() || '',
+        heartRate: initialData.heartRate?.toString() || '',
+        weight: initialData.weight?.toString() || '',
+        height: initialData.height?.toString() || '',
+        temperature: initialData.temperature?.toString() || '',
+        oxygenSaturation: initialData.oxygenSaturation?.toString() || '',
+        notes: initialData.notes?.toString() || ''
+      });
+    } else {
+      setFormData({
+        bloodPressureSystolic: '',
+        bloodPressureDiastolic: '',
+        heartRate: '',
+        weight: '',
+        height: '',
+        temperature: '',
+        oxygenSaturation: '',
+        notes: ''
+      });
+    }
+  }, [initialData]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [vitalsAlerts, setVitalsAlerts] = useState<{[key: string]: { status: VitalStatus; message: string }}>({});
   const [submissionError, setSubmissionError] = useState<string | null>(null); // Added error state
@@ -77,34 +116,41 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
       }
 
       const vitalsData = {
-        bloodPressureSystolic: formData.bloodPressureSystolic ? parseInt(formData.bloodPressureSystolic) : undefined,
-        bloodPressureDiastolic: formData.bloodPressureDiastolic ? parseInt(formData.bloodPressureDiastolic) : undefined,
-        heartRate: formData.heartRate ? parseInt(formData.heartRate) : undefined,
-        weight: formData.weight ? parseFloat(formData.weight) : undefined,
-        height: formData.height ? parseFloat(formData.height) : undefined,
-        temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
-        oxygenSaturation: formData.oxygenSaturation ? parseInt(formData.oxygenSaturation) : undefined,
-        notes: formData.notes || undefined,
-        recordedDate: new Date().toISOString()
+        bloodPressureSystolic: formData.bloodPressureSystolic ? parseInt(formData.bloodPressureSystolic) : null,
+        bloodPressureDiastolic: formData.bloodPressureDiastolic ? parseInt(formData.bloodPressureDiastolic) : null,
+        heartRate: formData.heartRate ? parseInt(formData.heartRate) : null,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+        height: formData.height ? parseFloat(formData.height) : null,
+        temperature: formData.temperature ? parseFloat(formData.temperature) : null,
+        oxygenSaturation: formData.oxygenSaturation ? parseInt(formData.oxygenSaturation) : null,
+        notes: formData.notes || null,
+        recordedDate: initialData?.recordedDate || new Date().toISOString()
       };
 
-      await addVitalSigns(vitalsData);
+      if (initialData?.id) {
+        // Update existing vitals
+        await updateVitalSigns(initialData.id, vitalsData);
+      } else {
+        // Add new vitals
+        await addVitalSigns(vitalsData);
+      }
       
       // Reset form
-      setFormData({
-        bloodPressureSystolic: '',
-        bloodPressureDiastolic: '',
-        heartRate: '',
-        weight: '',
-        height: '',
-        temperature: '',
-        oxygenSaturation: '',
-        notes: ''
-      });
-      setVitalsAlerts({});
+      if (!initialData) {
+        setFormData({
+          bloodPressureSystolic: '',
+          bloodPressureDiastolic: '',
+          heartRate: '',
+          weight: '',
+          height: '',
+          temperature: '',
+          oxygenSaturation: '',
+          notes: ''
+        });
+        setVitalsAlerts({});
+      }
       
       onOpenChange(false); // Close modal on success
-      // Assuming HealthDataContext.addVitalSigns calls toast.success
     } catch (error) {
       console.error('Error saving vital signs:', error);
       const errorMessage = error instanceof Error ? error.message : "Failed to save vital signs. Please try again.";
@@ -127,7 +173,7 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange })
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Activity className="h-5 w-5 text-red-500" />
-            <span>Log Vital Signs</span>
+            <span>{initialData?.id ? 'Edit' : 'Log'} Vital Signs</span>
           </DialogTitle>
           <DialogDescription>
             Record your current vital signs and measurements

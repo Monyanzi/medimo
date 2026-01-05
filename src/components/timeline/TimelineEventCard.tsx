@@ -8,6 +8,8 @@ import { format, parseISO } from 'date-fns';
 import { Pill, Calendar, FileText, Activity, Stethoscope, Clock, Trash2, Edit, Check, X } from 'lucide-react';
 import EditMedicationTimelineModal from '@/components/modals/EditMedicationTimelineModal';
 import EditAppointmentTimelineModal from '@/components/modals/EditAppointmentTimelineModal';
+import EditVitalsTimelineModal from '@/components/modals/EditVitalsTimelineModal';
+import EditGenericTimelineModal from '@/components/modals/EditGenericTimelineModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,57 +35,59 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
 
   const [isEditMedicationModalOpen, setIsEditMedicationModalOpen] = useState(false);
   const [isEditAppointmentModalOpen, setIsEditAppointmentModalOpen] = useState(false);
+  const [isEditVitalsModalOpen, setIsEditVitalsModalOpen] = useState(false);
+  const [isEditGenericModalOpen, setIsEditGenericModalOpen] = useState(false);
 
   const getCategoryIcon = (category: TimelineEvent['category']) => {
     switch (category) {
       case 'Medication':
-        return <Pill className="h-4 w-4 text-blue-500" />;
+        return <Pill className="h-5 w-5 text-blue-600" />;
       case 'Appointment':
-        return <Calendar className="h-4 w-4 text-purple-500" />;
+        return <Calendar className="h-5 w-5 text-violet-600" />;
       case 'Document':
-        return <FileText className="h-4 w-4 text-green-500" />;
+        return <FileText className="h-5 w-5 text-emerald-600" />;
       case 'Vitals':
-        return <Activity className="h-4 w-4 text-red-500" />;
+        return <Activity className="h-5 w-5 text-rose-600" />;
       case 'Test':
-        return <Stethoscope className="h-4 w-4 text-orange-500" />;
+        return <Stethoscope className="h-5 w-5 text-amber-600" />;
       case 'Other':
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <Clock className="h-5 w-5 text-slate-500" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <Clock className="h-5 w-5 text-slate-500" />;
     }
   };
 
-  const getCategoryColor = (category: TimelineEvent['category']) => {
+  const getCategoryBackground = (category: TimelineEvent['category']) => {
     switch (category) {
       case 'Medication':
-        return 'border-l-blue-500 bg-blue-50';
+        return 'bg-blue-50';
       case 'Appointment':
-        return 'border-l-purple-500 bg-purple-50';
+        return 'bg-violet-50';
       case 'Document':
-        return 'border-l-green-500 bg-green-50';
+        return 'bg-emerald-50';
       case 'Vitals':
-        return 'border-l-red-500 bg-red-50';
+        return 'bg-rose-50';
       case 'Test':
-        return 'border-l-orange-500 bg-orange-50';
+        return 'bg-amber-50';
       case 'Other':
-        return 'border-l-gray-500 bg-gray-50';
+        return 'bg-slate-50';
       default:
-        return 'border-l-gray-500 bg-gray-50';
+        return 'bg-slate-50';
     }
   };
 
-  // handleDelete is now directly called by the button, passing the event
-  // The AlertDialog is removed from here and will be managed by TimelineScreen
-
   const handleEditClick = () => {
+    // Always use structured modals - no more free-text inline editing
     if (event.category === 'Medication' && event.relatedId) {
       setIsEditMedicationModalOpen(true);
     } else if (event.category === 'Appointment' && event.relatedId) {
       setIsEditAppointmentModalOpen(true);
+    } else if (event.category === 'Vitals' && event.relatedId) {
+      setIsEditVitalsModalOpen(true);
     } else {
-      setEditedTitle(event.title);
-      setEditedDetails(event.details);
-      setIsEditingInline(true);
+      // Generic modal for Document, Test, Other, or orphaned events
+      // System events will open in read-only mode
+      setIsEditGenericModalOpen(true);
     }
   };
 
@@ -103,84 +107,86 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
 
   return (
     <>
-      <Card className={`border-l-4 ${getCategoryColor(event.category)}`}>
+      <Card className="bg-[var(--medimo-bg-elevated)] border border-[var(--medimo-border)] rounded-2xl overflow-hidden transition-all duration-200 group hover:border-[var(--medimo-accent)]/30 hover:shadow-sm">
         <CardContent className="p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start space-x-3 flex-1">
-              <div className="mt-1">
-                {getCategoryIcon(event.category)}
-              </div>
-              <div className="flex-1">
-                {isEditingInline ? (
-                  <div className="space-y-2">
-                    <Input
-                      value={editedTitle}
-                      onChange={(e) => setEditedTitle(e.target.value)}
-                      className="text-sm"
-                      placeholder="Event title"
-                    />
-                    <Textarea
-                      value={editedDetails}
-                      onChange={(e) => setEditedDetails(e.target.value)}
-                      className="text-sm"
-                      placeholder="Event details"
-                      rows={2}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="font-medium text-text-primary">{event.title}</h4>
-                      <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                        {event.category}
-                      </span>
-                    </div>
-                    <p className="text-sm text-text-secondary mb-2">{event.details}</p>
-                  </>
-                )}
-                <p className="text-xs text-gray-400">
-                  {format(parseISO(event.date), 'h:mm a')}
-                </p>
-              </div>
+          <div className="flex items-start gap-4">
+            {/* Icon Container - Color indicates alert level */}
+            <div className={`relative w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${getCategoryBackground(event.category)}`}>
+              {getCategoryIcon(event.category)}
+              {/* Alert indicator - subtle dot */}
+              {event.systemType === 'threshold' && (
+                <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-[var(--medimo-bg-elevated)]" />
+              )}
             </div>
-            <div className="flex space-x-1">
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
               {isEditingInline ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={handleSaveInlineEdit}
-                  >
-                    <Check className="h-4 w-4 text-green-500" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={handleCancelInlineEdit}
-                  >
-                    <X className="h-4 w-4 text-gray-500" />
-                  </Button>
-                </>
+                <div className="space-y-2">
+                  <Input
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    className="text-sm rounded-lg"
+                    placeholder="Event title"
+                  />
+                  <Textarea
+                    value={editedDetails}
+                    onChange={(e) => setEditedDetails(e.target.value)}
+                    className="text-sm rounded-lg"
+                    placeholder="Event details"
+                    rows={2}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleSaveInlineEdit} className="rounded-lg bg-[var(--medimo-accent)]">
+                      <Check className="h-4 w-4 mr-1" /> Save
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleCancelInlineEdit} className="rounded-lg">
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={handleEditClick}
-                  >
-                    <Edit className="h-4 w-4 text-blue-500" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => onDelete(event)} // Pass full event object
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      {/* Title and time on same line */}
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-display font-semibold text-[var(--medimo-text-primary)] truncate">
+                          {event.title}
+                        </h4>
+                        <span className="text-xs text-[var(--medimo-text-muted)] whitespace-nowrap">
+                          {format(parseISO(event.date), 'h:mm a')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions - Hidden until hover */}
+                    <div className="flex items-center -mr-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg hover:bg-[var(--medimo-accent-soft)]"
+                        onClick={handleEditClick}
+                      >
+                        <Edit className="h-4 w-4 text-[var(--medimo-text-muted)] hover:text-[var(--medimo-accent)]" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg hover:bg-rose-50"
+                        onClick={() => onDelete(event)}
+                      >
+                        <Trash2 className="h-4 w-4 text-[var(--medimo-text-muted)] hover:text-rose-500" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Details - Elegant and minimal */}
+                  {event.details && (
+                    <p className="text-sm text-[var(--medimo-text-secondary)] mt-1.5 line-clamp-2 leading-relaxed">
+                      {event.details}
+                    </p>
+                  )}
                 </>
               )}
             </div>
@@ -189,22 +195,33 @@ const TimelineEventCard: React.FC<TimelineEventCardProps> = ({ event, onDelete, 
       </Card>
 
       {/* Medication Edit Modal */}
-      {event.category === 'Medication' && event.relatedId && (
+      {event.category === 'Medication' && (
         <EditMedicationTimelineModal
           isOpen={isEditMedicationModalOpen}
           onOpenChange={setIsEditMedicationModalOpen}
           event={event}
         />
       )}
-
-      {/* Appointment Edit Modal */}
-      {event.category === 'Appointment' && event.relatedId && (
+      {event.category === 'Appointment' && (
         <EditAppointmentTimelineModal
           isOpen={isEditAppointmentModalOpen}
           onOpenChange={setIsEditAppointmentModalOpen}
           event={event}
         />
       )}
+      {event.category === 'Vitals' && (
+        <EditVitalsTimelineModal
+          isOpen={isEditVitalsModalOpen}
+          onOpenChange={setIsEditVitalsModalOpen}
+          event={event}
+        />
+      )}
+      {/* Generic modal for Document, Test, Other, system events, and orphaned events */}
+      <EditGenericTimelineModal
+        isOpen={isEditGenericModalOpen}
+        onOpenChange={setIsEditGenericModalOpen}
+        event={event}
+      />
     </>
   );
 };

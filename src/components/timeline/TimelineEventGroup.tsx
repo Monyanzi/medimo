@@ -17,11 +17,19 @@ const TimelineEventGroup: React.FC<TimelineEventGroupProps> = ({
   onDeleteEvent, // Prop name is kept, but its signature is effectively changed by TimelineScreen
   onEditEvent
 }) => {
+  const date = parseISO(dateKey);
+
   return (
     <div>
-      <h3 className="text-lg font-semibold text-text-primary mb-4 border-b border-border-divider pb-2">
-        {format(parseISO(dateKey), 'EEEE, MMMM d, yyyy')}
-      </h3>
+      {/* Elegant date header - minimal and refined */}
+      <div className="flex items-baseline gap-2 mb-4">
+        <h3 className="font-display text-lg font-semibold text-[var(--medimo-text-primary)]">
+          {format(date, 'EEEE')}
+        </h3>
+        <span className="text-sm text-[var(--medimo-text-muted)]">
+          {format(date, 'MMMM d')}
+        </span>
+      </div>
       <div className="space-y-3">
         {events.map((event) => (
           <TimelineEventCard

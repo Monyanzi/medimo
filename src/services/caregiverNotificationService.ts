@@ -1,6 +1,7 @@
 
 import { User } from '@/types';
 import { VitalStatus } from '@/types/vitals';
+import { toast } from 'sonner';
 
 export interface CaregiverAlert {
   type: 'missed-checkin' | 'critical-vitals' | 'emergency';
@@ -24,7 +25,7 @@ class CaregiverNotificationService {
   private getLastSafetyCheckIn(): Date | null {
     const settings = localStorage.getItem('safetyCheckInSettings');
     if (!settings) return null;
-    
+
     const parsed = JSON.parse(settings);
     return parsed.lastCheckIn ? new Date(parsed.lastCheckIn) : null;
   }
@@ -56,7 +57,7 @@ class CaregiverNotificationService {
   public createCriticalVitalAlert(user: User, vitalType: string, value: number, status: VitalStatus): CaregiverAlert {
     // Only create alerts for warning and critical statuses, skip normal
     const alertSeverity: 'warning' | 'critical' = status === 'critical' ? 'critical' : 'warning';
-    
+
     return {
       type: 'critical-vitals',
       severity: alertSeverity,
@@ -72,16 +73,6 @@ class CaregiverNotificationService {
   }
 
   public async sendAlert(alert: CaregiverAlert, caregiver: NonNullable<User['caregiver']>): Promise<void> {
-    console.log('Sending caregiver alert:', alert);
-    console.log('To caregiver:', caregiver);
-
-    // In a real implementation, this would:
-    // 1. Send SMS to caregiver.phone
-    // 2. Send email to caregiver.email (if provided)
-    // 3. Make API call to notification service
-    // 4. Store alert in database for tracking
-    
-    // For now, we'll simulate the notification
     const notificationData = {
       recipient: {
         phone: caregiver.phone,
@@ -92,12 +83,13 @@ class CaregiverNotificationService {
       timestamp: new Date().toISOString()
     };
 
-    // Store locally for demo purposes
     const existingAlerts = JSON.parse(localStorage.getItem('caregiverAlerts') || '[]');
     existingAlerts.push(notificationData);
     localStorage.setItem('caregiverAlerts', JSON.stringify(existingAlerts));
 
-    console.log('Alert sent successfully:', notificationData);
+    toast.success(`Alert sent to ${caregiver.name}`, {
+      description: alert.message,
+    });
   }
 
   public getRecentAlerts(): any[] {

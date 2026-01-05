@@ -25,7 +25,7 @@ const MedicationStreak: React.FC = () => {
   };
 
   return (
-    <Card className="bg-surface-card border border-border-divider shadow-sm">
+  <Card className="bg-surface-card border border-border-divider elev-surface">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
