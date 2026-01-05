@@ -64,16 +64,17 @@ export const generateQRCodeData = (
 };
 
 export const generateQRCodeImage = async (qrData: QRCodeData): Promise<string> => {
-  // Generate emergency profile URL that opens a mobile-friendly page with all medical info
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-  const baseUrl = apiUrl.replace('/api', '');  // Remove /api suffix
-  const emergencyUrl = `${baseUrl}/emergency/user-${qrData.medicalId}`;
+  // Generate plain-text markdown content for emergency responders
+  const markdownContent = generateMarkdownContent(qrData);
+  
+  // Create a data URL that displays the markdown as plain text when scanned
+  const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(markdownContent)}`;
 
   try {
-    const qrCodeUrl = await QRCode.toDataURL(emergencyUrl, {
+    const qrCodeUrl = await QRCode.toDataURL(dataUrl, {
       width: 400,
       margin: 2,
-      errorCorrectionLevel: 'M',
+      errorCorrectionLevel: 'L', // Lower error correction for more data capacity
       color: {
         dark: '#000000',
         light: '#FFFFFF'
@@ -84,6 +85,37 @@ export const generateQRCodeImage = async (qrData: QRCodeData): Promise<string> =
     console.error('Error generating QR code:', error);
     throw new Error('Failed to generate QR code');
   }
+};
+
+// Generate markdown content for the QR code
+export const generateMarkdownContent = (qrData: QRCodeData): string => {
+  const lines = [
+    `# MEDICAL EMERGENCY CARD`,
+    ``,
+    `**Name:** ${qrData.userName}`,
+    `**Blood Type:** ${qrData.bloodType || 'Unknown'}`,
+    ``,
+    `## Allergies`,
+    qrData.allergies.length > 0 ? qrData.allergies.map(a => `- ⚠️ ${a}`).join('\n') : '_None listed_',
+    ``,
+    `## Medical Conditions`,
+    qrData.conditions.length > 0 ? qrData.conditions.map(c => `- ${c}`).join('\n') : '_None listed_',
+    ``,
+    `## Current Medications`,
+    qrData.currentMedications.length > 0 ? qrData.currentMedications.map(m => `- 💊 ${m}`).join('\n') : '_None listed_',
+    ``,
+    `## Emergency Contact`,
+    `**${qrData.emergencyContactName || 'Not set'}**${qrData.emergencyContactRelationship ? ` (${qrData.emergencyContactRelationship})` : ''}`,
+    qrData.emergencyContactPhone ? `📞 ${qrData.emergencyContactPhone}` : '',
+  ];
+
+  if (qrData.importantNotes) {
+    lines.push(``, `## ⚠️ Important Notes`, qrData.importantNotes);
+  }
+
+  lines.push(``, `---`, `_Generated: ${new Date(qrData.generatedAt).toLocaleString()}_`);
+
+  return lines.filter(l => l !== undefined).join('\n');
 };
 
 export const saveQRCodeToStorage = (qrData: QRCodeData, qrImageUrl: string): void => {
