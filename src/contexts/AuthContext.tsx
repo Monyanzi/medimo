@@ -457,6 +457,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success('Logged out successfully');
   };
 
+  const deleteCurrentAccount = async (): Promise<void> => {
+    if (config.useApi) {
+      toast.error('Account deletion is not available in this mode.');
+      return;
+    }
+
+    const currentUser = MockAuthService.getCurrentUser();
+    if (!currentUser) {
+      toast.error('No account found to delete.');
+      return;
+    }
+
+    MockAuthService.deleteCurrentUser();
+
+    // Clear medication reminder data to prevent cross-user leakage
+    medicationReminderService.clearData();
+
+    setUser(null);
+    setError(null);
+    localStorage.removeItem('medimo_qr_code');
+    localStorage.removeItem('medimo_emergency_profile');
+
+    toast.success('Account deleted from this device');
+  };
+
   const updateUser = async (userData: Partial<User>): Promise<void> => {
     if (!user) {
       const error = 'No user logged in';
@@ -559,6 +584,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     register,
     logout,
+    deleteCurrentAccount,
     updateUser,
     regenerateQRCode,
     isLoading,

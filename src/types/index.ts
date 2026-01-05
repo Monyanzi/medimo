@@ -47,6 +47,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; user: User | null; error?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; user: User | null; error?: string }>;
   logout: () => void;
+  deleteCurrentAccount: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
   regenerateQRCode: () => Promise<void>;
   isLoading: boolean;

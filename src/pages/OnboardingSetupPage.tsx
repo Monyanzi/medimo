@@ -66,7 +66,7 @@ const stepConfig = [
 
 const OnboardingSetupPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const { user, updateUser, isLoading } = useAuth();
+  const { user, updateUser, deleteCurrentAccount, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const form = useForm<SetupForm>({
@@ -130,6 +130,18 @@ const OnboardingSetupPage: React.FC = () => {
       setCurrentStep(currentStep - 1);
     } else {
       navigate('/welcome');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const ok = window.confirm('Delete this account from this device? You can re-register afterwards.');
+    if (!ok) return;
+
+    try {
+      await deleteCurrentAccount();
+      navigate('/register');
+    } catch {
+      // errors are handled via toast in AuthContext
     }
   };
 
@@ -471,6 +483,16 @@ const OnboardingSetupPage: React.FC = () => {
                       </span>
                     )}
                   </Button>
+
+                  {currentStep === 0 && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteAccount}
+                      className="w-full mt-3 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                    >
+                      Delete this account
+                    </button>
+                  )}
 
                   {currentStep === 3 && (
                     <button
