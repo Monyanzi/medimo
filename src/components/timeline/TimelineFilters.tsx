@@ -9,8 +9,8 @@ interface TimelineFiltersProps {
   setSearchTerm: (term: string) => void;
   categoryFilter: string;
   setCategoryFilter: (category: string) => void;
-  systemFilter?: string;
-  setSystemFilter?: (v: string) => void;
+  systemFilter?: 'all' | 'system' | 'user';
+  setSystemFilter?: (v: 'all' | 'system' | 'user') => void;
   dateFilter: string;
   setDateFilter: (filter: string) => void;
   sortOrder: 'asc' | 'desc';
