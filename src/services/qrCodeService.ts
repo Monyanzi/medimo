@@ -66,15 +66,33 @@ export const generateQRCodeData = (
 };
 
 export const generateQRCodeImage = async (qrData: QRCodeData): Promise<string> => {
-  // Generate compact plain-text content for emergency responders
-  // Keep it short to fit in QR code limits (~2000 chars safe)
-  const textContent = generateCompactText(qrData);
+  // Create compact data object for URL encoding
+  const compactData = {
+    n: qrData.userName,
+    d: qrData.dob || '',
+    b: qrData.bloodType || '',
+    a: qrData.allergies.join(','),
+    e: qrData.emergencyContactName || '',
+    ep: qrData.emergencyContactPhone || '',
+    er: qrData.emergencyContactRelationship || '',
+    c: qrData.conditions.join(','),
+    m: qrData.currentMedications.join(','),
+    nt: qrData.importantNotes ? qrData.importantNotes.substring(0, 100) : '',
+    g: new Date(qrData.generatedAt).toLocaleDateString(),
+  };
+
+  // Base64 encode the data and create a URL to the emergency view page
+  const encoded = btoa(JSON.stringify(compactData));
+  
+  // Use current origin or fallback to a relative path
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const emergencyUrl = `${baseUrl}/e?d=${encoded}`;
 
   try {
-    const qrCodeUrl = await QRCode.toDataURL(textContent, {
+    const qrCodeUrl = await QRCode.toDataURL(emergencyUrl, {
       width: 400,
       margin: 2,
-      errorCorrectionLevel: 'L', // Lower error correction for more data capacity
+      errorCorrectionLevel: 'L',
       color: {
         dark: '#000000',
         light: '#FFFFFF'

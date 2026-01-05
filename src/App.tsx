@@ -25,6 +25,7 @@ const RegisterPage = React.lazy(() => import("./pages/RegisterPage"));
 const OnboardingSetupPage = React.lazy(() => import("./pages/OnboardingSetupPage"));
 const OnboardingCompletePage = React.lazy(() => import("./pages/OnboardingCompletePage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
+const EmergencyViewPage = React.lazy(() => import("./pages/EmergencyViewPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -132,6 +133,9 @@ const App: React.FC = () => {
                                 <PageWrapper><LegalSupportPage /></PageWrapper>
                               </AuthGuard>
                             } />
+
+                            {/* Public emergency view - no auth required */}
+                            <Route path="/e" element={<PageWrapper><EmergencyViewPage /></PageWrapper>} />
 
                             <Route path="*" element={<NotFound />} />
                           </Routes>
