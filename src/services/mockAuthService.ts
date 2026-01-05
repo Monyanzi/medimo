@@ -157,6 +157,23 @@ export class MockAuthService {
     localStorage.removeItem(CURRENT_USER_KEY);
   }
 
+  static deleteUser(userId: string): void {
+    const users = this.getUsers();
+    const filteredUsers = users.filter(u => u.id !== userId);
+    this.saveUsers(filteredUsers);
+
+    const currentUser = this.getCurrentUser();
+    if (currentUser && currentUser.id === userId) {
+      localStorage.removeItem(CURRENT_USER_KEY);
+    }
+  }
+
+  static deleteCurrentUser(): void {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser) return;
+    this.deleteUser(currentUser.id);
+  }
+
   static async updateUserOnboardingStatus(userId: string, isComplete: boolean): Promise<void> {
     const users = this.getUsers();
     const userIndex = users.findIndex(u => u.id === userId);
