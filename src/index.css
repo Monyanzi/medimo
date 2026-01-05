@@ -403,10 +403,37 @@
   100% { background-position: calc(200px + 100%) 0; }
 }
 
+@keyframes shimmerWave {
+  0% { 
+    background-position: -100% 0;
+  }
+  100% { 
+    background-position: 200% 0;
+  }
+}
+
 .shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-  background-size: 200px 100%;
-  animation: shimmer 1.5s infinite;
+  background: linear-gradient(90deg, 
+    hsl(var(--muted)) 25%, 
+    hsl(var(--muted) / 0.5) 50%, 
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmerWave 1.5s ease-in-out infinite;
+}
+
+/* Enhanced pulse animation */
+@keyframes subtlePulse {
+  0%, 100% { 
+    opacity: 1;
+  }
+  50% { 
+    opacity: 0.5;
+  }
+}
+
+.animate-subtle-pulse {
+  animation: subtlePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Accent ring for avatars and focus states */

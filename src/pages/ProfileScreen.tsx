@@ -165,7 +165,7 @@ QR Code: ${user.qrCode ? 'Active' : 'Not Generated'}`;
 
           <div className="px-4 py-6 pb-28 lg:pb-8 space-y-5 max-w-3xl mx-auto lg:px-8">
             {/* User Identity Card */}
-            <Card className="bg-[var(--medimo-bg-elevated)] border border-[var(--medimo-border)] rounded-2xl reveal-1">
+            <Card className="bg-[var(--medimo-bg-elevated)] border border-[var(--medimo-border)] rounded-2xl animate-slide-up">
               <CardContent className="p-6">
                 {/* Avatar & User Info */}
                 <div className="text-center mb-6">
@@ -226,7 +226,7 @@ QR Code: ${user.qrCode ? 'Active' : 'Not Generated'}`;
             <EmergencyReadinessCard user={user} medicationsCount={activeMedicationsCount} />
 
             {/* Important Information Card */}
-            <Card className="bg-[var(--medimo-bg-elevated)] border border-[var(--medimo-border)] rounded-2xl reveal-2">
+            <Card className="bg-[var(--medimo-bg-elevated)] border border-[var(--medimo-border)] rounded-2xl animate-slide-up delay-75">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base font-display text-[var(--medimo-text-primary)]">
                   <Info className="h-4 w-4 text-[var(--medimo-accent)]" />
@@ -295,7 +295,7 @@ QR Code: ${user.qrCode ? 'Active' : 'Not Generated'}`;
             </Card>
 
             {/* Settings Navigation */}
-            <Card className="bg-[var(--medimo-bg-elevated)] border border-[var(--medimo-border)] rounded-2xl overflow-hidden reveal-2">
+            <Card className="bg-[var(--medimo-bg-elevated)] border border-[var(--medimo-border)] rounded-2xl overflow-hidden animate-slide-up delay-150">
               <CardContent className="p-0">
                 {settingsItems.map((item, index) => {
                   const Icon = item.icon;
@@ -325,10 +325,10 @@ QR Code: ${user.qrCode ? 'Active' : 'Not Generated'}`;
             {/* Logout Button */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full bg-[var(--hc-accent-critical-soft)] hover:bg-[var(--medimo-critical)]/10 text-[var(--medimo-critical)] border border-[var(--medimo-critical)]/20 hover:border-[var(--medimo-critical)]/40 rounded-xl h-12 font-display font-medium reveal-3"
-                >
+                  <Button
+                    variant="outline"
+                    className="w-full bg-[var(--hc-accent-critical-soft)] hover:bg-[var(--medimo-critical)]/10 text-[var(--medimo-critical)] border border-[var(--medimo-critical)]/20 hover:border-[var(--medimo-critical)]/40 rounded-xl h-12 font-display font-medium animate-slide-up delay-225"
+                  >
                   <LogOut className="h-4 w-4 mr-2" />
                   Log Out
                 </Button>
