@@ -9,6 +9,7 @@ export interface QRCodeData {
   userName: string;
   medicalId: string;
   generatedAt: string;
+  dob: string;
 
   // CRITICAL MEDICAL DATA
   bloodType: string;
@@ -46,6 +47,7 @@ export const generateQRCodeData = (
     userName: user.name,
     medicalId: user.id,
     generatedAt: new Date().toISOString(),
+    dob: user.dob,
 
     // Critical medical data
     bloodType: user.bloodType,
@@ -90,38 +92,28 @@ export const generateCompactText = (qrData: QRCodeData): string => {
   const parts = [
     `MEDICAL EMERGENCY CARD`,
     ``,
-    `Name: ${qrData.userName}`,
-    `Blood: ${qrData.bloodType || '?'}`,
+    `Full Name: ${qrData.userName}`,
+    `Date of Birth: ${qrData.dob || 'Not set'}`,
+    `Blood Type: ${qrData.bloodType || 'Not set'}`,
+    ``,
+    `ALLERGIES: ${qrData.allergies.length > 0 ? qrData.allergies.join(', ') : 'None'}`,
+    ``,
+    `EMERGENCY CONTACT: ${qrData.emergencyContactName || 'Not set'}${qrData.emergencyContactRelationship ? ` (${qrData.emergencyContactRelationship})` : ''}`,
+    qrData.emergencyContactPhone ? `Phone: ${qrData.emergencyContactPhone}` : '',
+    ``,
+    `Medical Conditions: ${qrData.conditions.length > 0 ? qrData.conditions.join(', ') : 'None'}`,
+    ``,
+    `Current Medications: ${qrData.currentMedications.length > 0 ? qrData.currentMedications.join(', ') : 'None'}`,
   ];
 
-  if (qrData.allergies.length > 0) {
-    parts.push(``, `ALLERGIES: ${qrData.allergies.join(', ')}`);
-  }
-
-  if (qrData.conditions.length > 0) {
-    parts.push(``, `CONDITIONS: ${qrData.conditions.join(', ')}`);
-  }
-
-  if (qrData.currentMedications.length > 0) {
-    parts.push(``, `MEDS: ${qrData.currentMedications.join(', ')}`);
-  }
-
-  if (qrData.emergencyContactName) {
-    parts.push(
-      ``,
-      `EMERGENCY CONTACT:`,
-      `${qrData.emergencyContactName}${qrData.emergencyContactRelationship ? ` (${qrData.emergencyContactRelationship})` : ''}`,
-      qrData.emergencyContactPhone || ''
-    );
-  }
-
   if (qrData.importantNotes) {
-    // Truncate notes if too long
     const notes = qrData.importantNotes.length > 150 
       ? qrData.importantNotes.substring(0, 147) + '...'
       : qrData.importantNotes;
-    parts.push(``, `NOTES: ${notes}`);
+    parts.push(``, `Important Notes: ${notes}`);
   }
+
+  parts.push(``, `---`, `Generated: ${new Date(qrData.generatedAt).toLocaleString()}`);
 
   return parts.filter(p => p !== undefined).join('\n');
 };
