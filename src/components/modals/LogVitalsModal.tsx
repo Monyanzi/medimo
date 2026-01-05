@@ -14,8 +14,23 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useHealthData } from "@/contexts/HealthDataContext";
-import { Activity, AlertTriangle, CheckCircle } from "lucide-react";
+import { useAppSettings } from "@/contexts/AppSettingsContext";
+import { Activity, AlertTriangle } from "lucide-react";
 import { checkVitalInRange, DEFAULT_VITAL_RANGES, getVitalStatusColor, getVitalMessage, VitalStatus } from "@/utils/vitalsUtils";
+import {
+  getWeightUnit,
+  getHeightUnit,
+  getTemperatureUnit,
+  getWeightPlaceholder,
+  getHeightPlaceholder,
+  getTemperaturePlaceholder,
+  toStorageWeight,
+  toStorageHeight,
+  toStorageTemperature,
+  fromStorageWeight,
+  fromStorageHeight,
+  fromStorageTemperature,
+} from "@/utils/unitConversions";
 
 interface LogVitalsModalProps {
   isOpen: boolean;
@@ -36,13 +51,21 @@ interface LogVitalsModalProps {
 
 const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, initialData = null }) => {
   const { addVitalSigns, updateVitalSigns } = useHealthData();
+  const { measurementUnit } = useAppSettings();
+  
+  // Convert stored metric values to display values based on user preference
+  const toDisplayValue = (value: number | null | undefined, converter: (v: number, u: typeof measurementUnit) => number) => {
+    if (value == null) return '';
+    return converter(value, measurementUnit).toFixed(1);
+  };
+
   const [formData, setFormData] = useState({
     bloodPressureSystolic: initialData?.bloodPressureSystolic?.toString() || '',
     bloodPressureDiastolic: initialData?.bloodPressureDiastolic?.toString() || '',
     heartRate: initialData?.heartRate?.toString() || '',
-    weight: initialData?.weight?.toString() || '',
-    height: initialData?.height?.toString() || '',
-    temperature: initialData?.temperature?.toString() || '',
+    weight: toDisplayValue(initialData?.weight, fromStorageWeight),
+    height: toDisplayValue(initialData?.height, fromStorageHeight),
+    temperature: toDisplayValue(initialData?.temperature, fromStorageTemperature),
     oxygenSaturation: initialData?.oxygenSaturation?.toString() || '',
     notes: initialData?.notes?.toString() || ''
   });
@@ -54,9 +77,9 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
         bloodPressureSystolic: initialData.bloodPressureSystolic?.toString() || '',
         bloodPressureDiastolic: initialData.bloodPressureDiastolic?.toString() || '',
         heartRate: initialData.heartRate?.toString() || '',
-        weight: initialData.weight?.toString() || '',
-        height: initialData.height?.toString() || '',
-        temperature: initialData.temperature?.toString() || '',
+        weight: toDisplayValue(initialData.weight, fromStorageWeight),
+        height: toDisplayValue(initialData.height, fromStorageHeight),
+        temperature: toDisplayValue(initialData.temperature, fromStorageTemperature),
         oxygenSaturation: initialData.oxygenSaturation?.toString() || '',
         notes: initialData.notes?.toString() || ''
       });
@@ -115,13 +138,14 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
         return;
       }
 
+      // Convert display values to storage values (metric)
       const vitalsData = {
         bloodPressureSystolic: formData.bloodPressureSystolic ? parseInt(formData.bloodPressureSystolic) : null,
         bloodPressureDiastolic: formData.bloodPressureDiastolic ? parseInt(formData.bloodPressureDiastolic) : null,
         heartRate: formData.heartRate ? parseInt(formData.heartRate) : null,
-        weight: formData.weight ? parseFloat(formData.weight) : null,
-        height: formData.height ? parseFloat(formData.height) : null,
-        temperature: formData.temperature ? parseFloat(formData.temperature) : null,
+        weight: formData.weight ? toStorageWeight(parseFloat(formData.weight), measurementUnit) : null,
+        height: formData.height ? toStorageHeight(parseFloat(formData.height), measurementUnit) : null,
+        temperature: formData.temperature ? toStorageTemperature(parseFloat(formData.temperature), measurementUnit) : null,
         oxygenSaturation: formData.oxygenSaturation ? parseInt(formData.oxygenSaturation) : null,
         notes: formData.notes || null,
         recordedDate: initialData?.recordedDate || new Date().toISOString()
@@ -248,23 +272,23 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
           {/* Weight and Height */}
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label htmlFor="weight">Weight (lbs)</Label>
+              <Label htmlFor="weight">Weight ({getWeightUnit(measurementUnit)})</Label>
               <Input
                 id="weight"
                 type="number"
                 step="0.1"
-                placeholder="150"
+                placeholder={getWeightPlaceholder(measurementUnit)}
                 value={formData.weight}
                 onChange={(e) => handleInputChange('weight', e.target.value)}
               />
             </div>
             <div>
-              <Label htmlFor="height">Height (in)</Label>
+              <Label htmlFor="height">Height ({getHeightUnit(measurementUnit)})</Label>
               <Input
                 id="height"
                 type="number"
                 step="0.1"
-                placeholder="68"
+                placeholder={getHeightPlaceholder(measurementUnit)}
                 value={formData.height}
                 onChange={(e) => handleInputChange('height', e.target.value)}
               />
@@ -273,12 +297,12 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
 
           {/* Temperature */}
           <div>
-            <Label htmlFor="temperature">Temperature (°F)</Label>
+            <Label htmlFor="temperature">Temperature ({getTemperatureUnit(measurementUnit)})</Label>
             <Input
               id="temperature"
               type="number"
               step="0.1"
-              placeholder="98.6"
+              placeholder={getTemperaturePlaceholder(measurementUnit)}
               value={formData.temperature}
               onChange={(e) => handleInputChange('temperature', e.target.value)}
               className={vitalsAlerts.temperature?.status === 'critical' ? 'border-red-500' : ''}

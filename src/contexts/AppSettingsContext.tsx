@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
+import type { MeasurementUnit } from '@/utils/unitConversions';
 
 // Types
 export interface AppSettings {
@@ -7,13 +8,13 @@ export interface AppSettings {
   region: string;
   timeFormat: '12h' | '24h';
   dateFormat: 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
+  measurementUnit: MeasurementUnit;
   medicationReminders: boolean;
   appointmentReminders: boolean;
   vitalSignsReminders: boolean;
   caregiverAlerts: boolean;
   pushNotifications: boolean;
   emailNotifications: boolean;
-  // Future extension example: safetyCheckInIntervalMinutes?: number;
 }
 
 export interface AppSettingsContextType extends AppSettings {
@@ -21,6 +22,7 @@ export interface AppSettingsContextType extends AppSettings {
   setRegion: (v: string) => void;
   setTimeFormat: (v: '12h' | '24h') => void;
   setDateFormat: (v: AppSettings['dateFormat']) => void;
+  setMeasurementUnit: (v: MeasurementUnit) => void;
   setMedicationReminders: (v: boolean) => void;
   setAppointmentReminders: (v: boolean) => void;
   setVitalSignsReminders: (v: boolean) => void;
@@ -33,8 +35,9 @@ export interface AppSettingsContextType extends AppSettings {
 const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
   region: 'US',
-  timeFormat: '12h',
-  dateFormat: 'MM/DD/YYYY',
+  timeFormat: '24h',
+  dateFormat: 'DD/MM/YYYY',
+  measurementUnit: 'metric',
   medicationReminders: true,
   appointmentReminders: true,
   vitalSignsReminders: false,
@@ -107,6 +110,7 @@ export const AppSettingsProvider: React.FC<{children: React.ReactNode}> = ({ chi
     setRegion: v => update('region', v),
     setTimeFormat: v => update('timeFormat', v),
     setDateFormat: v => update('dateFormat', v),
+    setMeasurementUnit: v => update('measurementUnit', v),
     setMedicationReminders: v => update('medicationReminders', v),
     setAppointmentReminders: v => update('appointmentReminders', v),
     setVitalSignsReminders: v => update('vitalSignsReminders', v),
