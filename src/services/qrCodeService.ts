@@ -64,14 +64,12 @@ export const generateQRCodeData = (
 };
 
 export const generateQRCodeImage = async (qrData: QRCodeData): Promise<string> => {
-  // Generate plain-text markdown content for emergency responders
-  const markdownContent = generateMarkdownContent(qrData);
-  
-  // Create a data URL that displays the markdown as plain text when scanned
-  const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(markdownContent)}`;
+  // Generate compact plain-text content for emergency responders
+  // Keep it short to fit in QR code limits (~2000 chars safe)
+  const textContent = generateCompactText(qrData);
 
   try {
-    const qrCodeUrl = await QRCode.toDataURL(dataUrl, {
+    const qrCodeUrl = await QRCode.toDataURL(textContent, {
       width: 400,
       margin: 2,
       errorCorrectionLevel: 'L', // Lower error correction for more data capacity
@@ -87,35 +85,45 @@ export const generateQRCodeImage = async (qrData: QRCodeData): Promise<string> =
   }
 };
 
-// Generate markdown content for the QR code
-export const generateMarkdownContent = (qrData: QRCodeData): string => {
-  const lines = [
-    `# MEDICAL EMERGENCY CARD`,
+// Generate compact plain-text for QR code (fits within QR limits)
+export const generateCompactText = (qrData: QRCodeData): string => {
+  const parts = [
+    `MEDICAL EMERGENCY CARD`,
     ``,
-    `**Name:** ${qrData.userName}`,
-    `**Blood Type:** ${qrData.bloodType || 'Unknown'}`,
-    ``,
-    `## Allergies`,
-    qrData.allergies.length > 0 ? qrData.allergies.map(a => `- ⚠️ ${a}`).join('\n') : '_None listed_',
-    ``,
-    `## Medical Conditions`,
-    qrData.conditions.length > 0 ? qrData.conditions.map(c => `- ${c}`).join('\n') : '_None listed_',
-    ``,
-    `## Current Medications`,
-    qrData.currentMedications.length > 0 ? qrData.currentMedications.map(m => `- 💊 ${m}`).join('\n') : '_None listed_',
-    ``,
-    `## Emergency Contact`,
-    `**${qrData.emergencyContactName || 'Not set'}**${qrData.emergencyContactRelationship ? ` (${qrData.emergencyContactRelationship})` : ''}`,
-    qrData.emergencyContactPhone ? `📞 ${qrData.emergencyContactPhone}` : '',
+    `Name: ${qrData.userName}`,
+    `Blood: ${qrData.bloodType || '?'}`,
   ];
 
-  if (qrData.importantNotes) {
-    lines.push(``, `## ⚠️ Important Notes`, qrData.importantNotes);
+  if (qrData.allergies.length > 0) {
+    parts.push(``, `ALLERGIES: ${qrData.allergies.join(', ')}`);
   }
 
-  lines.push(``, `---`, `_Generated: ${new Date(qrData.generatedAt).toLocaleString()}_`);
+  if (qrData.conditions.length > 0) {
+    parts.push(``, `CONDITIONS: ${qrData.conditions.join(', ')}`);
+  }
 
-  return lines.filter(l => l !== undefined).join('\n');
+  if (qrData.currentMedications.length > 0) {
+    parts.push(``, `MEDS: ${qrData.currentMedications.join(', ')}`);
+  }
+
+  if (qrData.emergencyContactName) {
+    parts.push(
+      ``,
+      `EMERGENCY CONTACT:`,
+      `${qrData.emergencyContactName}${qrData.emergencyContactRelationship ? ` (${qrData.emergencyContactRelationship})` : ''}`,
+      qrData.emergencyContactPhone || ''
+    );
+  }
+
+  if (qrData.importantNotes) {
+    // Truncate notes if too long
+    const notes = qrData.importantNotes.length > 150 
+      ? qrData.importantNotes.substring(0, 147) + '...'
+      : qrData.importantNotes;
+    parts.push(``, `NOTES: ${notes}`);
+  }
+
+  return parts.filter(p => p !== undefined).join('\n');
 };
 
 export const saveQRCodeToStorage = (qrData: QRCodeData, qrImageUrl: string): void => {
