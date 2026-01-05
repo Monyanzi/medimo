@@ -21,15 +21,20 @@ import {
   getWeightUnit,
   getHeightUnit,
   getTemperatureUnit,
+  getGlucoseUnit,
   getWeightPlaceholder,
   getHeightPlaceholder,
   getTemperaturePlaceholder,
+  getGlucosePlaceholder,
+  getGlucoseNormalRange,
   toStorageWeight,
   toStorageHeight,
   toStorageTemperature,
+  toStorageGlucose,
   fromStorageWeight,
   fromStorageHeight,
   fromStorageTemperature,
+  fromStorageGlucose,
 } from "@/utils/unitConversions";
 
 interface LogVitalsModalProps {
@@ -44,6 +49,7 @@ interface LogVitalsModalProps {
     height?: number | null;
     temperature?: number | null;
     oxygenSaturation?: number | null;
+    bloodGlucose?: number | null;
     notes?: string | null;
     recordedDate?: string;
   } | null;
@@ -67,6 +73,7 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
     height: toDisplayValue(initialData?.height, fromStorageHeight),
     temperature: toDisplayValue(initialData?.temperature, fromStorageTemperature),
     oxygenSaturation: initialData?.oxygenSaturation?.toString() || '',
+    bloodGlucose: toDisplayValue(initialData?.bloodGlucose, fromStorageGlucose),
     notes: initialData?.notes?.toString() || ''
   });
   
@@ -81,6 +88,7 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
         height: toDisplayValue(initialData.height, fromStorageHeight),
         temperature: toDisplayValue(initialData.temperature, fromStorageTemperature),
         oxygenSaturation: initialData.oxygenSaturation?.toString() || '',
+        bloodGlucose: toDisplayValue(initialData.bloodGlucose, fromStorageGlucose),
         notes: initialData.notes?.toString() || ''
       });
     } else {
@@ -92,6 +100,7 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
         height: '',
         temperature: '',
         oxygenSaturation: '',
+        bloodGlucose: '',
         notes: ''
       });
     }
@@ -147,6 +156,7 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
         height: formData.height ? toStorageHeight(parseFloat(formData.height), measurementUnit) : null,
         temperature: formData.temperature ? toStorageTemperature(parseFloat(formData.temperature), measurementUnit) : null,
         oxygenSaturation: formData.oxygenSaturation ? parseInt(formData.oxygenSaturation) : null,
+        bloodGlucose: formData.bloodGlucose ? toStorageGlucose(parseFloat(formData.bloodGlucose), measurementUnit) : null,
         notes: formData.notes || null,
         recordedDate: initialData?.recordedDate || new Date().toISOString()
       };
@@ -169,6 +179,7 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
           height: '',
           temperature: '',
           oxygenSaturation: '',
+          bloodGlucose: '',
           notes: ''
         });
         setVitalsAlerts({});
@@ -186,7 +197,7 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
 
   const isFormValid = () => {
     return formData.bloodPressureSystolic || formData.heartRate || formData.weight || 
-           formData.temperature || formData.oxygenSaturation;
+           formData.temperature || formData.oxygenSaturation || formData.bloodGlucose;
   };
 
   const hasCriticalAlerts = Object.values(vitalsAlerts).some(alert => alert.status === 'critical');
@@ -330,6 +341,29 @@ const LogVitalsModal: React.FC<LogVitalsModalProps> = ({ isOpen, onOpenChange, i
               <div className={`text-xs mt-1 ${getVitalStatusColor(vitalsAlerts.oxygenSaturation.status)}`}>
                 {vitalsAlerts.oxygenSaturation.status === 'normal' ? '✓ Normal' : 
                  vitalsAlerts.oxygenSaturation.status === 'warning' ? '⚠ Low' : '🚨 Critical'}
+              </div>
+            )}
+          </div>
+
+          {/* Blood Glucose (Diabetes) */}
+          <div>
+            <Label htmlFor="bloodGlucose">Blood Glucose ({getGlucoseUnit(measurementUnit)})</Label>
+            <Input
+              id="bloodGlucose"
+              type="number"
+              step="0.1"
+              placeholder={getGlucosePlaceholder(measurementUnit)}
+              value={formData.bloodGlucose}
+              onChange={(e) => handleInputChange('bloodGlucose', e.target.value)}
+              className={vitalsAlerts.bloodGlucose?.status === 'critical' ? 'border-red-500' : ''}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Normal fasting: {getGlucoseNormalRange(measurementUnit)}
+            </p>
+            {vitalsAlerts.bloodGlucose && (
+              <div className={`text-xs mt-1 ${getVitalStatusColor(vitalsAlerts.bloodGlucose.status)}`}>
+                {vitalsAlerts.bloodGlucose.status === 'normal' ? '✓ Normal' : 
+                 vitalsAlerts.bloodGlucose.status === 'warning' ? '⚠ Elevated' : '🚨 Critical'}
               </div>
             )}
           </div>

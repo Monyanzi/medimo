@@ -30,6 +30,10 @@ export const getHeightPlaceholder = (unit: MeasurementUnit): string => unit === 
 export const getTemperaturePlaceholder = (unit: MeasurementUnit): string => unit === 'metric' ? '37.0' : '98.6';
 export const getGlucosePlaceholder = (unit: MeasurementUnit): string => unit === 'metric' ? '5.5' : '100';
 
+// Normal ranges info for display
+export const getGlucoseNormalRange = (unit: MeasurementUnit): string => 
+  unit === 'metric' ? '3.9-5.6 mmol/L (fasting)' : '70-100 mg/dL (fasting)';
+
 // Convert value to storage format (always metric internally for consistency)
 export const toStorageWeight = (value: number, unit: MeasurementUnit): number => 
   unit === 'imperial' ? lbsToKg(value) : value;
