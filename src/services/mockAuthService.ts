@@ -87,7 +87,7 @@ export class MockAuthService {
     localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users));
   }
 
-  static async register(email: string, password: string, name: string): Promise<AuthResponse> {
+  static async register(name: string, email: string, password: string): Promise<AuthResponse> {
     const users = this.getUsers();
     const normalizedEmailInput = email.toLowerCase();
 
