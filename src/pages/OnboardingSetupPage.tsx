@@ -27,8 +27,6 @@ import {
 } from '@/components/ui/select';
 
 const setupSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
   dob: z.string().min(1, 'Date of birth is required'),
   bloodType: z.string().min(1, 'Blood type is required'),
   emergencyContactName: z.string().optional(),
@@ -41,14 +39,12 @@ type SetupForm = z.infer<typeof setupSchema>;
 const OnboardingSetupPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const { updateUser, isLoading } = useAuth();
+  const { user, updateUser, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const form = useForm<SetupForm>({
     resolver: zodResolver(setupSchema),
     defaultValues: {
-      name: '',
-      email: '',
       dob: '',
       bloodType: '',
       emergencyContactName: '',
@@ -66,8 +62,6 @@ const OnboardingSetupPage: React.FC = () => {
   const onSubmit = async (data: SetupForm) => {
     try {
       const updateData = {
-        name: data.name,
-        email: data.email,
         dob: data.dob,
         bloodType: data.bloodType,
         emergencyContact: data.emergencyContactName ? {
@@ -112,7 +106,7 @@ const OnboardingSetupPage: React.FC = () => {
   const getFieldsForStep = (step: number): (keyof SetupForm)[] => {
     switch (step) {
       case 1:
-        return ['name', 'email', 'dob'];
+        return ['dob'];
       case 2:
         return ['bloodType'];
       case 3:
@@ -127,33 +121,12 @@ const OnboardingSetupPage: React.FC = () => {
       case 1:
         return (
           <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Enter your full name" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="email" placeholder="Enter your email" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Show user's name and email as read-only info */}
+            <div className="p-3 bg-muted rounded-lg space-y-2">
+              <p className="text-sm text-muted-foreground">Signed in as:</p>
+              <p className="font-medium text-text-primary">{user?.name}</p>
+              <p className="text-sm text-text-secondary">{user?.email}</p>
+            </div>
 
             <FormField
               control={form.control}
