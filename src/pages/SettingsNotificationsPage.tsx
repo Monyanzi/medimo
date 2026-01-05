@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Bell, Globe, Smartphone } from 'lucide-react';
+import { ChevronLeft, Bell, Globe, Smartphone, Ruler } from 'lucide-react';
 import DesktopSidebar from '@/components/shared/DesktopSidebar';
 import BottomNavigation from '@/components/shared/BottomNavigation';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
-import { toast } from 'sonner'; // For save confirmation
+import { toast } from 'sonner';
 
 const SettingsNotificationsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,6 +25,7 @@ const SettingsNotificationsPage: React.FC = () => {
     region, setRegion,
     timeFormat, setTimeFormat,
     dateFormat, setDateFormat,
+    measurementUnit, setMeasurementUnit,
     medicationReminders, setMedicationReminders,
     appointmentReminders, setAppointmentReminders,
     vitalSignsReminders, setVitalSignsReminders,
@@ -253,6 +254,35 @@ const SettingsNotificationsPage: React.FC = () => {
                     <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Measurement Units */}
+          <Card className="bg-surface-card border-border-divider">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Ruler className="h-5 w-5 text-primary-action" />
+                <span className="text-text-primary">Measurement Units</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Unit System</Label>
+                <Select value={measurementUnit} onValueChange={setMeasurementUnit}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select unit system" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="metric">Metric (kg, cm, °C)</SelectItem>
+                    <SelectItem value="imperial">Imperial (lbs, in, °F)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-text-secondary mt-2">
+                  {measurementUnit === 'metric' 
+                    ? 'Weight in kilograms, height in centimeters, temperature in Celsius'
+                    : 'Weight in pounds, height in inches, temperature in Fahrenheit'}
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -6,13 +6,15 @@ import { Activity, Heart, Thermometer, Weight, Wind, Droplet } from 'lucide-reac
 import StatusChip from '@/components/ui/StatusChip';
 import Sparkline from '@/components/ui/Sparkline';
 import { useHealthData } from '@/contexts/HealthDataContext';
+import { useAppSettings } from '@/contexts/AppSettingsContext';
 import { format, parseISO } from 'date-fns';
 import { classifyVital } from '@/theme/tokens';
-
+import { formatWeight, formatTemperature, getWeightUnit, getTemperatureUnit, fromStorageTemperature } from '@/utils/unitConversions';
 type Status = 'normal' | 'elevated' | 'critical';
 
 const VitalTracker: React.FC = () => {
   const { vitalSigns } = useHealthData();
+  const { measurementUnit } = useAppSettings();
   const [range, setRange] = useState<'7d' | '30d' | '1y'>('7d');
 
   const averageVitals = (arr: typeof vitalSigns): any => {
@@ -301,6 +303,7 @@ const VitalTracker: React.FC = () => {
             {(() => {
               const val = getNum('temperature');
               const st = classify.temp(val) as Status | undefined;
+              const displayTemp = val != null ? fromStorageTemperature(val, measurementUnit) : undefined;
               return (
                 <div className="p-4 rounded-xl bg-[var(--medimo-bg-secondary)] flex flex-col">
                   <div className="flex items-center gap-2 mb-2">
@@ -308,7 +311,9 @@ const VitalTracker: React.FC = () => {
                     <span className="text-xs text-[var(--medimo-text-muted)]">Temp</span>
                     {st && <div className={`ml-auto w-1.5 h-1.5 rounded-full ${st === 'critical' ? 'bg-rose-500' : st === 'elevated' ? 'bg-amber-500' : 'bg-emerald-500'}`} />}
                   </div>
-                  <span className="font-display text-xl font-bold text-[var(--medimo-text-primary)] tabular-nums">{fmt(val, '°')}</span>
+                  <span className="font-display text-xl font-bold text-[var(--medimo-text-primary)] tabular-nums">
+                    {displayTemp != null ? `${displayTemp.toFixed(1)}${getTemperatureUnit(measurementUnit)}` : 'No data'}
+                  </span>
                 </div>
               );
             })()}

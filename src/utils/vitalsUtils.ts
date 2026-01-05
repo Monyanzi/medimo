@@ -1,11 +1,12 @@
 
-import { CriticalVitalRanges, VitalAlert, VitalRange } from '@/types/vitals';
+import { CriticalVitalRanges, VitalRange } from '@/types/vitals';
 
+// Ranges are stored in metric (Celsius for temperature)
 export const DEFAULT_VITAL_RANGES: CriticalVitalRanges = {
   bloodPressureSystolic: { min: 90, max: 140, unit: 'mmHg' },
   bloodPressureDiastolic: { min: 60, max: 90, unit: 'mmHg' },
   heartRate: { min: 60, max: 100, unit: 'bpm' },
-  temperature: { min: 97.0, max: 99.5, unit: '°F' },
+  temperature: { min: 36.1, max: 37.5, unit: '°C' }, // Metric (Celsius)
   oxygenSaturation: { min: 95, max: 100, unit: '%' }
 };
 
